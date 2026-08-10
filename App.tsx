@@ -24,6 +24,11 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import { Amplify } from 'aws-amplify';
+import outputs from './amplify_outputs.json';
+
+Amplify.configure(outputs);
+
 type SectionProps = PropsWithChildren<{
   title: string;
 }>;
