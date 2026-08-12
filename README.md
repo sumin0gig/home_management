@@ -1,97 +1,76 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# HomeManagement
 
-# Getting Started
+가정 살림 관리를 위한 React Native 앱. 현재는 계정 시스템(회원가입/로그인)이 구현되어 있으며, 이후 이 계정을 기반으로 살림 관련 기능들이 추가될 예정이다.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 지금까지 구현된 기능
 
-## Step 1: Start Metro
+### 계정 시스템
+- **회원가입**: 아이디 / 이메일 / 비밀번호 입력 → 이메일 인증 코드 확인 → 가입 완료
+- **로그인**: 아이디 + 비밀번호로 로그인
+- **로그인 상태 분기**: 앱 실행 시 로그인 여부를 확인해 로그인 화면군과 홈 화면을 자동으로 분기
+- **로그아웃**
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+이메일이 아닌 **아이디로 로그인**한다. 인증 자체는 AWS Cognito가 이메일 기반으로 처리하지만(Cognito 제약상 email 또는 phone 중 하나가 반드시 필요), 가입 시 입력한 아이디를 DynamoDB에 `아이디 → 이메일` 매핑으로 저장해두고, 로그인 시 입력한 아이디로 이메일을 먼저 조회한 뒤 그 이메일로 Cognito 인증을 수행하는 방식이다.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+## 기술 스택
 
-```sh
-# Using npm
+| 영역 | 선택 |
+|---|---|
+| 프레임워크 | React Native 0.79 + React 19 + TypeScript |
+| 상태관리 | zustand |
+| 내비게이션 | React Navigation (native-stack) |
+| 인증 | AWS Amplify Gen2 (Cognito) |
+| DB | AWS Amplify Data (DynamoDB, GraphQL) |
+
+DB 저장이 필요한 동작(회원가입, 아이디→이메일 조회 등)은 화면에서 직접 처리하지 않고, `src/api/`의 함수를 통해 API 호출로 처리한다.
+
+## 프로젝트 구조
+
+```
+src/
+  api/            Amplify 호출을 감싸는 함수들 (이 프로젝트에서 aws-amplify를 직접 import하는 유일한 위치)
+    auth.ts         Cognito 가입/로그인/로그아웃/세션 확인
+    userLogin.ts    아이디 ↔ 이메일 매핑 조회/생성 (DynamoDB)
+  store/          zustand 스토어 (화면 상태 + api 호출 orchestration)
+    useAuthStore.ts    로그인 세션 상태(loading/signedIn/signedOut), Amplify Hub 이벤트 구독
+    useSignUpStore.ts  회원가입 폼 상태 및 절차
+    useSignInStore.ts  로그인 폼 상태 및 절차
+  navigation/     화면 전환 정의
+    AuthNavigator.tsx  로그인 전: Login → SignUp → ConfirmSignUp
+    MainNavigator.tsx  로그인 후: Home
+  screens/        화면 컴포넌트
+  utils/          순수 검증 함수 (validation.ts)
+
+amplify/
+  auth/resource.ts   Cognito 설정 (이메일 로그인, 커스텀 비밀번호 정책)
+  data/resource.ts   DynamoDB 스키마 (Todo 예시 모델, UserLogin 아이디 매핑 모델)
+  backend.ts         Amplify가 제공하지 않는 설정(비밀번호 정책 등)을 CDK 레벨에서 오버라이드
+```
+
+## 시작하기
+
+### 1. 의존성 설치
+```powershell
+npm install
+```
+
+### 2. 백엔드 배포 (최초 1회 및 amplify/ 변경 시)
+AWS 자격 증명이 설정되어 있어야 한다. 아래 명령은 워치 모드로 계속 실행되며, `amplify/` 변경 시 자동 재배포된다.
+```powershell
+npx ampx sandbox
+```
+완료되면 `amplify_outputs.json`이 자동으로 채워진다.
+
+### 3. 앱 실행
+```powershell
 npm start
-
-# OR using Yarn
-yarn start
 ```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+다른 터미널에서:
+```powershell
 npm run android
-
-# OR using Yarn
-yarn android
 ```
+(iOS는 macOS + Xcode 환경에서 `cd ios && pod install` 이후 `npm run ios`)
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## 알려진 제약 / 향후 개선 여지
+- `UserLogin`(아이디 매핑) 테이블이 `allow.guest()`로 열려 있어, 로그인 전 아이디 조회를 위해 비로그인 접근을 허용한다. 개인용 앱 규모라 감수했지만, 더 엄격히 하려면 Lambda 리졸버로 대체 가능하다.
+- 비밀번호 재설정, 소셜 로그인 등은 아직 없다.
