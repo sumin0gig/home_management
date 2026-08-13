@@ -1,8 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { signOutUser, getAuthErrorMessage } from '../api/auth';
+import { signOutUser, getAuthErrorMessage } from '../../api/auth';
 
-function HomeScreen(): React.JSX.Element {
+function SettingsScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>(null);
 
   const handleSignOut = async () => {
@@ -15,7 +15,6 @@ function HomeScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>환영합니다</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <Pressable style={styles.button} onPress={handleSignOut}>
         <Text style={styles.buttonText}>로그아웃</Text>
@@ -30,11 +29,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 24,
   },
   error: {
     color: '#d32f2f',
@@ -53,4 +47,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default SettingsScreen;
