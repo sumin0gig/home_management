@@ -2,6 +2,7 @@ import {
   signInWithRedirect,
   signOut,
   getCurrentUser,
+  fetchUserAttributes,
   type GetCurrentUserOutput,
 } from 'aws-amplify/auth';
 
@@ -15,6 +16,11 @@ export async function signOutUser(): Promise<void> {
 
 export async function getCurrentAuthUser(): Promise<GetCurrentUserOutput> {
   return getCurrentUser();
+}
+
+export async function fetchDisplayName(): Promise<string> {
+  const attributes = await fetchUserAttributes();
+  return attributes.name ?? attributes.email ?? '이름 없음';
 }
 
 export function getAuthErrorMessage(error: unknown): string {
