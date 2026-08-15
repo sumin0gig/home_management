@@ -7,6 +7,7 @@ const schema = a.schema({
       inviteCode: a.string().required(),
       ownerId: a.string().required(),
       members: a.hasMany('FamilyMember', 'familyId'),
+      chores: a.hasMany('Chore', 'familyId'),
     })
     .secondaryIndexes(index => [index('inviteCode')])
     .authorization(allow => [
@@ -28,6 +29,33 @@ const schema = a.schema({
       allow.ownersDefinedIn('familyOwnerId').identityClaim('sub').to(['read', 'delete']),
       allow.authenticated().to(['read', 'create']),
     ]),
+
+  Chore: a
+    .model({
+      familyId: a.id().required(),
+      family: a.belongsTo('Family', 'familyId'),
+      title: a.string().required(),
+      description: a.string(),
+      recurrenceType: a.enum(['INTERVAL', 'YEARLY_MONTHS']),
+      intervalValue: a.integer(),
+      intervalUnit: a.enum(['DAY', 'WEEK', 'MONTH']),
+      months: a.integer().array(),
+      nextDueDate: a.date().required(),
+      logs: a.hasMany('ChoreLog', 'choreId'),
+    })
+    .secondaryIndexes(index => [index('familyId')])
+    .authorization(allow => [allow.authenticated().to(['create', 'read', 'update', 'delete'])]),
+
+  ChoreLog: a
+    .model({
+      choreId: a.id().required(),
+      chore: a.belongsTo('Chore', 'choreId'),
+      completedBy: a.string().required(),
+      completedByName: a.string().required(),
+      completedAt: a.datetime().required(),
+    })
+    .secondaryIndexes(index => [index('choreId')])
+    .authorization(allow => [allow.authenticated().to(['create', 'read'])]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

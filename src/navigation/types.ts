@@ -6,6 +6,7 @@ export type AuthStackParamList = {
 
 export type HomeStackParamList = {
   HomeMain: undefined;
+  ChoreForm: { choreId?: string } | undefined;
 };
 
 export type FamilyStackParamList = {

@@ -11,6 +11,7 @@ import {
   type FamilyMemberRow,
 } from '../api/family';
 import { fetchDisplayName } from '../api/auth';
+import { seedDefaultChores } from '../api/chore';
 
 type FamilyStatus = 'loading' | 'none' | 'joined';
 
@@ -65,7 +66,8 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
     set({ error: null });
     try {
       const displayName = await fetchDisplayName();
-      await apiCreateFamily(name, displayName);
+      const family = await apiCreateFamily(name, displayName);
+      await seedDefaultChores(family.id);
       await get().fetchMyFamily();
     } catch (err) {
       set({ error: (err as Error).message });
