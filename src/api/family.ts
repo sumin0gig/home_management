@@ -1,6 +1,7 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentAuthUser } from './auth';
+import { deleteAllChoresForFamily } from './chore';
 
 const client = generateClient<Schema>();
 
@@ -126,6 +127,10 @@ export async function leaveFamily(
 ): Promise<void> {
   if (membership.role === 'OWNER' && otherMembersCount > 0) {
     throw new Error('다른 구성원이 있는 동안에는 소유자가 가족을 떠날 수 없습니다.');
+  }
+
+  if (membership.role === 'OWNER') {
+    await deleteAllChoresForFamily(membership.familyId);
   }
 
   const { errors } = await client.models.FamilyMember.delete({ id: membership.id });

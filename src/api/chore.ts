@@ -188,6 +188,46 @@ export async function deleteChore(choreId: string): Promise<void> {
   throwIfErrors(errors, '집안일 삭제에 실패했습니다.');
 }
 
+async function listAllChoresForFamily(familyId: string): Promise<ChoreRow[]> {
+  const results: ChoreRow[] = [];
+  let nextToken: string | null | undefined;
+  do {
+    const {
+      data,
+      nextToken: token,
+      errors,
+    } = await client.models.Chore.listChoreByFamilyId({ familyId }, { nextToken });
+    throwIfErrors(errors, '집안일 목록을 불러오지 못했습니다.');
+    results.push(...data);
+    nextToken = token;
+  } while (nextToken);
+  return results;
+}
+
+async function deleteAllChoreLogsForChore(choreId: string): Promise<void> {
+  let nextToken: string | null | undefined;
+  do {
+    const {
+      data: logs,
+      nextToken: token,
+      errors,
+    } = await client.models.ChoreLog.listChoreLogByChoreId({ choreId }, { nextToken });
+    throwIfErrors(errors, '완료 기록 삭제에 실패했습니다.');
+    await Promise.all(logs.map(log => client.models.ChoreLog.delete({ id: log.id })));
+    nextToken = token;
+  } while (nextToken);
+}
+
+export async function deleteAllChoresForFamily(familyId: string): Promise<void> {
+  const chores = await listAllChoresForFamily(familyId);
+  await Promise.all(
+    chores.map(async chore => {
+      await deleteAllChoreLogsForChore(chore.id);
+      await client.models.Chore.delete({ id: chore.id });
+    }),
+  );
+}
+
 export async function completeChore(chore: ChoreRow): Promise<void> {
   const user = await getCurrentAuthUser();
   const displayName = await fetchDisplayName();
