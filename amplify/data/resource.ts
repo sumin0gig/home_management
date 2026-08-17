@@ -13,6 +13,7 @@ const schema = a.schema({
     .authorization(allow => [
       allow.owner().identityClaim('sub').to(['create', 'read', 'update', 'delete']),
       allow.authenticated().to(['read']),
+      allow.group('Admin').to(['create', 'read', 'update', 'delete']),
     ]),
 
   FamilyMember: a
@@ -28,6 +29,7 @@ const schema = a.schema({
       allow.owner().identityClaim('sub').to(['create', 'read', 'update', 'delete']),
       allow.ownersDefinedIn('familyOwnerId').identityClaim('sub').to(['read', 'delete']),
       allow.authenticated().to(['read', 'create']),
+      allow.group('Admin').to(['create', 'read', 'update', 'delete']),
     ]),
 
   Chore: a
@@ -44,7 +46,10 @@ const schema = a.schema({
       logs: a.hasMany('ChoreLog', 'choreId'),
     })
     .secondaryIndexes(index => [index('familyId')])
-    .authorization(allow => [allow.authenticated().to(['create', 'read', 'update', 'delete'])]),
+    .authorization(allow => [
+      allow.authenticated().to(['create', 'read', 'update', 'delete']),
+      allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+    ]),
 
   ChoreLog: a
     .model({
@@ -55,7 +60,10 @@ const schema = a.schema({
       completedAt: a.datetime().required(),
     })
     .secondaryIndexes(index => [index('choreId')])
-    .authorization(allow => [allow.authenticated().to(['create', 'read'])]),
+    .authorization(allow => [
+      allow.authenticated().to(['create', 'read']),
+      allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
