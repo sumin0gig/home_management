@@ -90,10 +90,22 @@ export function toDateString(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function addMonthsClamped(date: Date, months: number): Date {
+  const day = date.getDate();
+  const firstOfTargetMonth = new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const lastDayOfTargetMonth = new Date(
+    firstOfTargetMonth.getFullYear(),
+    firstOfTargetMonth.getMonth() + 1,
+    0,
+  ).getDate();
+  firstOfTargetMonth.setDate(Math.min(day, lastDayOfTargetMonth));
+  return firstOfTargetMonth;
+}
+
 export function computeNextDueDate(chore: ChoreInput, from: Date): string {
   if (chore.recurrenceType === 'INTERVAL') {
     const value = chore.intervalValue ?? 1;
-    const next = new Date(from);
+    let next = new Date(from);
     switch (chore.intervalUnit) {
       case 'DAY':
         next.setDate(next.getDate() + value);
@@ -103,7 +115,7 @@ export function computeNextDueDate(chore: ChoreInput, from: Date): string {
         break;
       case 'MONTH':
       default:
-        next.setMonth(next.getMonth() + value);
+        next = addMonthsClamped(next, value);
         break;
     }
     return toDateString(next);
