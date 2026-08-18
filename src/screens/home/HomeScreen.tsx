@@ -11,7 +11,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '../../navigation/types';
 import { useFamilyStore } from '../../store/useFamilyStore';
 import { useChoreStore } from '../../store/useChoreStore';
-import type { ChoreRow } from '../../api/chore';
+import { toDateString, type ChoreRow } from '../../api/chore';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
 
@@ -56,7 +56,7 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
     );
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toDateString(new Date());
   const todayChores = chores
     .filter(c => c.nextDueDate <= today)
     .sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate));
