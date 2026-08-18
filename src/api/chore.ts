@@ -174,7 +174,7 @@ export async function updateChore(choreId: string, input: ChoreInput): Promise<v
   const { errors } = await client.models.Chore.update({
     id: choreId,
     title: input.title,
-    description: input.description,
+    description: input.description ?? null,
     recurrenceType: input.recurrenceType,
     intervalValue: input.intervalValue ?? null,
     intervalUnit: input.intervalUnit ?? null,
