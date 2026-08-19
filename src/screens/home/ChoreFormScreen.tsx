@@ -71,7 +71,9 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
 
   React.useEffect(() => {
     if (choreId) {
-      listChoreLogs(choreId).then(setLogs).catch(() => {});
+      listChoreLogs(choreId)
+        .then(setLogs)
+        .catch(err => setError((err as Error).message));
     }
   }, [choreId]);
 

@@ -272,10 +272,9 @@ export async function completeChore(chore: ChoreRow): Promise<void> {
 }
 
 export async function listChoreLogs(choreId: string, limit = 5): Promise<ChoreLogRow[]> {
-  const { data: logs, errors } = await client.models.ChoreLog.listChoreLogByChoreId(
-    { choreId },
-    { sortDirection: 'DESC', limit },
-  );
+  // listChoreLogByChoreId has no sort key, so sortDirection isn't supported server-side —
+  // fetch and sort client-side instead.
+  const { data: logs, errors } = await client.models.ChoreLog.listChoreLogByChoreId({ choreId });
   throwIfErrors(errors, '완료 기록을 불러오지 못했습니다.');
-  return logs;
+  return [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt)).slice(0, limit);
 }
