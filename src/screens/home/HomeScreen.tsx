@@ -28,11 +28,18 @@ function formatDueLabel(nextDueDate: string, today: string): string {
 function HomeScreen({ navigation }: Props): React.JSX.Element {
   const familyStatus = useFamilyStore(state => state.status);
   const family = useFamilyStore(state => state.family);
+  const fetchMyFamily = useFamilyStore(state => state.fetchMyFamily);
   const chores = useChoreStore(state => state.chores);
   const choreStatus = useChoreStore(state => state.status);
   const error = useChoreStore(state => state.error);
   const fetchChores = useChoreStore(state => state.fetchChores);
   const completeChore = useChoreStore(state => state.completeChore);
+
+  React.useEffect(() => {
+    if (familyStatus === 'loading') {
+      fetchMyFamily();
+    }
+  }, [familyStatus, fetchMyFamily]);
 
   React.useEffect(() => {
     if (family?.id) {
