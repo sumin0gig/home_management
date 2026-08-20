@@ -1,7 +1,7 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentAuthUser } from './auth';
-import { deleteAllChoresForFamily } from './chore';
+import { deleteAllRoomsForFamily } from './room';
 
 const client = generateClient<Schema>();
 
@@ -130,7 +130,7 @@ export async function leaveFamily(
   }
 
   if (membership.role === 'OWNER') {
-    await deleteAllChoresForFamily(membership.familyId);
+    await deleteAllRoomsForFamily(membership.familyId);
   }
 
   const { errors } = await client.models.FamilyMember.delete({ id: membership.id });

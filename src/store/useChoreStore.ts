@@ -1,23 +1,25 @@
 import { create } from 'zustand';
 import {
-  listChoresForFamily,
+  listChoresForRoom,
   createChore as apiCreateChore,
   updateChore as apiUpdateChore,
-  deleteChore as apiDeleteChore,
+  deleteChoreAndLogs as apiDeleteChoreAndLogs,
   completeChore as apiCompleteChore,
   type ChoreRow,
   type ChoreInput,
 } from '../api/chore';
+import { listRoomsForFamily } from '../api/room';
 
 type ChoreStatus = 'idle' | 'loading' | 'loaded';
 
 interface ChoreState {
   status: ChoreStatus;
   chores: ChoreRow[];
+  currentFamilyId: string | null;
   error: string | null;
-  fetchChores: (familyId: string) => Promise<void>;
-  createChore: (familyId: string, input: ChoreInput) => Promise<void>;
-  updateChore: (choreId: string, input: ChoreInput) => Promise<void>;
+  fetchChoresForFamily: (familyId: string) => Promise<void>;
+  createChore: (roomId: string, input: ChoreInput) => Promise<void>;
+  updateChore: (choreId: string, input: ChoreInput, roomId?: string) => Promise<void>;
   deleteChore: (choreId: string) => Promise<void>;
   completeChore: (chore: ChoreRow) => Promise<void>;
   reset: () => void;
@@ -26,26 +28,28 @@ interface ChoreState {
 const initialState = {
   status: 'idle' as ChoreStatus,
   chores: [] as ChoreRow[],
+  currentFamilyId: null as string | null,
   error: null as string | null,
 };
 
 export const useChoreStore = create<ChoreState>((set, get) => ({
   ...initialState,
 
-  fetchChores: async (familyId: string) => {
-    set({ status: 'loading', error: null });
+  fetchChoresForFamily: async (familyId: string) => {
+    set({ status: 'loading', error: null, currentFamilyId: familyId });
     try {
-      const chores = await listChoresForFamily(familyId);
-      set({ status: 'loaded', chores });
+      const rooms = await listRoomsForFamily(familyId);
+      const choresByRoom = await Promise.all(rooms.map(room => listChoresForRoom(room.id)));
+      set({ status: 'loaded', chores: choresByRoom.flat() });
     } catch (err) {
       set({ status: 'loaded', error: (err as Error).message });
     }
   },
 
-  createChore: async (familyId: string, input: ChoreInput) => {
+  createChore: async (roomId: string, input: ChoreInput) => {
     set({ error: null });
     try {
-      const chore = await apiCreateChore(familyId, input);
+      const chore = await apiCreateChore(roomId, input);
       set({ chores: [...get().chores, chore] });
     } catch (err) {
       set({ error: (err as Error).message });
@@ -53,13 +57,13 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     }
   },
 
-  updateChore: async (choreId: string, input: ChoreInput) => {
+  updateChore: async (choreId: string, input: ChoreInput, roomId?: string) => {
     set({ error: null });
     try {
-      await apiUpdateChore(choreId, input);
-      const familyId = get().chores.find(c => c.id === choreId)?.familyId;
-      if (familyId) {
-        await get().fetchChores(familyId);
+      await apiUpdateChore(choreId, input, roomId);
+      const { currentFamilyId } = get();
+      if (currentFamilyId) {
+        await get().fetchChoresForFamily(currentFamilyId);
       }
     } catch (err) {
       set({ error: (err as Error).message });
@@ -70,7 +74,7 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
   deleteChore: async (choreId: string) => {
     set({ error: null });
     try {
-      await apiDeleteChore(choreId);
+      await apiDeleteChoreAndLogs(choreId);
       set({ chores: get().chores.filter(c => c.id !== choreId) });
     } catch (err) {
       set({ error: (err as Error).message });
@@ -82,7 +86,10 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ error: null });
     try {
       await apiCompleteChore(chore);
-      await get().fetchChores(chore.familyId);
+      const { currentFamilyId } = get();
+      if (currentFamilyId) {
+        await get().fetchChoresForFamily(currentFamilyId);
+      }
     } catch (err) {
       set({ error: (err as Error).message });
       throw err;

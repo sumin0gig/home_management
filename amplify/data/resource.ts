@@ -7,7 +7,7 @@ const schema = a.schema({
       inviteCode: a.string().required(),
       ownerId: a.string().required(),
       members: a.hasMany('FamilyMember', 'familyId'),
-      chores: a.hasMany('Chore', 'familyId'),
+      rooms: a.hasMany('Room', 'familyId'),
     })
     .secondaryIndexes(index => [index('inviteCode')])
     .authorization(allow => [
@@ -32,10 +32,40 @@ const schema = a.schema({
       allow.group('Admin').to(['create', 'read', 'update', 'delete']),
     ]),
 
-  Chore: a
+  Room: a
     .model({
       familyId: a.id().required(),
       family: a.belongsTo('Family', 'familyId'),
+      roomType: a.enum(['LIVING_ROOM', 'BATHROOM', 'KITCHEN', 'ENTRANCE', 'BEDROOM', 'GENERAL_ROOM']),
+      label: a.string(),
+      chores: a.hasMany('Chore', 'roomId'),
+    })
+    .secondaryIndexes(index => [index('familyId')])
+    .authorization(allow => [
+      allow.authenticated().to(['create', 'read', 'update', 'delete']),
+      allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+    ]),
+
+  ChoreTemplate: a
+    .model({
+      roomType: a.enum(['LIVING_ROOM', 'BATHROOM', 'KITCHEN', 'ENTRANCE', 'BEDROOM', 'GENERAL_ROOM']),
+      title: a.string().required(),
+      description: a.string(),
+      recurrenceType: a.enum(['INTERVAL', 'YEARLY_MONTHS']),
+      intervalValue: a.integer(),
+      intervalUnit: a.enum(['DAY', 'WEEK', 'MONTH']),
+      months: a.integer().array(),
+    })
+    .secondaryIndexes(index => [index('roomType')])
+    .authorization(allow => [
+      allow.authenticated().to(['read']),
+      allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+    ]),
+
+  Chore: a
+    .model({
+      roomId: a.id().required(),
+      room: a.belongsTo('Room', 'roomId'),
       title: a.string().required(),
       description: a.string(),
       recurrenceType: a.enum(['INTERVAL', 'YEARLY_MONTHS']),
@@ -45,7 +75,7 @@ const schema = a.schema({
       nextDueDate: a.date().required(),
       logs: a.hasMany('ChoreLog', 'choreId'),
     })
-    .secondaryIndexes(index => [index('familyId')])
+    .secondaryIndexes(index => [index('roomId')])
     .authorization(allow => [
       allow.authenticated().to(['create', 'read', 'update', 'delete']),
       allow.group('Admin').to(['create', 'read', 'update', 'delete']),
@@ -61,7 +91,7 @@ const schema = a.schema({
     })
     .secondaryIndexes(index => [index('choreId')])
     .authorization(allow => [
-      allow.authenticated().to(['create', 'read']),
+      allow.authenticated().to(['create', 'read', 'delete']),
       allow.group('Admin').to(['create', 'read', 'update', 'delete']),
     ]),
 });

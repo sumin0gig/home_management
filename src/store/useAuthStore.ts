@@ -3,6 +3,7 @@ import { Hub } from 'aws-amplify/utils';
 import { getCurrentAuthUser } from '../api/auth';
 import { useFamilyStore } from './useFamilyStore';
 import { useChoreStore } from './useChoreStore';
+import { useRoomStore } from './useRoomStore';
 
 type AuthStatus = 'loading' | 'signedIn' | 'signedOut';
 
@@ -32,6 +33,7 @@ export const useAuthStore = create<AuthState>(set => ({
         set({ status: 'signedOut' });
         useFamilyStore.getState().reset();
         useChoreStore.getState().reset();
+        useRoomStore.getState().reset();
       }
     });
   },

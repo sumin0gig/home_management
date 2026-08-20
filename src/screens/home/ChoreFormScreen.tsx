@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '../../navigation/types';
-import { useFamilyStore } from '../../store/useFamilyStore';
 import { useChoreStore } from '../../store/useChoreStore';
+import { useRoomStore } from '../../store/useRoomStore';
 import { listChoreLogs, type ChoreInput, type ChoreLogRow, type IntervalUnit } from '../../api/chore';
+import { roomDisplayName } from '../../api/room';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ChoreForm'>;
 
@@ -36,17 +37,18 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
   const choreId = route.params?.choreId;
   const isEditMode = Boolean(choreId);
 
-  const family = useFamilyStore(state => state.family);
   const chores = useChoreStore(state => state.chores);
   const createChore = useChoreStore(state => state.createChore);
   const updateChore = useChoreStore(state => state.updateChore);
   const deleteChore = useChoreStore(state => state.deleteChore);
+  const rooms = useRoomStore(state => state.rooms);
 
   const existingChore = React.useMemo(
     () => chores.find(c => c.id === choreId),
     [chores, choreId],
   );
 
+  const [roomId, setRoomId] = React.useState<string | null>(existingChore?.roomId ?? null);
   const [title, setTitle] = React.useState(existingChore?.title ?? '');
   const [description, setDescription] = React.useState(existingChore?.description ?? '');
   const [recurrenceType, setRecurrenceType] = React.useState<'INTERVAL' | 'YEARLY_MONTHS'>(
@@ -84,6 +86,10 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
   };
 
   const handleSave = async () => {
+    if (!roomId) {
+      setError('방을 선택해주세요.');
+      return;
+    }
     if (!title.trim()) {
       setError('제목을 입력해주세요.');
       return;
@@ -105,9 +111,9 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
     setError(null);
     try {
       if (isEditMode && choreId) {
-        await updateChore(choreId, input);
-      } else if (family) {
-        await createChore(family.id, input);
+        await updateChore(choreId, input, roomId);
+      } else {
+        await createChore(roomId, input);
       }
       navigation.goBack();
     } catch (err) {
@@ -137,6 +143,20 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <Text style={styles.label}>방</Text>
+      <View style={styles.chipRow}>
+        {rooms.map(room => (
+          <Pressable
+            key={room.id}
+            style={[styles.chip, roomId === room.id && styles.chipSelected]}
+            onPress={() => setRoomId(room.id)}>
+            <Text style={roomId === room.id ? styles.chipTextSelected : styles.chipText}>
+              {roomDisplayName(room)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       <Text style={styles.label}>제목</Text>
       <TextInput style={styles.input} value={title} onChangeText={setTitle} />
