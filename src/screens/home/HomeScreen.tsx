@@ -67,9 +67,18 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
   React.useEffect(() => {
     if (family?.id) {
       fetchRooms(family.id);
+    }
+  }, [family?.id, fetchRooms]);
+
+  // Keyed on the room id set (not just family.id) so chores refetch whenever a room is
+  // added/removed after the initial load — e.g. rooms created during family onboarding,
+  // which happen after family.id is already set and chores have already been fetched once.
+  const roomIds = rooms.map(r => r.id).join(',');
+  React.useEffect(() => {
+    if (family?.id) {
       fetchChoresForFamily(family.id);
     }
-  }, [family?.id, fetchRooms, fetchChoresForFamily]);
+  }, [family?.id, roomIds, fetchChoresForFamily]);
 
   if (familyStatus === 'loading' || roomStatus === 'loading' || choreStatus === 'loading') {
     return (
