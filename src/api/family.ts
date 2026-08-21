@@ -2,6 +2,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentAuthUser } from './auth';
 import { deleteAllRoomsForFamily } from './room';
+import { throwIfErrors } from './chore';
 
 const client = generateClient<Schema>();
 
@@ -15,13 +16,6 @@ function generateInviteCode(): string {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
-}
-
-function throwIfErrors(errors: unknown, fallbackMessage: string): void {
-  if (errors && Array.isArray(errors) && errors.length > 0) {
-    const message = (errors[0] as { message?: string })?.message;
-    throw new Error(message ?? fallbackMessage);
-  }
 }
 
 export async function createFamily(name: string, displayName: string): Promise<FamilyRow> {

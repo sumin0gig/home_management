@@ -13,7 +13,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '../../navigation/types';
 import { useChoreStore } from '../../store/useChoreStore';
 import { useRoomStore } from '../../store/useRoomStore';
-import { listChoreLogs, type ChoreInput, type ChoreLogRow, type IntervalUnit } from '../../api/chore';
+import {
+  listChoreLogs,
+  toDateString,
+  type ChoreInput,
+  type ChoreLogRow,
+  type IntervalUnit,
+} from '../../api/chore';
 import { roomDisplayName } from '../../api/room';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ChoreForm'>;
@@ -25,13 +31,6 @@ const INTERVAL_UNIT_LABELS: Record<'DAY' | 'WEEK' | 'MONTH', string> = {
 };
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
-
-function formatLogDate(iso: string): string {
-  const date = new Date(iso);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-    date.getDate(),
-  ).padStart(2, '0')}`;
-}
 
 function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
   const choreId = route.params?.choreId;
@@ -98,11 +97,19 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
       setError('최소 한 달을 선택해주세요.');
       return;
     }
+    const parsedIntervalValue = Number(intervalValue);
+    if (
+      recurrenceType === 'INTERVAL' &&
+      (!Number.isInteger(parsedIntervalValue) || parsedIntervalValue < 1)
+    ) {
+      setError('간격은 1 이상의 정수로 입력해주세요.');
+      return;
+    }
     const input: ChoreInput = {
       title: title.trim(),
       description: description.trim() || undefined,
       recurrenceType,
-      intervalValue: recurrenceType === 'INTERVAL' ? Number(intervalValue) || 1 : undefined,
+      intervalValue: recurrenceType === 'INTERVAL' ? parsedIntervalValue : undefined,
       intervalUnit: recurrenceType === 'INTERVAL' ? intervalUnit : undefined,
       months: recurrenceType === 'YEARLY_MONTHS' ? months : undefined,
     };
@@ -133,8 +140,12 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
         text: '삭제',
         style: 'destructive',
         onPress: async () => {
-          await deleteChore(choreId);
-          navigation.goBack();
+          try {
+            await deleteChore(choreId);
+            navigation.goBack();
+          } catch (err) {
+            setError((err as Error).message);
+          }
         },
       },
     ]);
@@ -250,7 +261,7 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
           ) : (
             logs.map(log => (
               <Text key={log.id} style={styles.logItem}>
-                {formatLogDate(log.completedAt)} · {log.completedByName}
+                {toDateString(new Date(log.completedAt))} · {log.completedByName}
               </Text>
             ))
           )}
