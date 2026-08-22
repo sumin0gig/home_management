@@ -17,7 +17,7 @@ export type SettingsStackParamList = {
   SettingsMain: undefined;
 };
 
-export type MainTabParamList = {
+export type MainDrawerParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
   FamilyTab: NavigatorScreenParams<FamilyStackParamList>;
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>;

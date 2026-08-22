@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import FamilyOnboarding from './FamilyOnboarding';
 import { createFamily, getMyFamily, listFamilyMembers } from '../../../api/family';
-import { fetchDisplayName } from '../../../api/auth';
+import { fetchDisplayName, signOutUser } from '../../../api/auth';
 import { createRoom } from '../../../api/room';
 import { resetAllStores } from '../../../test-utils/resetStores';
 
@@ -18,6 +18,7 @@ const mockedGetMyFamily = getMyFamily as jest.Mock;
 const mockedListFamilyMembers = listFamilyMembers as jest.Mock;
 const mockedFetchDisplayName = fetchDisplayName as jest.Mock;
 const mockedCreateRoom = createRoom as jest.Mock;
+const mockedSignOutUser = signOutUser as jest.Mock;
 
 describe('FamilyOnboarding', () => {
   beforeEach(() => {
@@ -64,5 +65,12 @@ describe('FamilyOnboarding', () => {
       expect(mockedCreateFamily).toHaveBeenCalledWith('우리집', '테스트유저'),
     );
     expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'BEDROOM', undefined);
+  });
+
+  test('로그아웃 링크를 탭하면 signOutUser를 호출한다', () => {
+    mockedSignOutUser.mockResolvedValue(undefined);
+    const { getByText } = render(<FamilyOnboarding />);
+    fireEvent.press(getByText('로그아웃'));
+    expect(mockedSignOutUser).toHaveBeenCalledTimes(1);
   });
 });

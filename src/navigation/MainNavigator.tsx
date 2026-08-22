@@ -1,23 +1,27 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import type { MainTabParamList } from './types';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import type { MainDrawerParamList } from './types';
 import HomeStackNavigator from './HomeStackNavigator';
 import FamilyStackNavigator from './FamilyStackNavigator';
 import SettingsStackNavigator from './SettingsStackNavigator';
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const Drawer = createDrawerNavigator<MainDrawerParamList>();
 
 function MainNavigator(): React.JSX.Element {
   return (
-    <Tab.Navigator initialRouteName="HomeTab" screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: '홈' }} />
-      <Tab.Screen name="FamilyTab" component={FamilyStackNavigator} options={{ title: '가족' }} />
-      <Tab.Screen
+    <Drawer.Navigator initialRouteName="HomeTab" screenOptions={{ headerShown: false }}>
+      <Drawer.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: '홈' }} />
+      <Drawer.Screen
+        name="FamilyTab"
+        component={FamilyStackNavigator}
+        options={{ title: '가족' }}
+      />
+      <Drawer.Screen
         name="SettingsTab"
         component={SettingsStackNavigator}
         options={{ title: '설정' }}
       />
-    </Tab.Navigator>
+    </Drawer.Navigator>
   );
 }
 

@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { useFamilyStore } from '../../../store/useFamilyStore';
 import { useRoomStore } from '../../../store/useRoomStore';
 import { ROOM_TYPES, ROOM_TYPE_LABELS, type RoomType } from '../../../api/room';
+import { signOutUser } from '../../../api/auth';
 
 interface SelectedRoom {
   key: string;
@@ -70,6 +71,10 @@ function FamilyOnboarding(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
+      <Pressable style={styles.logoutLink} onPress={() => signOutUser()}>
+        <Text style={styles.logoutLinkText}>로그아웃</Text>
+      </Pressable>
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <View style={styles.section}>
@@ -150,6 +155,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
+  },
+  logoutLink: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+  },
+  logoutLinkText: {
+    color: '#555',
+    fontSize: 13,
   },
   section: {
     marginBottom: 32,

@@ -10,3 +10,5 @@ jest.mock('@react-native-async-storage/async-storage', () => {
 jest.mock('@react-native-community/netinfo', () =>
   require('@react-native-community/netinfo/jest/netinfo-mock'),
 );
+
+require('react-native-gesture-handler/jestSetup');

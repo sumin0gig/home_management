@@ -1,14 +1,26 @@
 import React from 'react';
-import { ActivityIndicator } from 'react-native';
-import { render, waitFor } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import FamilyScreen from './FamilyScreen';
-import { getMyFamily, listFamilyMembers } from '../../api/family';
+import { useFamilyStore } from '../../store/useFamilyStore';
 import { resetAllStores } from '../../test-utils/resetStores';
+import type { FamilyRow, FamilyMemberRow } from '../../api/family';
 
 jest.mock('../../api/family');
 
-const mockedGetMyFamily = getMyFamily as jest.Mock;
-const mockedListFamilyMembers = listFamilyMembers as jest.Mock;
+const family: FamilyRow = {
+  id: 'f1',
+  name: 'TestFamily',
+  inviteCode: 'ABC123',
+  ownerId: 'u1',
+} as FamilyRow;
+
+const membership: FamilyMemberRow = {
+  id: 'm1',
+  familyId: 'f1',
+  userId: 'u1',
+  displayName: 'me',
+  role: 'OWNER',
+} as FamilyMemberRow;
 
 describe('FamilyScreen', () => {
   beforeEach(() => {
@@ -16,27 +28,12 @@ describe('FamilyScreen', () => {
     resetAllStores();
   });
 
-  test('초기 로딩 중에는 스피너를 표시한다', () => {
-    mockedGetMyFamily.mockReturnValue(new Promise(() => {}));
-    const { UNSAFE_getByType } = render(<FamilyScreen />);
-    expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
-  });
-
-  test('가족이 없으면 가족 만들기 화면을 보여준다', async () => {
-    mockedGetMyFamily.mockResolvedValue(null);
+  // FamilyScreen은 드로워를 통해서만(=이미 가족에 속해 있을 때만) 도달하므로
+  // 온보딩 분기 없이 항상 가족 홈(멤버 관리) 화면을 그대로 위임한다.
+  test('가족 홈(멤버 관리) 화면을 렌더링한다', () => {
+    useFamilyStore.setState({ status: 'joined', family, membership, members: [membership] });
     const { getByText } = render(<FamilyScreen />);
-    await waitFor(() => expect(getByText('가족 만들기')).toBeTruthy());
-  });
-
-  test('가족이 있으면 가족 홈 화면을 보여준다', async () => {
-    mockedGetMyFamily.mockResolvedValue({
-      family: { id: 'f1', name: 'TestFamily', inviteCode: 'ABC123', ownerId: 'u1' },
-      membership: { id: 'm1', familyId: 'f1', userId: 'u1', role: 'OWNER', displayName: 'me' },
-    });
-    mockedListFamilyMembers.mockResolvedValue([
-      { id: 'm1', familyId: 'f1', userId: 'u1', role: 'OWNER', displayName: 'me' },
-    ]);
-    const { getByText } = render(<FamilyScreen />);
-    await waitFor(() => expect(getByText(/TestFamily/)).toBeTruthy());
+    expect(getByText(/TestFamily/)).toBeTruthy();
+    expect(getByText('가족 떠나기')).toBeTruthy();
   });
 });

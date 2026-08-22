@@ -36,9 +36,7 @@ function formatDueLabel(nextDueDate: string, today: string): string {
 }
 
 function HomeScreen({ navigation }: Props): React.JSX.Element {
-  const familyStatus = useFamilyStore(state => state.status);
   const family = useFamilyStore(state => state.family);
-  const fetchMyFamily = useFamilyStore(state => state.fetchMyFamily);
 
   const rooms = useRoomStore(state => state.rooms);
   const roomStatus = useRoomStore(state => state.status);
@@ -59,12 +57,6 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
   const [isSavingRoom, setIsSavingRoom] = React.useState(false);
 
   React.useEffect(() => {
-    if (familyStatus === 'loading') {
-      fetchMyFamily();
-    }
-  }, [familyStatus, fetchMyFamily]);
-
-  React.useEffect(() => {
     if (family?.id) {
       fetchRooms(family.id);
     }
@@ -80,18 +72,10 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
     }
   }, [family?.id, roomIds, fetchChoresForFamily]);
 
-  if (familyStatus === 'loading' || roomStatus === 'loading' || choreStatus === 'loading') {
+  if (roomStatus === 'loading' || choreStatus === 'loading') {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (familyStatus === 'none') {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.emptyText}>먼저 가족 탭에서 가족을 만들거나 참여해주세요.</Text>
       </View>
     );
   }

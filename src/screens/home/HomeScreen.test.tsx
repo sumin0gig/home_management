@@ -63,12 +63,6 @@ describe('HomeScreen', () => {
     resetAllStores();
   });
 
-  test('가족이 없으면 안내 문구를 표시한다', () => {
-    useFamilyStore.setState({ status: 'none', family: null });
-    const { getByText } = renderHomeScreen();
-    expect(getByText('먼저 가족 탭에서 가족을 만들거나 참여해주세요.')).toBeTruthy();
-  });
-
   test('방별로 집안일 목록을 그룹핑해서 보여준다', async () => {
     mockedListRoomsForFamily.mockResolvedValue([bedroom]);
     mockedListChoresForRoom.mockResolvedValue([chore]);
