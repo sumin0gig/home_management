@@ -3,8 +3,10 @@ import {
   listRoomsForFamily,
   createRoom as apiCreateRoom,
   deleteRoom as apiDeleteRoom,
+  DEFAULT_ROOM_SIZE,
   type RoomRow,
   type RoomType,
+  type RoomSize,
 } from '../api/room';
 
 type RoomStatus = 'idle' | 'loading' | 'loaded';
@@ -14,7 +16,12 @@ interface RoomState {
   rooms: RoomRow[];
   error: string | null;
   fetchRooms: (familyId: string) => Promise<void>;
-  addRoom: (familyId: string, roomType: NonNullable<RoomType>, label?: string) => Promise<void>;
+  addRoom: (
+    familyId: string,
+    roomType: NonNullable<RoomType>,
+    size?: NonNullable<RoomSize>,
+    label?: string,
+  ) => Promise<void>;
   removeRoom: (roomId: string) => Promise<void>;
   reset: () => void;
 }
@@ -38,10 +45,15 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     }
   },
 
-  addRoom: async (familyId: string, roomType: NonNullable<RoomType>, label?: string) => {
+  addRoom: async (
+    familyId: string,
+    roomType: NonNullable<RoomType>,
+    size: NonNullable<RoomSize> = DEFAULT_ROOM_SIZE,
+    label?: string,
+  ) => {
     set({ error: null });
     try {
-      const room = await apiCreateRoom(familyId, roomType, label);
+      const room = await apiCreateRoom(familyId, roomType, size, label);
       set({ rooms: [...get().rooms, room] });
     } catch (err) {
       set({ error: (err as Error).message });

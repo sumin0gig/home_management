@@ -3,8 +3,11 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import FamilyOnboarding from '../screens/family/components/FamilyOnboarding';
+import RoomSetupScreen from '../screens/family/components/RoomSetupScreen';
+import RoomWaitingScreen from '../screens/family/components/RoomWaitingScreen';
 import { useAuthStore } from '../store/useAuthStore';
 import { useFamilyStore } from '../store/useFamilyStore';
+import { useRoomStore } from '../store/useRoomStore';
 
 function RootNavigator(): React.JSX.Element {
   const authStatus = useAuthStore(state => state.status);
@@ -13,6 +16,12 @@ function RootNavigator(): React.JSX.Element {
 
   const familyStatus = useFamilyStore(state => state.status);
   const fetchMyFamily = useFamilyStore(state => state.fetchMyFamily);
+  const family = useFamilyStore(state => state.family);
+  const membership = useFamilyStore(state => state.membership);
+
+  const roomStatus = useRoomStore(state => state.status);
+  const rooms = useRoomStore(state => state.rooms);
+  const fetchRooms = useRoomStore(state => state.fetchRooms);
 
   useEffect(() => {
     checkAuthStatus();
@@ -26,8 +35,15 @@ function RootNavigator(): React.JSX.Element {
     }
   }, [authStatus, fetchMyFamily]);
 
+  useEffect(() => {
+    if (familyStatus === 'joined' && family) {
+      fetchRooms(family.id);
+    }
+  }, [familyStatus, family, fetchRooms]);
+
   const isLoading =
     authStatus === 'loading' || (authStatus === 'signedIn' && familyStatus === 'loading');
+  const isRoomsLoading = familyStatus === 'joined' && roomStatus === 'idle';
 
   if (isLoading) {
     return (
@@ -43,6 +59,18 @@ function RootNavigator(): React.JSX.Element {
 
   if (familyStatus === 'none') {
     return <FamilyOnboarding />;
+  }
+
+  if (isRoomsLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (rooms.length === 0) {
+    return membership?.role === 'OWNER' ? <RoomSetupScreen /> : <RoomWaitingScreen />;
   }
 
   return <MainNavigator />;

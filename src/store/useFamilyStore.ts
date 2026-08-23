@@ -11,6 +11,7 @@ import {
   type FamilyMemberRow,
 } from '../api/family';
 import { fetchDisplayName } from '../api/auth';
+import { useRoomStore } from './useRoomStore';
 
 type FamilyStatus = 'loading' | 'none' | 'joined';
 
@@ -134,6 +135,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
     try {
       const otherMembersCount = members.filter(m => m.id !== membership.id).length;
       await apiLeaveFamily(membership, otherMembersCount);
+      useRoomStore.getState().reset();
       set({ status: 'none', family: null, membership: null, members: [] });
     } catch (err) {
       set({ error: (err as Error).message });

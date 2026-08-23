@@ -18,9 +18,13 @@ import { toDateString, type ChoreRow } from '../../api/chore';
 import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
+  ROOM_SIZES,
+  ROOM_SIZE_LABELS,
+  DEFAULT_ROOM_SIZE,
   roomDisplayName,
   type RoomRow,
   type RoomType,
+  type RoomSize,
 } from '../../api/room';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
@@ -53,6 +57,8 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
 
   const [isAddingRoom, setIsAddingRoom] = React.useState(false);
   const [newRoomType, setNewRoomType] = React.useState<NonNullable<RoomType> | null>(null);
+  const [newRoomSize, setNewRoomSize] =
+    React.useState<NonNullable<RoomSize>>(DEFAULT_ROOM_SIZE);
   const [newRoomLabel, setNewRoomLabel] = React.useState('');
   const [isSavingRoom, setIsSavingRoom] = React.useState(false);
 
@@ -97,9 +103,10 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
     }
     setIsSavingRoom(true);
     try {
-      await addRoom(family.id, newRoomType, newRoomLabel.trim() || undefined);
+      await addRoom(family.id, newRoomType, newRoomSize, newRoomLabel.trim() || undefined);
       setIsAddingRoom(false);
       setNewRoomType(null);
+      setNewRoomSize(DEFAULT_ROOM_SIZE);
       setNewRoomLabel('');
     } catch {
       // 에러는 store의 error 상태로 표시됨
@@ -158,6 +165,18 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
               </Pressable>
             ))}
           </View>
+          <View style={styles.chipRow}>
+            {ROOM_SIZES.map(size => (
+              <Pressable
+                key={size}
+                style={[styles.chip, newRoomSize === size && styles.chipSelected]}
+                onPress={() => setNewRoomSize(size)}>
+                <Text style={newRoomSize === size ? styles.chipTextSelected : styles.chipText}>
+                  {ROOM_SIZE_LABELS[size]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
           <TextInput
             style={styles.input}
             placeholder="이름(선택, 예: 안방)"
@@ -170,6 +189,7 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
               onPress={() => {
                 setIsAddingRoom(false);
                 setNewRoomType(null);
+                setNewRoomSize(DEFAULT_ROOM_SIZE);
                 setNewRoomLabel('');
               }}>
               <Text style={styles.cancelButtonText}>취소</Text>

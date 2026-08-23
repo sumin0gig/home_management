@@ -7,6 +7,7 @@ const client = generateClient<Schema>();
 
 export type RoomRow = Schema['Room']['type'];
 export type RoomType = RoomRow['roomType'];
+export type RoomSize = RoomRow['size'];
 
 export const ROOM_TYPE_LABELS: Record<NonNullable<RoomType>, string> = {
   LIVING_ROOM: '거실',
@@ -18,6 +19,28 @@ export const ROOM_TYPE_LABELS: Record<NonNullable<RoomType>, string> = {
 };
 
 export const ROOM_TYPES = Object.keys(ROOM_TYPE_LABELS) as Array<NonNullable<RoomType>>;
+
+export const ROOM_SIZE_LABELS: Record<NonNullable<RoomSize>, string> = {
+  VERY_SMALL: '매우 작음',
+  SMALL: '작음',
+  NORMAL: '보통',
+  BIG: '큼',
+  VERY_BIG: '매우 큼',
+};
+
+export const ROOM_SIZES = Object.keys(ROOM_SIZE_LABELS) as Array<NonNullable<RoomSize>>;
+
+export const DEFAULT_ROOM_SIZE: NonNullable<RoomSize> = 'NORMAL';
+
+// 도면도 그리드에서 타일 너비 비율(%)로 쓰는 값. 합이 딱 100/50 등으로 안 떨어져도
+// flexWrap이 알아서 다음 줄로 넘겨주므로 상대적 크기감만 표현하면 된다.
+export const ROOM_SIZE_WIDTH_RATIO: Record<NonNullable<RoomSize>, number> = {
+  VERY_SMALL: 28,
+  SMALL: 40,
+  NORMAL: 48,
+  BIG: 64,
+  VERY_BIG: 100,
+};
 
 export function roomDisplayName(room: RoomRow): string {
   if (room.label && room.label.trim()) {
@@ -51,11 +74,13 @@ async function listAllRoomsForFamily(familyId: string): Promise<RoomRow[]> {
 export async function createRoom(
   familyId: string,
   roomType: NonNullable<RoomType>,
+  size: NonNullable<RoomSize> = DEFAULT_ROOM_SIZE,
   label?: string,
 ): Promise<RoomRow> {
   const { data: room, errors } = await client.models.Room.create({
     familyId,
     roomType,
+    size,
     label,
   });
   throwIfErrors(errors, '방 생성에 실패했습니다.');

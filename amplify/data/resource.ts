@@ -37,6 +37,7 @@ const schema = a.schema({
       familyId: a.id().required(),
       family: a.belongsTo('Family', 'familyId'),
       roomType: a.enum(['LIVING_ROOM', 'BATHROOM', 'KITCHEN', 'ENTRANCE', 'BEDROOM', 'GENERAL_ROOM']),
+      size: a.enum(['VERY_SMALL', 'SMALL', 'NORMAL', 'BIG', 'VERY_BIG']),
       label: a.string(),
       chores: a.hasMany('Chore', 'roomId'),
     })

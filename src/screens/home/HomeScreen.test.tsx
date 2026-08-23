@@ -100,7 +100,9 @@ describe('HomeScreen', () => {
     fireEvent.press(getByText('침실'));
     fireEvent.press(getByText('추가'));
 
-    await waitFor(() => expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'BEDROOM', undefined));
+    await waitFor(() =>
+      expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'BEDROOM', 'NORMAL', undefined),
+    );
   });
 
   test('방 삭제를 탭하면 확인 후 deleteRoom을 호출한다', async () => {
