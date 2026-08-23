@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFamilyStore } from '../../../store/useFamilyStore';
 import { useRoomStore } from '../../../store/useRoomStore';
 import { ROOM_TYPES, ROOM_TYPE_LABELS, type RoomType } from '../../../api/room';
@@ -12,6 +13,7 @@ interface SelectedRoom {
 }
 
 function FamilyOnboarding(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const error = useFamilyStore(state => state.error);
   const createFamily = useFamilyStore(state => state.createFamily);
   const joinFamily = useFamilyStore(state => state.joinFamily);
@@ -71,7 +73,9 @@ function FamilyOnboarding(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <Pressable style={styles.logoutLink} onPress={() => signOutUser()}>
+      <Pressable
+        style={[styles.logoutLink, { top: insets.top + 16 }]}
+        onPress={() => signOutUser()}>
         <Text style={styles.logoutLinkText}>로그아웃</Text>
       </Pressable>
 
@@ -158,7 +162,6 @@ const styles = StyleSheet.create({
   },
   logoutLink: {
     position: 'absolute',
-    top: 16,
     right: 16,
   },
   logoutLinkText: {

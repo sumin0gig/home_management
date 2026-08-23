@@ -11,4 +11,11 @@ jest.mock('@react-native-community/netinfo', () =>
   require('@react-native-community/netinfo/jest/netinfo-mock'),
 );
 
+jest.mock('react-native-safe-area-context', () => {
+  // The mock file's `export default {...}` compiles to `exports.default = {...}`,
+  // so a plain require() here (bypassing Babel's ESM interop) needs unwrapping.
+  const mock = require('react-native-safe-area-context/jest/mock');
+  return mock.default ?? mock;
+});
+
 require('react-native-gesture-handler/jestSetup');
