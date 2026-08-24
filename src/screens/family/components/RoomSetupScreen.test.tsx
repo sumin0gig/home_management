@@ -76,6 +76,72 @@ describe('RoomSetupScreen', () => {
     );
   });
 
+  test('여러 방을 추가하고 집 만들기를 누르면 모든 방에 대해 addRoom이 호출된다', async () => {
+    mockedCreateRoom.mockResolvedValue({
+      id: 'r1',
+      familyId: 'f1',
+      roomType: 'BEDROOM',
+      size: 'NORMAL',
+      label: null,
+    });
+
+    const { getByText } = render(<RoomSetupScreen />);
+    fireEvent.press(getByText('+ 침실'));
+    fireEvent.press(getByText('+ 거실'));
+    fireEvent.press(getByText('집 만들기'));
+
+    await waitFor(() => expect(mockedCreateRoom).toHaveBeenCalledTimes(2));
+    expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'BEDROOM', 'NORMAL', undefined);
+    expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'LIVING_ROOM', 'NORMAL', undefined);
+  });
+
+  test('다른 방 만들기를 탭하면 모달이 열려 이름 입력 필드가 보인다', () => {
+    const { getByText, getByPlaceholderText } = render(<RoomSetupScreen />);
+    fireEvent.press(getByText('+ 다른 방 만들기'));
+    expect(getByPlaceholderText('방 이름(예: 서재)')).toBeTruthy();
+  });
+
+  test('이름 없이 추가를 누르면 방이 생성되지 않는다', () => {
+    const { getByText } = render(<RoomSetupScreen />);
+    fireEvent.press(getByText('+ 다른 방 만들기'));
+    fireEvent.press(getByText('추가'));
+    fireEvent.press(getByText('집 만들기'));
+    expect(mockedCreateRoom).not.toHaveBeenCalled();
+  });
+
+  test('이름과 크기를 입력하고 추가하면 커스텀 타일이 생성되고 집 만들기 시 GENERAL_ROOM으로 저장된다', async () => {
+    mockedCreateRoom.mockResolvedValue({
+      id: 'r1',
+      familyId: 'f1',
+      roomType: 'GENERAL_ROOM',
+      size: 'BIG',
+      label: '서재',
+    });
+
+    const { getByText, getByPlaceholderText } = render(<RoomSetupScreen />);
+    fireEvent.press(getByText('+ 다른 방 만들기'));
+    fireEvent.changeText(getByPlaceholderText('방 이름(예: 서재)'), '서재');
+    fireEvent.press(getByText('큼'));
+    fireEvent.press(getByText('추가'));
+
+    expect(getByText('서재')).toBeTruthy();
+
+    fireEvent.press(getByText('집 만들기'));
+
+    await waitFor(() =>
+      expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'GENERAL_ROOM', 'BIG', '서재'),
+    );
+  });
+
+  test('취소를 누르면 방이 추가되지 않는다', () => {
+    const { getByText, getByPlaceholderText } = render(<RoomSetupScreen />);
+    fireEvent.press(getByText('+ 다른 방 만들기'));
+    fireEvent.changeText(getByPlaceholderText('방 이름(예: 서재)'), '서재');
+    fireEvent.press(getByText('취소'));
+    fireEvent.press(getByText('집 만들기'));
+    expect(mockedCreateRoom).not.toHaveBeenCalled();
+  });
+
   test('로그아웃 링크를 탭하면 signOutUser를 호출한다', () => {
     mockedSignOutUser.mockResolvedValue(undefined);
     const { getByText } = render(<RoomSetupScreen />);

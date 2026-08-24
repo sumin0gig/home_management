@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -40,11 +41,37 @@ function RoomSetupScreen(): React.JSX.Element {
   const [isSaving, setIsSaving] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
 
+  const [isCustomModalVisible, setIsCustomModalVisible] = React.useState(false);
+  const [customName, setCustomName] = React.useState('');
+  const [customSize, setCustomSize] = React.useState<NonNullable<RoomSize>>(DEFAULT_ROOM_SIZE);
+
   const handleAddBlock = (roomType: NonNullable<RoomType>) => {
     setBlocks(prev => [
       ...prev,
       { key: `${roomType}-${Date.now()}-${prev.length}`, roomType, size: DEFAULT_ROOM_SIZE, label: '' },
     ]);
+  };
+
+  const handleOpenCustomModal = () => {
+    setCustomName('');
+    setCustomSize(DEFAULT_ROOM_SIZE);
+    setIsCustomModalVisible(true);
+  };
+
+  const handleAddCustomBlock = () => {
+    if (!customName.trim()) {
+      return;
+    }
+    setBlocks(prev => [
+      ...prev,
+      {
+        key: `GENERAL_ROOM-${Date.now()}-${prev.length}`,
+        roomType: 'GENERAL_ROOM',
+        size: customSize,
+        label: customName.trim(),
+      },
+    ]);
+    setIsCustomModalVisible(false);
   };
 
   const handleRemoveBlock = (key: string) => {
@@ -75,9 +102,11 @@ function RoomSetupScreen(): React.JSX.Element {
     setIsSaving(true);
     setSubmitError(null);
     try {
-      for (const block of blocks) {
-        await addRoom(family.id, block.roomType, block.size, block.label.trim() || undefined);
-      }
+      await Promise.all(
+        blocks.map(block =>
+          addRoom(family.id, block.roomType, block.size, block.label.trim() || undefined),
+        ),
+      );
     } catch (err) {
       setSubmitError((err as Error).message);
     } finally {
@@ -106,6 +135,9 @@ function RoomSetupScreen(): React.JSX.Element {
             <Text style={styles.paletteChipText}>+ {ROOM_TYPE_LABELS[roomType]}</Text>
           </Pressable>
         ))}
+        <Pressable style={styles.customChip} onPress={handleOpenCustomModal}>
+          <Text style={styles.customChipText}>+ 다른 방 만들기</Text>
+        </Pressable>
       </View>
 
       <ScrollView style={styles.floorPlanScroll} contentContainerStyle={styles.floorPlan}>
@@ -117,7 +149,9 @@ function RoomSetupScreen(): React.JSX.Element {
               key={block.key}
               style={[styles.tile, { width: `${ROOM_SIZE_WIDTH_RATIO[block.size]}%` }]}>
               <View style={styles.tileHeader}>
-                <Text style={styles.tileTitle}>{ROOM_TYPE_LABELS[block.roomType]}</Text>
+                <Text style={styles.tileTitle}>
+                  {block.label.trim() || ROOM_TYPE_LABELS[block.roomType]}
+                </Text>
                 <Pressable onPress={() => handleRemoveBlock(block.key)}>
                   <Text style={styles.removeText}>✕</Text>
                 </Pressable>
@@ -173,6 +207,51 @@ function RoomSetupScreen(): React.JSX.Element {
           <Text style={styles.submitButtonText}>집 만들기</Text>
         )}
       </Pressable>
+
+      <Modal
+        visible={isCustomModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsCustomModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>다른 방 만들기</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="방 이름(예: 서재)"
+              value={customName}
+              onChangeText={setCustomName}
+              autoFocus
+            />
+            <View style={styles.chipRow}>
+              {ROOM_SIZES.map(size => (
+                <Pressable
+                  key={size}
+                  style={[styles.sizeChip, customSize === size && styles.sizeChipSelected]}
+                  onPress={() => setCustomSize(size)}>
+                  <Text
+                    style={customSize === size ? styles.sizeChipTextSelected : styles.sizeChipText}>
+                    {ROOM_SIZE_LABELS[size]}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={styles.modalButtonRow}>
+              <Pressable
+                style={styles.modalCancelButton}
+                onPress={() => setIsCustomModalVisible(false)}>
+                <Text style={styles.modalCancelButtonText}>취소</Text>
+              </Pressable>
+              <Pressable
+                style={styles.modalAddButton}
+                onPress={handleAddCustomBlock}
+                disabled={!customName.trim()}>
+                <Text style={styles.modalAddButtonText}>추가</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -221,6 +300,18 @@ const styles = StyleSheet.create({
   },
   paletteChipText: {
     color: '#2f6fed',
+    fontWeight: '600',
+  },
+  customChip: {
+    borderWidth: 1,
+    borderColor: '#999',
+    borderStyle: 'dashed',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  customChipText: {
+    color: '#555',
     fontWeight: '600',
   },
   floorPlanScroll: {
@@ -301,6 +392,82 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
+  },
+  sizeChip: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+  },
+  sizeChipSelected: {
+    backgroundColor: '#2f6fed',
+    borderColor: '#2f6fed',
+  },
+  sizeChipText: {
+    color: '#333',
+  },
+  sizeChipTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  modalCancelButtonText: {
+    color: '#555',
+    fontWeight: '600',
+  },
+  modalAddButton: {
+    flex: 1,
+    backgroundColor: '#2f6fed',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalAddButtonText: {
+    color: '#fff',
     fontWeight: '600',
   },
 });
