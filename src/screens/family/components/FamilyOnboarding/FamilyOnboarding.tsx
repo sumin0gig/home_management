@@ -1,8 +1,8 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFamilyStore } from '../../../store/useFamilyStore';
-import { signOutUser } from '../../../api/auth';
+import { useFamilyStore } from '../../../../store/useFamilyStore';
+import { signOutUser } from '../../../../api/auth';
 
 function FamilyOnboarding(): React.JSX.Element {
   const insets = useSafeAreaInsets();

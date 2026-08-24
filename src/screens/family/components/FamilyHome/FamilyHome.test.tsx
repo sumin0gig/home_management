@@ -2,12 +2,12 @@ import React from 'react';
 import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import FamilyHome from './FamilyHome';
-import { removeFamilyMember, leaveFamily as apiLeaveFamily } from '../../../api/family';
-import { useFamilyStore } from '../../../store/useFamilyStore';
-import { resetAllStores } from '../../../test-utils/resetStores';
-import type { FamilyRow, FamilyMemberRow } from '../../../api/family';
+import { removeFamilyMember, leaveFamily as apiLeaveFamily } from '../../../../api/family';
+import { useFamilyStore } from '../../../../store/useFamilyStore';
+import { resetAllStores } from '../../../../test-utils/resetStores';
+import type { FamilyRow, FamilyMemberRow } from '../../../../api/family';
 
-jest.mock('../../../api/family');
+jest.mock('../../../../api/family');
 
 const mockedRemoveFamilyMember = removeFamilyMember as jest.Mock;
 const mockedApiLeaveFamily = apiLeaveFamily as jest.Mock;

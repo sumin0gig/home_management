@@ -1,9 +1,9 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFamilyStore } from '../../../store/useFamilyStore';
-import { useRoomStore } from '../../../store/useRoomStore';
-import { signOutUser } from '../../../api/auth';
+import { useFamilyStore } from '../../../../store/useFamilyStore';
+import { useRoomStore } from '../../../../store/useRoomStore';
+import { signOutUser } from '../../../../api/auth';
 
 function RoomWaitingScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();

@@ -9,8 +9,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useFamilyStore } from '../../../store/useFamilyStore';
-import type { FamilyMemberRow } from '../../../api/family';
+import { useFamilyStore } from '../../../../store/useFamilyStore';
+import type { FamilyMemberRow } from '../../../../api/family';
 
 function FamilyHome(): React.JSX.Element {
   const family = useFamilyStore(state => state.family);

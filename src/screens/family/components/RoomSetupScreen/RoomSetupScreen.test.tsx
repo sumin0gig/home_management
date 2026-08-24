@@ -1,15 +1,15 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import RoomSetupScreen from './RoomSetupScreen';
-import { createRoom } from '../../../api/room';
-import { signOutUser } from '../../../api/auth';
-import { useFamilyStore } from '../../../store/useFamilyStore';
-import { resetAllStores } from '../../../test-utils/resetStores';
-import type { FamilyRow } from '../../../api/family';
+import { createRoom } from '../../../../api/room';
+import { signOutUser } from '../../../../api/auth';
+import { useFamilyStore } from '../../../../store/useFamilyStore';
+import { resetAllStores } from '../../../../test-utils/resetStores';
+import type { FamilyRow } from '../../../../api/family';
 
-jest.mock('../../../api/auth');
-jest.mock('../../../api/room', () => ({
-  ...jest.requireActual('../../../api/room'),
+jest.mock('../../../../api/auth');
+jest.mock('../../../../api/room', () => ({
+  ...jest.requireActual('../../../../api/room'),
   createRoom: jest.fn(),
 }));
 

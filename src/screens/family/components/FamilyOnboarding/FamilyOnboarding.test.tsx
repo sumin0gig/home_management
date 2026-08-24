@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import FamilyOnboarding from './FamilyOnboarding';
-import { createFamily, joinFamilyByInviteCode, getMyFamily, listFamilyMembers } from '../../../api/family';
-import { fetchDisplayName, signOutUser } from '../../../api/auth';
-import { resetAllStores } from '../../../test-utils/resetStores';
+import { createFamily, joinFamilyByInviteCode, getMyFamily, listFamilyMembers } from '../../../../api/family';
+import { fetchDisplayName, signOutUser } from '../../../../api/auth';
+import { resetAllStores } from '../../../../test-utils/resetStores';
 
-jest.mock('../../../api/family');
-jest.mock('../../../api/auth');
+jest.mock('../../../../api/family');
+jest.mock('../../../../api/auth');
 
 const mockedCreateFamily = createFamily as jest.Mock;
 const mockedJoinFamily = joinFamilyByInviteCode as jest.Mock;
