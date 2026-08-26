@@ -134,21 +134,25 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
     if (!choreId) {
       return;
     }
-    Alert.alert('집안일 삭제', `'${title}' 항목을 삭제할까요?`, [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '삭제',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteChore(choreId);
-            navigation.goBack();
-          } catch (err) {
-            setError((err as Error).message);
-          }
+    Alert.alert(
+      '집안일 삭제',
+      `'${title}' 항목을 삭제할까요? 이 집안일의 완료 기록도 모두 함께 삭제되며, 되돌릴 수 없습니다.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteChore(choreId);
+              navigation.goBack();
+            } catch (err) {
+              setError((err as Error).message);
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   return (

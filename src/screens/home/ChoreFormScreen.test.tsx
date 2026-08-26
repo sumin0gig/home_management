@@ -150,7 +150,27 @@ describe('ChoreFormScreen', () => {
       expect(navigation.goBack).toHaveBeenCalled();
     });
 
-    test('삭제 버튼을 탭하면 확인 후 deleteChore를 호출한다', async () => {
+    test('삭제 버튼을 탭하면 완료 기록도 함께 삭제된다는 안내와 함께 확인을 요청한다', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+      const navigation = createMockNavigation<'ChoreForm'>();
+      const { getByText } = render(
+        <ChoreFormScreen
+          navigation={navigation}
+          route={{ params: { choreId: 'c1' } } as never}
+        />,
+      );
+      fireEvent.press(getByText('삭제'));
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        '집안일 삭제',
+        expect.stringContaining('완료 기록도 모두 함께 삭제'),
+        expect.any(Array),
+      );
+      expect(mockedDeleteChoreAndLogs).not.toHaveBeenCalled();
+      jest.restoreAllMocks();
+    });
+
+    test('삭제 확인을 누르면 deleteChore를 호출한다', async () => {
       mockedDeleteChoreAndLogs.mockResolvedValue(undefined);
       jest.spyOn(Alert, 'alert').mockImplementation((_t, _m, buttons) => {
         buttons?.find(b => b.style === 'destructive')?.onPress?.();
@@ -166,6 +186,24 @@ describe('ChoreFormScreen', () => {
 
       await waitFor(() => expect(mockedDeleteChoreAndLogs).toHaveBeenCalledWith('c1'));
       expect(navigation.goBack).toHaveBeenCalled();
+      jest.restoreAllMocks();
+    });
+
+    test('삭제 취소를 누르면 deleteChore가 호출되지 않는다', () => {
+      jest.spyOn(Alert, 'alert').mockImplementation((_t, _m, buttons) => {
+        buttons?.find(b => b.style === 'cancel')?.onPress?.();
+      });
+      const navigation = createMockNavigation<'ChoreForm'>();
+      const { getByText } = render(
+        <ChoreFormScreen
+          navigation={navigation}
+          route={{ params: { choreId: 'c1' } } as never}
+        />,
+      );
+      fireEvent.press(getByText('삭제'));
+
+      expect(mockedDeleteChoreAndLogs).not.toHaveBeenCalled();
+      expect(navigation.goBack).not.toHaveBeenCalled();
       jest.restoreAllMocks();
     });
   });
