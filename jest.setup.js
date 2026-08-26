@@ -19,3 +19,12 @@ jest.mock('react-native-safe-area-context', () => {
 });
 
 require('react-native-gesture-handler/jestSetup');
+
+jest.mock('@react-native-firebase/messaging', () => ({
+  __esModule: true,
+  getMessaging: jest.fn(() => ({})),
+  requestPermission: jest.fn().mockResolvedValue(1),
+  getToken: jest.fn().mockResolvedValue('mock-fcm-token'),
+  onTokenRefresh: jest.fn(() => () => {}),
+  onMessage: jest.fn(() => () => {}),
+}));

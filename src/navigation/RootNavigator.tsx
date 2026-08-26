@@ -8,11 +8,14 @@ import RoomWaitingScreen from '../screens/family/components/RoomWaitingScreen/Ro
 import { useAuthStore } from '../store/useAuthStore';
 import { useFamilyStore } from '../store/useFamilyStore';
 import { useRoomStore } from '../store/useRoomStore';
+import { usePushNotifications } from '../notifications/usePushNotifications';
 
 function RootNavigator(): React.JSX.Element {
   const authStatus = useAuthStore(state => state.status);
   const checkAuthStatus = useAuthStore(state => state.checkAuthStatus);
   const subscribeToAuthEvents = useAuthStore(state => state.subscribeToAuthEvents);
+
+  usePushNotifications(authStatus === 'signedIn');
 
   const familyStatus = useFamilyStore(state => state.status);
   const fetchMyFamily = useFamilyStore(state => state.fetchMyFamily);

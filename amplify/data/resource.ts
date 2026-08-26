@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
+import { choreReminder } from '../functions/choreReminder/resource';
 
 const schema = a.schema({
   Family: a
@@ -76,7 +77,7 @@ const schema = a.schema({
       nextDueDate: a.date().required(),
       logs: a.hasMany('ChoreLog', 'choreId'),
     })
-    .secondaryIndexes(index => [index('roomId')])
+    .secondaryIndexes(index => [index('roomId'), index('nextDueDate')])
     .authorization(allow => [
       allow.authenticated().to(['create', 'read', 'update', 'delete']),
       allow.group('Admin').to(['create', 'read', 'update', 'delete']),
@@ -95,7 +96,19 @@ const schema = a.schema({
       allow.authenticated().to(['create', 'read', 'delete']),
       allow.group('Admin').to(['create', 'read', 'update', 'delete']),
     ]),
-});
+
+  DeviceToken: a
+    .model({
+      userId: a.string().required(),
+      token: a.string().required(),
+      platform: a.enum(['ANDROID', 'IOS']),
+    })
+    .secondaryIndexes(index => [index('userId')])
+    .authorization(allow => [
+      allow.owner().identityClaim('sub').to(['create', 'read', 'update', 'delete']),
+      allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+    ]),
+}).authorization(allow => [allow.resource(choreReminder).to(['query'])]);
 
 export type Schema = ClientSchema<typeof schema>;
 
