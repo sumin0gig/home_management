@@ -29,5 +29,18 @@
             <data android:scheme="homemanagement" />
         </intent-filter>
       </activity>
+
+      <receiver
+        android:name=".widget.ChoreWidget"
+        android:exported="false"
+        android:label="@string/chore_widget_label">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            <action android:name="com.homemanagement.WIDGET_CLICK" />
+        </intent-filter>
+        <meta-data
+            android:name="android.appwidget.provider"
+            android:resource="@xml/chore_widget_info" />
+      </receiver>
     </application>
 </manifest>
