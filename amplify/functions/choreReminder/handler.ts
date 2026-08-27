@@ -10,6 +10,8 @@ const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env)
 Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 
+const NOTIFICATIONS_ENABLED = false;
+
 function todaySeoulDateString(): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Seoul',
@@ -42,6 +44,8 @@ async function listAll<T>(
 }
 
 export const handler = async (): Promise<void> => {
+  if (!NOTIFICATIONS_ENABLED) return;
+
   const today = todaySeoulDateString();
 
   const dueChores = await listAll(nextToken =>
