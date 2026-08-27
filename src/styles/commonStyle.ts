@@ -6,4 +6,6 @@ export const colors = {
   negative: '#D9705B',
   gray: '#9A9A9A',
   white: '#F2F2F2',
+  overlay: 'rgba(0, 0, 0, 0.4)',
+  modalBackground: '#FFFFFF',
 } as const;

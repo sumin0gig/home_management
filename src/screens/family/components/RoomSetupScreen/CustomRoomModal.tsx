@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import ModalView from '../../../../components/common/ModalView';
 import {
   ROOM_SIZES,
   ROOM_SIZE_LABELS,
@@ -36,58 +37,40 @@ function CustomRoomModal({ visible, onClose, onSubmit }: Props): React.JSX.Eleme
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>다른 방 만들기</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="방 이름(예: 서재)"
-            value={name}
-            onChangeText={setName}
-            autoFocus
-          />
-          <View style={styles.chipRow}>
-            {ROOM_SIZES.map(sizeOption => (
-              <Pressable
-                key={sizeOption}
-                style={[styles.sizeChip, size === sizeOption && styles.sizeChipSelected]}
-                onPress={() => setSize(sizeOption)}>
-                <Text style={size === sizeOption ? styles.sizeChipTextSelected : styles.sizeChipText}>
-                  {ROOM_SIZE_LABELS[sizeOption]}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.modalButtonRow}>
-            <Pressable style={styles.modalCancelButton} onPress={handleClose}>
-              <Text style={styles.modalCancelButtonText}>취소</Text>
-            </Pressable>
-            <Pressable
-              style={styles.modalAddButton}
-              onPress={handleSubmit}
-              disabled={!name.trim()}>
-              <Text style={styles.modalAddButtonText}>추가</Text>
-            </Pressable>
-          </View>
-        </View>
+    <ModalView visible={visible} onRequestClose={handleClose}>
+      <Text style={styles.modalTitle}>다른 방 만들기</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="방 이름(예: 서재)"
+        value={name}
+        onChangeText={setName}
+        autoFocus
+      />
+      <View style={styles.chipRow}>
+        {ROOM_SIZES.map(sizeOption => (
+          <Pressable
+            key={sizeOption}
+            style={[styles.sizeChip, size === sizeOption && styles.sizeChipSelected]}
+            onPress={() => setSize(sizeOption)}>
+            <Text style={size === sizeOption ? styles.sizeChipTextSelected : styles.sizeChipText}>
+              {ROOM_SIZE_LABELS[sizeOption]}
+            </Text>
+          </Pressable>
+        ))}
       </View>
-    </Modal>
+      <View style={styles.modalButtonRow}>
+        <Pressable style={styles.modalCancelButton} onPress={handleClose}>
+          <Text style={styles.modalCancelButtonText}>취소</Text>
+        </Pressable>
+        <Pressable style={styles.modalAddButton} onPress={handleSubmit} disabled={!name.trim()}>
+          <Text style={styles.modalAddButtonText}>추가</Text>
+        </Pressable>
+      </View>
+    </ModalView>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-  },
   modalTitle: {
     fontSize: 17,
     fontWeight: '700',
