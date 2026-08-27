@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   saveButton: {
-    backgroundColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   removeText: {
-    color: '#d32f2f',
+    color: commonStyle.negativeColor,
     fontWeight: '600',
   },
   error: {
@@ -232,10 +232,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#d32f2f',
+    borderColor: commonStyle.negativeColor,
   },
   leaveButtonText: {
-    color: '#d32f2f',
+    color: commonStyle.negativeColor,
     fontSize: 16,
     fontWeight: '600',
   },

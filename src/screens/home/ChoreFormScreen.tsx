@@ -324,8 +324,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipSelected: {
-    backgroundColor: '#2f6fed',
-    borderColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
+    borderColor: commonStyle.touchableColor,
   },
   chipText: {
     color: '#333',
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   saveButton: {
-    backgroundColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -357,10 +357,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
     borderWidth: 1,
-    borderColor: '#d32f2f',
+    borderColor: commonStyle.negativeColor,
   },
   deleteButtonText: {
-    color: '#d32f2f',
+    color: commonStyle.negativeColor,
     fontSize: 16,
     fontWeight: '600',
   },

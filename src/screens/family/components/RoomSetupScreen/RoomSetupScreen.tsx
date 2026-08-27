@@ -182,13 +182,13 @@ const styles = StyleSheet.create({
   },
   paletteChip: {
     borderWidth: 1,
-    borderColor: '#2f6fed',
+    borderColor: commonStyle.touchableColor,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 14,
   },
   paletteChipText: {
-    color: '#2f6fed',
+    color: commonStyle.touchableColor,
     fontWeight: '600',
   },
   customChip: {
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   submitButton: {
-    backgroundColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',

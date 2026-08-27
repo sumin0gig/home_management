@@ -8,6 +8,7 @@ import {
   type RoomType,
   type RoomSize,
 } from '../../../../api/room';
+import { commonStyle } from '../../../../styles/commonStyle';
 
 export interface RoomBlock {
   key: string;
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   removeText: {
-    color: '#d32f2f',
+    color: commonStyle.negativeColor,
     fontWeight: '600',
   },
   sizeStepper: {
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   stepperArrow: {
-    color: '#2f6fed',
+    color: commonStyle.touchableColor,
     fontSize: 16,
     fontWeight: '700',
     paddingHorizontal: 6,

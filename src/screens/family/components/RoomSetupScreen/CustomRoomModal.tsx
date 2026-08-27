@@ -7,6 +7,7 @@ import {
   DEFAULT_ROOM_SIZE,
   type RoomSize,
 } from '../../../../api/room';
+import { commonStyle } from '../../../../styles/commonStyle';
 
 interface Props {
   visible: boolean;
@@ -99,8 +100,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   sizeChipSelected: {
-    backgroundColor: '#2f6fed',
-    borderColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
+    borderColor: commonStyle.touchableColor,
   },
   sizeChipText: {
     color: '#333',
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   },
   modalAddButton: {
     flex: 1,
-    backgroundColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',

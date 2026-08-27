@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   addButton: {
-    backgroundColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addRoomLinkText: {
-    color: '#2f6fed',
+    color: commonStyle.touchableColor,
     fontWeight: '600',
   },
   addRoomForm: {
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   },
   saveRoomButton: {
     flex: 1,
-    backgroundColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -344,8 +344,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   chipSelected: {
-    backgroundColor: '#2f6fed',
-    borderColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
+    borderColor: commonStyle.touchableColor,
   },
   chipText: {
     color: '#333',
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   removeRoomText: {
-    color: '#d32f2f',
+    color: commonStyle.negativeColor,
     fontSize: 13,
   },
   choreRow: {
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   completeButton: {
-    backgroundColor: '#2f6fed',
+    backgroundColor: commonStyle.touchableColor,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 8,

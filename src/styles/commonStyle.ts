@@ -6,11 +6,12 @@ export const colors = {
   negative: '#D9705B',
   gray: '#9A9A9A',
   white: '#F2F2F2',
+  black: '#333333',
   overlay: 'rgba(0, 0, 0, 0.4)',
 } as const;
 
 export const commonStyle = {
   defaultBackgroundColor: colors.default,
-  touchableColor: colors.blue,
+  touchableColor: "#2f6fed",
   negativeColor: colors.negative,
 } as const;
