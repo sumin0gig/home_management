@@ -1,25 +1,25 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import HomeScreen from './HomeScreen';
-import { useFamilyStore } from '../../store/useFamilyStore';
-import { listRoomsForFamily, createRoom, deleteRoom } from '../../api/room';
-import { listChoresForRoom, completeChore } from '../../api/chore';
-import { resetAllStores } from '../../test-utils/resetStores';
-import { createMockNavigation } from '../../test-utils/navigation';
-import type { FamilyRow } from '../../api/family';
-import type { RoomRow } from '../../api/room';
-import type { ChoreRow } from '../../api/chore';
+import HomeScreen from '../../../src/screens/home/HomeScreen';
+import { useFamilyStore } from '../../../src/store/useFamilyStore';
+import { listRoomsForFamily, createRoom, deleteRoom } from '../../../src/api/room';
+import { listChoresForRoom, completeChore } from '../../../src/api/chore';
+import { resetAllStores } from '../../../src/test-utils/resetStores';
+import { createMockNavigation } from '../../../src/test-utils/navigation';
+import type { FamilyRow } from '../../../src/api/family';
+import type { RoomRow } from '../../../src/api/room';
+import type { ChoreRow } from '../../../src/api/chore';
 
-jest.mock('../../api/family');
-jest.mock('../../api/room', () => ({
-  ...jest.requireActual('../../api/room'),
+jest.mock('../../../src/api/family');
+jest.mock('../../../src/api/room', () => ({
+  ...jest.requireActual('../../../src/api/room'),
   listRoomsForFamily: jest.fn(),
   createRoom: jest.fn(),
   deleteRoom: jest.fn(),
 }));
-jest.mock('../../api/chore', () => ({
-  ...jest.requireActual('../../api/chore'),
+jest.mock('../../../src/api/chore', () => ({
+  ...jest.requireActual('../../../src/api/chore'),
   listChoresForRoom: jest.fn(),
   completeChore: jest.fn(),
 }));

@@ -1,15 +1,15 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import RoomWaitingScreen from './RoomWaitingScreen';
-import { listRoomsForFamily } from '../../../../api/room';
-import { signOutUser } from '../../../../api/auth';
-import { useFamilyStore } from '../../../../store/useFamilyStore';
-import { resetAllStores } from '../../../../test-utils/resetStores';
-import type { FamilyRow } from '../../../../api/family';
+import RoomWaitingScreen from '../../../../../src/screens/family/components/RoomWaitingScreen/RoomWaitingScreen';
+import { listRoomsForFamily } from '../../../../../src/api/room';
+import { signOutUser } from '../../../../../src/api/auth';
+import { useFamilyStore } from '../../../../../src/store/useFamilyStore';
+import { resetAllStores } from '../../../../../src/test-utils/resetStores';
+import type { FamilyRow } from '../../../../../src/api/family';
 
-jest.mock('../../../../api/auth');
-jest.mock('../../../../api/room', () => ({
-  ...jest.requireActual('../../../../api/room'),
+jest.mock('../../../../../src/api/auth');
+jest.mock('../../../../../src/api/room', () => ({
+  ...jest.requireActual('../../../../../src/api/room'),
   listRoomsForFamily: jest.fn(),
 }));
 

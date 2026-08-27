@@ -1,11 +1,11 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import FamilyScreen from './FamilyScreen';
-import { useFamilyStore } from '../../store/useFamilyStore';
-import { resetAllStores } from '../../test-utils/resetStores';
-import type { FamilyRow, FamilyMemberRow } from '../../api/family';
+import FamilyScreen from '../../../src/screens/family/FamilyScreen';
+import { useFamilyStore } from '../../../src/store/useFamilyStore';
+import { resetAllStores } from '../../../src/test-utils/resetStores';
+import type { FamilyRow, FamilyMemberRow } from '../../../src/api/family';
 
-jest.mock('../../api/family');
+jest.mock('../../../src/api/family');
 
 const family: FamilyRow = {
   id: 'f1',

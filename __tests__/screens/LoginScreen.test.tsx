@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import LoginScreen from './LoginScreen';
-import { signInWithGoogle, getAuthErrorMessage } from '../api/auth';
+import LoginScreen from '../../src/screens/LoginScreen';
+import { signInWithGoogle, getAuthErrorMessage } from '../../src/api/auth';
 
-jest.mock('../api/auth');
+jest.mock('../../src/api/auth');
 
 const mockedSignInWithGoogle = signInWithGoogle as jest.Mock;
 const mockedGetAuthErrorMessage = getAuthErrorMessage as jest.Mock;

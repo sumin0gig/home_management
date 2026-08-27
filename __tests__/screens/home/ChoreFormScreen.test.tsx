@@ -1,17 +1,17 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import ChoreFormScreen from './ChoreFormScreen';
-import { useChoreStore } from '../../store/useChoreStore';
-import { useRoomStore } from '../../store/useRoomStore';
-import { createChore, updateChore, deleteChoreAndLogs, listChoreLogs } from '../../api/chore';
-import { resetAllStores } from '../../test-utils/resetStores';
-import { createMockNavigation } from '../../test-utils/navigation';
-import type { RoomRow } from '../../api/room';
-import type { ChoreRow, ChoreLogRow } from '../../api/chore';
+import ChoreFormScreen from '../../../src/screens/home/ChoreFormScreen';
+import { useChoreStore } from '../../../src/store/useChoreStore';
+import { useRoomStore } from '../../../src/store/useRoomStore';
+import { createChore, updateChore, deleteChoreAndLogs, listChoreLogs } from '../../../src/api/chore';
+import { resetAllStores } from '../../../src/test-utils/resetStores';
+import { createMockNavigation } from '../../../src/test-utils/navigation';
+import type { RoomRow } from '../../../src/api/room';
+import type { ChoreRow, ChoreLogRow } from '../../../src/api/chore';
 
-jest.mock('../../api/chore', () => ({
-  ...jest.requireActual('../../api/chore'),
+jest.mock('../../../src/api/chore', () => ({
+  ...jest.requireActual('../../../src/api/chore'),
   createChore: jest.fn(),
   updateChore: jest.fn(),
   deleteChoreAndLogs: jest.fn(),

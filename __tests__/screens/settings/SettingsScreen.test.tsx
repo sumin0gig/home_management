@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import SettingsScreen from './SettingsScreen';
-import { signOutUser, getAuthErrorMessage } from '../../api/auth';
+import SettingsScreen from '../../../src/screens/settings/SettingsScreen';
+import { signOutUser, getAuthErrorMessage } from '../../../src/api/auth';
 
-jest.mock('../../api/auth');
+jest.mock('../../../src/api/auth');
 
 const mockedSignOutUser = signOutUser as jest.Mock;
 const mockedGetAuthErrorMessage = getAuthErrorMessage as jest.Mock;
