@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useFamilyStore } from '../../../../store/useFamilyStore';
 import type { FamilyMemberRow } from '../../../../api/family';
+import { commonStyle } from '../../../../styles/commonStyle';
 
 function FamilyHome(): React.JSX.Element {
   const family = useFamilyStore(state => state.family);
@@ -150,6 +151,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+    backgroundColor: commonStyle.defaultBackgroundColor,
   },
   header: {
     marginBottom: 24,

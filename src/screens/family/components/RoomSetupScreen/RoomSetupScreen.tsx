@@ -14,6 +14,7 @@ import {
 } from '../../../../api/room';
 import RoomBlockTile, { type RoomBlock } from './RoomBlockTile';
 import CustomRoomModal from './CustomRoomModal';
+import { commonStyle } from '../../../../styles/commonStyle';
 
 function RoomSetupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -147,6 +148,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+    backgroundColor: commonStyle.defaultBackgroundColor,
   },
   logoutLink: {
     position: 'absolute',

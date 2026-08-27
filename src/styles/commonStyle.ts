@@ -7,5 +7,10 @@ export const colors = {
   gray: '#9A9A9A',
   white: '#F2F2F2',
   overlay: 'rgba(0, 0, 0, 0.4)',
-  modalBackground: '#FFFFFF',
+} as const;
+
+export const commonStyle = {
+  defaultBackgroundColor: colors.default,
+  touchableColor: colors.blue,
+  negativeColor: colors.negative,
 } as const;

@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   content: {
-    backgroundColor: colors.modalBackground,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 20,
   },

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { signInWithGoogle, getAuthErrorMessage } from '../api/auth';
+import { commonStyle } from '../styles/commonStyle';
 
 function LoginScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>(null);
@@ -34,6 +35,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    backgroundColor: commonStyle.defaultBackgroundColor,
   },
   title: {
     fontSize: 24,

@@ -21,6 +21,7 @@ import {
   type IntervalUnit,
 } from '../../api/chore';
 import { roomDisplayName } from '../../api/room';
+import { commonStyle } from '../../styles/commonStyle';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ChoreForm'>;
 
@@ -156,7 +157,7 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <Text style={styles.label}>방</Text>
@@ -276,6 +277,10 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: commonStyle.defaultBackgroundColor,
+  },
   container: {
     padding: 24,
   },

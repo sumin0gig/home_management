@@ -15,6 +15,7 @@ import { useFamilyStore } from '../../store/useFamilyStore';
 import { useChoreStore } from '../../store/useChoreStore';
 import { useRoomStore } from '../../store/useRoomStore';
 import { toDateString, type ChoreRow } from '../../api/chore';
+import { commonStyle } from '../../styles/commonStyle';
 import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
@@ -246,12 +247,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+    backgroundColor: commonStyle.defaultBackgroundColor,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    backgroundColor: commonStyle.defaultBackgroundColor,
   },
   emptyText: {
     fontSize: 15,

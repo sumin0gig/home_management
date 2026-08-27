@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { signOutUser, getAuthErrorMessage } from '../../api/auth';
+import { commonStyle } from '../../styles/commonStyle';
 
 function SettingsScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>(null);
@@ -29,6 +30,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+    backgroundColor: commonStyle.defaultBackgroundColor,
   },
   error: {
     color: '#d32f2f',
