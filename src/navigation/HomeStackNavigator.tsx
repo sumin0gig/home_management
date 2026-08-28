@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from './types';
 import HomeScreen from '../screens/home/HomeScreen';
+import RoomDetailScreen from '../screens/home/RoomDetailScreen';
 import ChoreFormScreen from '../screens/home/ChoreFormScreen';
 import { renderDrawerMenuButton } from './DrawerMenuButton';
 
@@ -15,6 +16,7 @@ function HomeStackNavigator(): React.JSX.Element {
         component={HomeScreen}
         options={{ title: '홈', headerLeft: renderDrawerMenuButton }}
       />
+      <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
       <Stack.Screen name="ChoreForm" component={ChoreFormScreen} />
     </Stack.Navigator>
   );

@@ -6,12 +6,12 @@ export const colors = {
   green: '#8ee0a1',
   teal: '#b2efed',
   blue: '#A9DDF2',
-  negative: '#D9705B',
   gray: '#9A9A9A',
   white: '#F2F2F2',
   black: '#333333',
   overlay: 'rgba(0, 0, 0, 0.4)',
-  touchable: '#2f6fed',
+  negative: '#D9705B',
+  touchable: '#F2BDA6'
 } as const;
 
 export const commonStyle = {} as const;

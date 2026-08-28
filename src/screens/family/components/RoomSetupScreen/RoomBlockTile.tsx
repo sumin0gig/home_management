@@ -20,25 +20,31 @@ export interface RoomBlock {
 
 interface Props {
   block: RoomBlock;
-  onRemove: () => void;
+  onRemove?: () => void;
+  onPress?: () => void;
+  hasDueToday?: boolean;
 }
 
-function RoomBlockTile({ block, onRemove }: Props): React.JSX.Element {
+function RoomBlockTile({ block, onRemove, onPress, hasDueToday }: Props): React.JSX.Element {
   const sizeIndex = ROOM_SIZES.indexOf(block.size);
 
   return (
-    <View
+    <Pressable
+      onPress={onPress}
       style={[
         styles.tile,
         { backgroundColor: getRoomColor(block.key), width: `${ROOM_SIZE_WIDTH_RATIO[block.size]}%` },
       ]}>
+      {hasDueToday ? <View style={styles.dueBadge} testID={`due-badge-${block.key}`} /> : null}
       <View style={styles.tileHeader}>
         <Text style={styles.tileTitle}>{block.label.trim() || ROOM_TYPE_LABELS[block.roomType]}</Text>
-        <Pressable onPress={onRemove}>
-          <Text style={styles.removeText}>✕</Text>
-        </Pressable>
+        {onRemove ? (
+          <Pressable onPress={onRemove}>
+            <Text style={styles.removeText}>✕</Text>
+          </Pressable>
+        ) : null}
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -47,6 +53,15 @@ const styles = StyleSheet.create({
     minWidth: '25%',
     borderRadius: 10,
     padding: 10,
+  },
+  dueBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.negative,
   },
   tileHeader: {
     flexDirection: 'row',

@@ -1,10 +1,9 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import HomeScreen from '../../../src/screens/home/HomeScreen';
 import { useFamilyStore } from '../../../src/store/useFamilyStore';
-import { listRoomsForFamily, createRoom, deleteRoom } from '../../../src/api/room';
-import { listChoresForRoom, completeChore } from '../../../src/api/chore';
+import { listRoomsForFamily, createRoom } from '../../../src/api/room';
+import { listChoresForRoom } from '../../../src/api/chore';
 import { resetAllStores } from '../../../src/test-utils/resetStores';
 import { createMockNavigation } from '../../../src/test-utils/navigation';
 import type { FamilyRow } from '../../../src/api/family';
@@ -16,19 +15,15 @@ jest.mock('../../../src/api/room', () => ({
   ...jest.requireActual('../../../src/api/room'),
   listRoomsForFamily: jest.fn(),
   createRoom: jest.fn(),
-  deleteRoom: jest.fn(),
 }));
 jest.mock('../../../src/api/chore', () => ({
   ...jest.requireActual('../../../src/api/chore'),
   listChoresForRoom: jest.fn(),
-  completeChore: jest.fn(),
 }));
 
 const mockedListRoomsForFamily = listRoomsForFamily as jest.Mock;
 const mockedCreateRoom = createRoom as jest.Mock;
-const mockedDeleteRoom = deleteRoom as jest.Mock;
 const mockedListChoresForRoom = listChoresForRoom as jest.Mock;
-const mockedCompleteChore = completeChore as jest.Mock;
 
 const family: FamilyRow = {
   id: 'f1',
@@ -51,10 +46,11 @@ const chore: ChoreRow = {
   nextDueDate: '2000-01-01',
 } as ChoreRow;
 
-function renderHomeScreen() {
-  return render(
-    <HomeScreen navigation={createMockNavigation()} route={{} as never} />,
-  );
+function renderHomeScreen(navigation = createMockNavigation<'HomeMain'>()) {
+  return {
+    ...render(<HomeScreen navigation={navigation} route={{} as never} />),
+    navigation,
+  };
 }
 
 describe('HomeScreen', () => {
@@ -63,28 +59,38 @@ describe('HomeScreen', () => {
     resetAllStores();
   });
 
-  test('방별로 집안일 목록을 그룹핑해서 보여준다', async () => {
+  test('방 목록을 타일로 보여주고, 오늘 해야 할 집안일이 있으면 표시를 남긴다', async () => {
     mockedListRoomsForFamily.mockResolvedValue([bedroom]);
     mockedListChoresForRoom.mockResolvedValue([chore]);
     useFamilyStore.setState({ status: 'joined', family });
 
-    const { getByText } = renderHomeScreen();
+    const { getByText, getByTestId } = renderHomeScreen();
 
-    await waitFor(() => expect(getByText('침구 햇빛살균')).toBeTruthy());
-    expect(getByText('침실')).toBeTruthy();
+    await waitFor(() => expect(getByText('침실')).toBeTruthy());
+    expect(getByTestId('due-badge-r1')).toBeTruthy();
   });
 
-  test('완료 버튼을 탭하면 completeChore를 호출한다', async () => {
+  test('오늘 해야 할 집안일이 없으면 표시를 남기지 않는다', async () => {
     mockedListRoomsForFamily.mockResolvedValue([bedroom]);
-    mockedListChoresForRoom.mockResolvedValue([chore]);
-    mockedCompleteChore.mockResolvedValue(undefined);
+    mockedListChoresForRoom.mockResolvedValue([]);
     useFamilyStore.setState({ status: 'joined', family });
 
-    const { getByText } = renderHomeScreen();
-    await waitFor(() => expect(getByText('완료')).toBeTruthy());
-    fireEvent.press(getByText('완료'));
+    const { getByText, queryByTestId } = renderHomeScreen();
 
-    await waitFor(() => expect(mockedCompleteChore).toHaveBeenCalledWith(chore));
+    await waitFor(() => expect(getByText('침실')).toBeTruthy());
+    expect(queryByTestId('due-badge-r1')).toBeNull();
+  });
+
+  test('방을 탭하면 RoomDetail로 이동한다', async () => {
+    mockedListRoomsForFamily.mockResolvedValue([bedroom]);
+    mockedListChoresForRoom.mockResolvedValue([]);
+    useFamilyStore.setState({ status: 'joined', family });
+
+    const { getByText, navigation } = renderHomeScreen();
+    await waitFor(() => expect(getByText('침실')).toBeTruthy());
+    fireEvent.press(getByText('침실'));
+
+    expect(navigation.navigate).toHaveBeenCalledWith('RoomDetail', { roomId: 'r1' });
   });
 
   test('+ 방 추가로 방을 만들면 createRoom을 호출한다', async () => {
@@ -101,24 +107,7 @@ describe('HomeScreen', () => {
     fireEvent.press(getByText('추가'));
 
     await waitFor(() =>
-      expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'BEDROOM', 'NORMAL', undefined),
+      expect(mockedCreateRoom).toHaveBeenCalledWith('f1', 'BEDROOM', 'BIG', undefined),
     );
-  });
-
-  test('방 삭제를 탭하면 확인 후 deleteRoom을 호출한다', async () => {
-    mockedListRoomsForFamily.mockResolvedValue([bedroom]);
-    mockedListChoresForRoom.mockResolvedValue([]);
-    mockedDeleteRoom.mockResolvedValue(undefined);
-    useFamilyStore.setState({ status: 'joined', family });
-    jest.spyOn(Alert, 'alert').mockImplementation((_t, _m, buttons) => {
-      buttons?.find(b => b.style === 'destructive')?.onPress?.();
-    });
-
-    const { getByText } = renderHomeScreen();
-    await waitFor(() => expect(getByText('삭제')).toBeTruthy());
-    fireEvent.press(getByText('삭제'));
-
-    await waitFor(() => expect(mockedDeleteRoom).toHaveBeenCalledWith('r1'));
-    jest.restoreAllMocks();
   });
 });

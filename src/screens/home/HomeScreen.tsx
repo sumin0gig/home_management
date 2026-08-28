@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,8 +13,9 @@ import type { HomeStackParamList } from '../../navigation/types';
 import { useFamilyStore } from '../../store/useFamilyStore';
 import { useChoreStore } from '../../store/useChoreStore';
 import { useRoomStore } from '../../store/useRoomStore';
-import { toDateString, type ChoreRow } from '../../api/chore';
+import { toDateString } from '../../api/chore';
 import { colors } from '../../styles/commonStyle';
+import RoomBlockTile from '../family/components/RoomSetupScreen/RoomBlockTile';
 import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
@@ -31,16 +31,6 @@ import {
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
 
-function formatDueLabel(nextDueDate: string, today: string): string {
-  if (nextDueDate < today) {
-    return '기한 지남';
-  }
-  if (nextDueDate === today) {
-    return '오늘';
-  }
-  return `예정 (${nextDueDate})`;
-}
-
 function HomeScreen({ navigation }: Props): React.JSX.Element {
   const family = useFamilyStore(state => state.family);
 
@@ -49,13 +39,11 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
   const roomError = useRoomStore(state => state.error);
   const fetchRooms = useRoomStore(state => state.fetchRooms);
   const addRoom = useRoomStore(state => state.addRoom);
-  const removeRoom = useRoomStore(state => state.removeRoom);
 
   const chores = useChoreStore(state => state.chores);
   const choreStatus = useChoreStore(state => state.status);
   const choreError = useChoreStore(state => state.error);
   const fetchChoresForFamily = useChoreStore(state => state.fetchChoresForFamily);
-  const completeChore = useChoreStore(state => state.completeChore);
 
   const [isAddingRoom, setIsAddingRoom] = React.useState(false);
   const [newRoomType, setNewRoomType] = React.useState<NonNullable<RoomType> | null>(null);
@@ -117,40 +105,13 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
     }
   };
 
-  const handleRemoveRoom = (room: RoomRow) => {
-    Alert.alert('방 삭제', `'${roomDisplayName(room)}'을(를) 삭제할까요? 방의 집안일도 함께 삭제됩니다.`, [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => removeRoom(room.id) },
-    ]);
-  };
-
-  const renderChore = (item: ChoreRow) => (
-    <View style={styles.choreRow} key={item.id}>
-      <Pressable
-        style={styles.choreInfo}
-        onPress={() => navigation.navigate('ChoreForm', { choreId: item.id })}>
-        <Text style={styles.choreTitle}>{item.title}</Text>
-        {item.description ? (
-          <Text style={styles.choreDescription}>{item.description}</Text>
-        ) : null}
-        <Text style={styles.choreDue}>{formatDueLabel(item.nextDueDate, today)}</Text>
-      </Pressable>
-      <Pressable style={styles.completeButton} onPress={() => completeChore(item)}>
-        <Text style={styles.completeButtonText}>완료</Text>
-      </Pressable>
-    </View>
-  );
+  const hasDueToday = (room: RoomRow): boolean =>
+    chores.some(c => c.roomId === room.id && c.nextDueDate <= today);
 
   return (
     <View style={styles.container}>
       {roomError ? <Text style={styles.error}>{roomError}</Text> : null}
       {choreError ? <Text style={styles.error}>{choreError}</Text> : null}
-
-      <Pressable
-        style={styles.addButton}
-        onPress={() => navigation.navigate('ChoreForm', undefined)}>
-        <Text style={styles.addButtonText}>+ 집안일 추가</Text>
-      </Pressable>
 
       {isAddingRoom ? (
         <View style={styles.addRoomForm}>
@@ -217,30 +178,23 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
         </Pressable>
       )}
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.roomGrid}>
         {sortedRooms.length === 0 ? (
           <Text style={styles.emptySection}>등록된 방이 없습니다. 방을 추가해주세요.</Text>
         ) : (
-          sortedRooms.map(room => {
-            const roomChores = chores
-              .filter(c => c.roomId === room.id)
-              .sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate));
-            return (
-              <View key={room.id} style={styles.roomSection}>
-                <View style={styles.roomSectionHeader}>
-                  <Text style={styles.roomSectionTitle}>{roomDisplayName(room)}</Text>
-                  <Pressable onPress={() => handleRemoveRoom(room)}>
-                    <Text style={styles.removeRoomText}>삭제</Text>
-                  </Pressable>
-                </View>
-                {roomChores.length === 0 ? (
-                  <Text style={styles.emptySection}>집안일이 없습니다.</Text>
-                ) : (
-                  roomChores.map(renderChore)
-                )}
-              </View>
-            );
-          })
+          sortedRooms.map(room => (
+            <RoomBlockTile
+              key={room.id}
+              block={{
+                key: room.id,
+                roomType: room.roomType ?? 'GENERAL_ROOM',
+                size: room.size ?? DEFAULT_ROOM_SIZE,
+                label: room.label ?? '',
+              }}
+              onPress={() => navigation.navigate('RoomDetail', { roomId: room.id })}
+              hasDueToday={hasDueToday(room)}
+            />
+          ))
         )}
       </ScrollView>
     </View>
@@ -274,13 +228,6 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
     marginBottom: 12,
     textAlign: 'center',
-  },
-  addButton: {
-    backgroundColor: colors.touchable,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
   },
   addButtonText: {
     color: '#fff',
@@ -358,62 +305,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  roomSection: {
-    marginBottom: 24,
-  },
-  roomSectionHeader: {
+  roomGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingBottom: 4,
-    borderBottomWidth: 2,
-    borderBottomColor: '#333',
-  },
-  roomSectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  removeRoomText: {
-    color: colors.negative,
-    fontSize: 13,
-  },
-  choreRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  choreInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  choreTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  choreDescription: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-  },
-  choreDue: {
-    fontSize: 12,
-    color: '#2f6fed',
-    marginTop: 4,
-    fontWeight: '600',
-  },
-  completeButton: {
-    backgroundColor: colors.touchable,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  completeButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    flexWrap: 'wrap',
+    gap: 8,
   },
 });
 

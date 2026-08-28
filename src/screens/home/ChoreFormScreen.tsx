@@ -48,7 +48,9 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
     [chores, choreId],
   );
 
-  const [roomId, setRoomId] = React.useState<string | null>(existingChore?.roomId ?? null);
+  const [roomId, setRoomId] = React.useState<string | null>(
+    existingChore?.roomId ?? route.params?.roomId ?? null,
+  );
   const [title, setTitle] = React.useState(existingChore?.title ?? '');
   const [description, setDescription] = React.useState(existingChore?.description ?? '');
   const [recurrenceType, setRecurrenceType] = React.useState<'INTERVAL' | 'YEARLY_MONTHS'>(
