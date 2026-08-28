@@ -8,7 +8,7 @@ import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   ROOM_SIZES,
-  DEFAULT_ROOM_SIZE,
+  ROOM_TYPE_DEFAULT_SIZE,
   type RoomType,
   type RoomSize,
 } from '../../../../api/room';
@@ -30,7 +30,12 @@ function RoomSetupScreen(): React.JSX.Element {
   const handleAddBlock = (roomType: NonNullable<RoomType>) => {
     setBlocks(prev => [
       ...prev,
-      { key: `${roomType}-${Date.now()}-${prev.length}`, roomType, size: DEFAULT_ROOM_SIZE, label: '' },
+      {
+        key: `${roomType}-${Date.now()}-${prev.length}`,
+        roomType,
+        size: ROOM_TYPE_DEFAULT_SIZE[roomType],
+        label: '',
+      },
     ]);
   };
 
@@ -117,8 +122,6 @@ function RoomSetupScreen(): React.JSX.Element {
               key={block.key}
               block={block}
               onRemove={() => handleRemoveBlock(block.key)}
-              onResize={direction => handleResizeBlock(block.key, direction)}
-              onLabelChange={label => handleLabelChange(block.key, label)}
             />
           ))
         )}

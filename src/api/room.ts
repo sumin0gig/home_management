@@ -32,6 +32,15 @@ export const ROOM_SIZES = Object.keys(ROOM_SIZE_LABELS) as Array<NonNullable<Roo
 
 export const DEFAULT_ROOM_SIZE: NonNullable<RoomSize> = 'NORMAL';
 
+export const ROOM_TYPE_DEFAULT_SIZE: Record<NonNullable<RoomType>, NonNullable<RoomSize>> = {
+  LIVING_ROOM: 'VERY_BIG',
+  BATHROOM: 'SMALL',
+  KITCHEN: 'BIG',
+  ENTRANCE: 'VERY_SMALL',
+  BEDROOM: 'BIG',
+  GENERAL_ROOM: 'NORMAL',
+};
+
 // 도면도 그리드에서 타일 너비 비율(%)로 쓰는 값. 합이 딱 100/50 등으로 안 떨어져도
 // flexWrap이 알아서 다음 줄로 넘겨주므로 상대적 크기감만 표현하면 된다.
 export const ROOM_SIZE_WIDTH_RATIO: Record<NonNullable<RoomSize>, number> = {

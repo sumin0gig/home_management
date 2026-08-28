@@ -20,11 +20,9 @@ export interface RoomBlock {
 interface Props {
   block: RoomBlock;
   onRemove: () => void;
-  onResize: (direction: -1 | 1) => void;
-  onLabelChange: (label: string) => void;
 }
 
-function RoomBlockTile({ block, onRemove, onResize, onLabelChange }: Props): React.JSX.Element {
+function RoomBlockTile({ block, onRemove }: Props): React.JSX.Element {
   const sizeIndex = ROOM_SIZES.indexOf(block.size);
 
   return (
@@ -35,34 +33,6 @@ function RoomBlockTile({ block, onRemove, onResize, onLabelChange }: Props): Rea
           <Text style={styles.removeText}>✕</Text>
         </Pressable>
       </View>
-
-      <View style={styles.sizeStepper}>
-        <Pressable onPress={() => onResize(-1)} disabled={sizeIndex === 0} hitSlop={8}>
-          <Text style={[styles.stepperArrow, sizeIndex === 0 && styles.stepperArrowDisabled]}>
-            ◀
-          </Text>
-        </Pressable>
-        <Text style={styles.sizeLabel}>{ROOM_SIZE_LABELS[block.size]}</Text>
-        <Pressable
-          onPress={() => onResize(1)}
-          disabled={sizeIndex === ROOM_SIZES.length - 1}
-          hitSlop={8}>
-          <Text
-            style={[
-              styles.stepperArrow,
-              sizeIndex === ROOM_SIZES.length - 1 && styles.stepperArrowDisabled,
-            ]}>
-            ▶
-          </Text>
-        </Pressable>
-      </View>
-
-      <TextInput
-        style={styles.labelInput}
-        placeholder="이름(선택, 예: 안방)"
-        value={block.label}
-        onChangeText={onLabelChange}
-      />
     </View>
   );
 }

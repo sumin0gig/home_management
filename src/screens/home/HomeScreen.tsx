@@ -22,6 +22,7 @@ import {
   ROOM_SIZES,
   ROOM_SIZE_LABELS,
   DEFAULT_ROOM_SIZE,
+  ROOM_TYPE_DEFAULT_SIZE,
   roomDisplayName,
   type RoomRow,
   type RoomType,
@@ -158,7 +159,10 @@ function HomeScreen({ navigation }: Props): React.JSX.Element {
               <Pressable
                 key={roomType}
                 style={[styles.chip, newRoomType === roomType && styles.chipSelected]}
-                onPress={() => setNewRoomType(roomType)}>
+                onPress={() => {
+                  setNewRoomType(roomType);
+                  setNewRoomSize(ROOM_TYPE_DEFAULT_SIZE[roomType]);
+                }}>
                 <Text
                   style={newRoomType === roomType ? styles.chipTextSelected : styles.chipText}>
                   {ROOM_TYPE_LABELS[roomType]}
