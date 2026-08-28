@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   addRoomLink: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     marginBottom: 20,
   },
   addRoomLinkText: {
