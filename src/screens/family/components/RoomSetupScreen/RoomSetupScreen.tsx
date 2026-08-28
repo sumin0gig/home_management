@@ -14,7 +14,7 @@ import {
 } from '../../../../api/room';
 import RoomBlockTile, { type RoomBlock } from './RoomBlockTile';
 import CustomRoomModal from './CustomRoomModal';
-import { colors } from '../../../../styles/commonStyle';
+import { commonColor } from '../../../../styles/commonStyle';
 
 function RoomSetupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   logoutLink: {
     position: 'absolute',
@@ -172,13 +172,13 @@ const styles = StyleSheet.create({
   },
   paletteChip: {
     borderWidth: 1,
-    borderColor: colors.touchable,
+    borderColor: commonColor.touchable,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 14,
   },
   paletteChipText: {
-    color: colors.touchable,
+    color: commonColor.touchable,
     fontWeight: '600',
   },
   customChip: {
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   submitButton: {
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',

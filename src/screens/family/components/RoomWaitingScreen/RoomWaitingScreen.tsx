@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFamilyStore } from '../../../../store/useFamilyStore';
 import { useRoomStore } from '../../../../store/useRoomStore';
 import { signOutUser } from '../../../../api/auth';
-import { colors } from '../../../../styles/commonStyle';
+import { commonColor } from '../../../../styles/commonStyle';
 
 function RoomWaitingScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   logoutLink: {
     position: 'absolute',
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   button: {
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 8,

@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFamilyStore } from '../../../../store/useFamilyStore';
 import { signOutUser } from '../../../../api/auth';
-import { colors } from '../../../../styles/commonStyle';
+import { commonColor } from '../../../../styles/commonStyle';
 
 function FamilyOnboarding(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   logoutLink: {
     position: 'absolute',
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useFamilyStore } from '../../../../store/useFamilyStore';
 import type { FamilyMemberRow } from '../../../../api/family';
-import { colors } from '../../../../styles/commonStyle';
+import { commonColor } from '../../../../styles/commonStyle';
 
 function FamilyHome(): React.JSX.Element {
   const family = useFamilyStore(state => state.family);
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   header: {
     marginBottom: 24,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   saveButton: {
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   removeText: {
-    color: colors.negative,
+    color: commonColor.negative,
     fontWeight: '600',
   },
   error: {
@@ -232,10 +232,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.negative,
+    borderColor: commonColor.negative,
   },
   leaveButtonText: {
-    color: colors.negative,
+    color: commonColor.negative,
     fontSize: 16,
     fontWeight: '600',
   },

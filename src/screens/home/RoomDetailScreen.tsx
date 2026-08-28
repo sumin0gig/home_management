@@ -6,7 +6,7 @@ import { useChoreStore } from '../../store/useChoreStore';
 import { useRoomStore } from '../../store/useRoomStore';
 import { toDateString, type ChoreRow } from '../../api/chore';
 import { roomDisplayName } from '../../api/room';
-import { colors } from '../../styles/commonStyle';
+import { commonColor } from '../../styles/commonStyle';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'RoomDetail'>;
 
@@ -88,14 +88,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   emptySection: {
     fontSize: 14,
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   addButton: {
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   completeButton: {
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 8,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { signOutUser, getAuthErrorMessage } from '../../api/auth';
-import { colors } from '../../styles/commonStyle';
+import { commonColor } from '../../styles/commonStyle';
 
 function SettingsScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>(null);
@@ -30,14 +30,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   error: {
     color: '#d32f2f',
     marginBottom: 12,
   },
   button: {
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,

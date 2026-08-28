@@ -14,7 +14,7 @@ import { useFamilyStore } from '../../store/useFamilyStore';
 import { useChoreStore } from '../../store/useChoreStore';
 import { useRoomStore } from '../../store/useRoomStore';
 import { toDateString } from '../../api/chore';
-import { colors } from '../../styles/commonStyle';
+import { commonColor } from '../../styles/commonStyle';
 import RoomBlockTile from '../family/components/RoomSetupScreen/RoomBlockTile';
 import {
   ROOM_TYPES,
@@ -205,14 +205,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: colors.default,
+    backgroundColor: commonColor.backgroundColor,
   },
   emptyText: {
     fontSize: 15,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addRoomLinkText: {
-    color: colors.touchable,
+    color: commonColor.touchable,
     fontWeight: '600',
   },
   addRoomForm: {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   saveRoomButton: {
     flex: 1,
-    backgroundColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -295,8 +295,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   chipSelected: {
-    backgroundColor: colors.touchable,
-    borderColor: colors.touchable,
+    backgroundColor: commonColor.touchable,
+    borderColor: commonColor.touchable,
   },
   chipText: {
     color: '#333',

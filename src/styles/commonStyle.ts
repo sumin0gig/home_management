@@ -7,11 +7,15 @@ export const colors = {
   teal: '#b2efed',
   blue: '#A9DDF2',
   gray: '#9A9A9A',
-  white: '#F2F2F2',
+  white: '#FAFAFA',
   black: '#333333',
+} as const;
+
+export const commonColor = {
   overlay: 'rgba(0, 0, 0, 0.4)',
   negative: '#D9705B',
-  touchable: '#F2BDA6'
+  touchable: '#F2BDA6',
+  backgroundColor: colors.white,
 } as const;
 
 export const commonStyle = {} as const;

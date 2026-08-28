@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
-import { colors } from '../../styles/commonStyle';
+import { colors, commonColor } from '../../styles/commonStyle';
 
 interface Props {
   visible: boolean;
@@ -21,7 +21,7 @@ function ModalView({ visible, onRequestClose, children }: Props): React.JSX.Elem
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: commonColor.overlay,
     justifyContent: 'center',
     padding: 24,
   },

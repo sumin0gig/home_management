@@ -8,7 +8,7 @@ import {
   type RoomType,
   type RoomSize,
 } from '../../../../api/room';
-import { colors } from '../../../../styles/commonStyle';
+import { commonColor } from '../../../../styles/commonStyle';
 import { getRoomColor } from '../../../../utils/commonUtils';
 
 export interface RoomBlock {
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.negative,
+    backgroundColor: commonColor.negative,
   },
   tileHeader: {
     flexDirection: 'row',
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   removeText: {
-    color: colors.negative,
+    color: commonColor.negative,
     fontWeight: '600',
   },
   sizeStepper: {
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   stepperArrow: {
-    color: colors.touchable,
+    color: commonColor.touchable,
     fontSize: 16,
     fontWeight: '700',
     paddingHorizontal: 6,
