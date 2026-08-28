@@ -21,7 +21,7 @@ import {
   type IntervalUnit,
 } from '../../api/chore';
 import { roomDisplayName } from '../../api/room';
-import { commonStyle } from '../../styles/commonStyle';
+import { colors } from '../../styles/commonStyle';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ChoreForm'>;
 
@@ -279,7 +279,7 @@ function ChoreFormScreen({ navigation, route }: Props): React.JSX.Element {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: commonStyle.defaultBackgroundColor,
+    backgroundColor: colors.default,
   },
   container: {
     padding: 24,
@@ -324,8 +324,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipSelected: {
-    backgroundColor: commonStyle.touchableColor,
-    borderColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
+    borderColor: colors.touchable,
   },
   chipText: {
     color: '#333',
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   saveButton: {
-    backgroundColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -357,10 +357,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
     borderWidth: 1,
-    borderColor: commonStyle.negativeColor,
+    borderColor: colors.negative,
   },
   deleteButtonText: {
-    color: commonStyle.negativeColor,
+    color: colors.negative,
     fontSize: 16,
     fontWeight: '600',
   },

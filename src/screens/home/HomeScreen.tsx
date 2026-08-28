@@ -15,7 +15,7 @@ import { useFamilyStore } from '../../store/useFamilyStore';
 import { useChoreStore } from '../../store/useChoreStore';
 import { useRoomStore } from '../../store/useRoomStore';
 import { toDateString, type ChoreRow } from '../../api/chore';
-import { commonStyle } from '../../styles/commonStyle';
+import { colors } from '../../styles/commonStyle';
 import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
@@ -251,14 +251,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: commonStyle.defaultBackgroundColor,
+    backgroundColor: colors.default,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: commonStyle.defaultBackgroundColor,
+    backgroundColor: colors.default,
   },
   emptyText: {
     fontSize: 15,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   addButton: {
-    backgroundColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addRoomLinkText: {
-    color: commonStyle.touchableColor,
+    color: colors.touchable,
     fontWeight: '600',
   },
   addRoomForm: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   saveRoomButton: {
     flex: 1,
-    backgroundColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
@@ -348,8 +348,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   chipSelected: {
-    backgroundColor: commonStyle.touchableColor,
-    borderColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
+    borderColor: colors.touchable,
   },
   chipText: {
     color: '#333',
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   removeRoomText: {
-    color: commonStyle.negativeColor,
+    color: colors.negative,
     fontSize: 13,
   },
   choreRow: {
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   completeButton: {
-    backgroundColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 8,

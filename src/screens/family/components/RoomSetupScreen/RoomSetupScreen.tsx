@@ -14,7 +14,7 @@ import {
 } from '../../../../api/room';
 import RoomBlockTile, { type RoomBlock } from './RoomBlockTile';
 import CustomRoomModal from './CustomRoomModal';
-import { commonStyle } from '../../../../styles/commonStyle';
+import { colors } from '../../../../styles/commonStyle';
 
 function RoomSetupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -49,23 +49,6 @@ function RoomSetupScreen(): React.JSX.Element {
 
   const handleRemoveBlock = (key: string) => {
     setBlocks(prev => prev.filter(b => b.key !== key));
-  };
-
-  const handleResizeBlock = (key: string, direction: -1 | 1) => {
-    setBlocks(prev =>
-      prev.map(b => {
-        if (b.key !== key) {
-          return b;
-        }
-        const currentIndex = ROOM_SIZES.indexOf(b.size);
-        const nextIndex = Math.min(Math.max(currentIndex + direction, 0), ROOM_SIZES.length - 1);
-        return { ...b, size: ROOM_SIZES[nextIndex] };
-      }),
-    );
-  };
-
-  const handleLabelChange = (key: string, label: string) => {
-    setBlocks(prev => prev.map(b => (b.key === key ? { ...b, label } : b)));
   };
 
   const handleSubmit = async () => {
@@ -104,7 +87,11 @@ function RoomSetupScreen(): React.JSX.Element {
 
       <View style={styles.paletteRow}>
         {ROOM_TYPES.map(roomType => (
-          <Pressable key={roomType} style={styles.paletteChip} onPress={() => handleAddBlock(roomType)}>
+          <Pressable
+            key={ roomType }
+            style={ styles.paletteChip }
+            onPress={ () => handleAddBlock( roomType ) }
+          >
             <Text style={styles.paletteChipText}>+ {ROOM_TYPE_LABELS[roomType]}</Text>
           </Pressable>
         ))}
@@ -151,7 +138,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: commonStyle.defaultBackgroundColor,
+    backgroundColor: colors.default,
   },
   logoutLink: {
     position: 'absolute',
@@ -185,13 +172,13 @@ const styles = StyleSheet.create({
   },
   paletteChip: {
     borderWidth: 1,
-    borderColor: commonStyle.touchableColor,
+    borderColor: colors.touchable,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 14,
   },
   paletteChipText: {
-    color: commonStyle.touchableColor,
+    color: colors.touchable,
     fontWeight: '600',
   },
   customChip: {
@@ -225,7 +212,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   submitButton: {
-    backgroundColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',

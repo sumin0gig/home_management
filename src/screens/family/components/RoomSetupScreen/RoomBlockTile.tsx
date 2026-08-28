@@ -8,7 +8,8 @@ import {
   type RoomType,
   type RoomSize,
 } from '../../../../api/room';
-import { commonStyle } from '../../../../styles/commonStyle';
+import { colors } from '../../../../styles/commonStyle';
+import { getRoomColor } from '../../../../utils/commonUtils';
 
 export interface RoomBlock {
   key: string;
@@ -26,7 +27,11 @@ function RoomBlockTile({ block, onRemove }: Props): React.JSX.Element {
   const sizeIndex = ROOM_SIZES.indexOf(block.size);
 
   return (
-    <View style={[styles.tile, { width: `${ROOM_SIZE_WIDTH_RATIO[block.size]}%` }]}>
+    <View
+      style={[
+        styles.tile,
+        { backgroundColor: getRoomColor(block.key), width: `${ROOM_SIZE_WIDTH_RATIO[block.size]}%` },
+      ]}>
       <View style={styles.tileHeader}>
         <Text style={styles.tileTitle}>{block.label.trim() || ROOM_TYPE_LABELS[block.roomType]}</Text>
         <Pressable onPress={onRemove}>
@@ -40,10 +45,7 @@ function RoomBlockTile({ block, onRemove }: Props): React.JSX.Element {
 const styles = StyleSheet.create({
   tile: {
     minWidth: '25%',
-    borderWidth: 1,
-    borderColor: '#2f6fed',
     borderRadius: 10,
-    backgroundColor: '#eaf1ff',
     padding: 10,
   },
   tileHeader: {
@@ -57,7 +59,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   removeText: {
-    color: commonStyle.negativeColor,
+    color: colors.negative,
     fontWeight: '600',
   },
   sizeStepper: {
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   stepperArrow: {
-    color: commonStyle.touchableColor,
+    color: colors.touchable,
     fontSize: 16,
     fontWeight: '700',
     paddingHorizontal: 6,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { signInWithGoogle, getAuthErrorMessage } from '../api/auth';
-import { commonStyle } from '../styles/commonStyle';
+import { colors } from '../styles/commonStyle';
 
 function LoginScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>(null);
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: commonStyle.defaultBackgroundColor,
+    backgroundColor: colors.default,
   },
   title: {
     fontSize: 24,
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   button: {
-    backgroundColor: commonStyle.touchableColor,
+    backgroundColor: colors.touchable,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
