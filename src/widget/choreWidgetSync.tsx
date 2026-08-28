@@ -28,7 +28,7 @@ export function getTopChores(
   chores: ChoreRow[],
   limit = WIDGET_TOP_CHORES_LIMIT,
 ): WidgetChoreItem[] {
-  const today = toDateString(new Date());
+  const today = toDateString( new Date() );
   return [...chores]
     .sort((a, b) => a.nextDueDate.localeCompare(b.nextDueDate))
     .slice(0, limit)
@@ -43,8 +43,11 @@ export function getTopChores(
 // process), so the app pushes the current top chores into shared storage
 // whenever they change, and the widget just renders the last snapshot.
 export async function syncChoreWidget(chores: ChoreRow[]): Promise<void> {
-  const topChores = getTopChores(chores);
-  await AsyncStorage.setItem(WIDGET_TOP_CHORES_STORAGE_KEY, JSON.stringify(topChores));
+  const topChores = getTopChores( chores );
+  await AsyncStorage.setItem(
+    WIDGET_TOP_CHORES_STORAGE_KEY,
+    JSON.stringify(topChores),
+  );
 
   if (Platform.OS === 'android') {
     await requestWidgetUpdate({

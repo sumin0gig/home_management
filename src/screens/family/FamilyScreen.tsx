@@ -1,5 +1,5 @@
-import React from 'react';
-import FamilyHome from './components/FamilyHome/FamilyHome';
+import React from "react";
+import FamilyHome from "../../components/FamilyHome/FamilyHome";
 
 function FamilyScreen(): React.JSX.Element {
   return <FamilyHome />;

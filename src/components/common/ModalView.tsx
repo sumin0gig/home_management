@@ -1,6 +1,6 @@
-import React from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
-import { colors, commonColor } from '../../styles/commonStyle';
+import React from "react";
+import { Modal, StyleSheet, View } from "react-native";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 interface Props {
   visible: boolean;
@@ -8,21 +8,30 @@ interface Props {
   children: React.ReactNode;
 }
 
-function ModalView({ visible, onRequestClose, children }: Props): React.JSX.Element {
+function ModalView( {
+  visible,
+  onRequestClose,
+  children,
+}: Props ): React.JSX.Element {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onRequestClose}>
-      <View style={styles.overlay}>
-        <View style={styles.content}>{children}</View>
+    <Modal
+      visible={ visible }
+      transparent
+      animationType="fade"
+      onRequestClose={ onRequestClose }
+    >
+      <View style={ styles.overlay }>
+        <View style={ styles.content }> { children } </View>
       </View>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create( {
   overlay: {
     flex: 1,
     backgroundColor: commonColor.overlay,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 24,
   },
   content: {
@@ -30,6 +39,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
   },
-});
+} );
 
 export default ModalView;

@@ -9,5 +9,5 @@ function hashRoomId(id: string): number {
 }
 
 export function getRoomColor(id: string): string {
-  return ROOM_COLOR_PALETTE[ hashRoomId(id) % ROOM_COLOR_PALETTE.length ];
+  return ROOM_COLOR_PALETTE[hashRoomId(id) % ROOM_COLOR_PALETTE.length];
 }

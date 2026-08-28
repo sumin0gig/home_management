@@ -10,9 +10,8 @@ export type RoomType = ChoreTemplateRow['roomType'];
 export async function listChoreTemplatesForRoomType(
   roomType: NonNullable<RoomType>,
 ): Promise<ChoreTemplateRow[]> {
-  const { data: templates, errors } = await client.models.ChoreTemplate.listChoreTemplateByRoomType(
-    { roomType },
-  );
+  const { data: templates, errors } =
+    await client.models.ChoreTemplate.listChoreTemplateByRoomType({ roomType });
   throwIfErrors(errors, '집안일 템플릿을 불러오지 못했습니다.');
   return templates;
 }

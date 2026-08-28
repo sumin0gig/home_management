@@ -19,7 +19,11 @@ interface ChoreState {
   error: string | null;
   fetchChoresForFamily: (familyId: string) => Promise<void>;
   createChore: (roomId: string, input: ChoreInput) => Promise<void>;
-  updateChore: (choreId: string, input: ChoreInput, roomId?: string) => Promise<void>;
+  updateChore: (
+    choreId: string,
+    input: ChoreInput,
+    roomId?: string,
+  ) => Promise<void>;
   deleteChore: (choreId: string) => Promise<void>;
   completeChore: (chore: ChoreRow) => Promise<void>;
   reset: () => void;
@@ -39,7 +43,9 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
     set({ status: 'loading', error: null, currentFamilyId: familyId });
     try {
       const rooms = await listRoomsForFamily(familyId);
-      const choresByRoom = await Promise.all(rooms.map(room => listChoresForRoom(room.id)));
+      const choresByRoom = await Promise.all(
+        rooms.map(room => listChoresForRoom(room.id)),
+      );
       set({ status: 'loaded', chores: choresByRoom.flat() });
     } catch (err) {
       set({ status: 'loaded', error: (err as Error).message });

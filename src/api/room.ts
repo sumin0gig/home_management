@@ -1,6 +1,11 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
-import { throwIfErrors, toDateString, listAllChoresForRoom, deleteChoreAndLogs } from './chore';
+import {
+  throwIfErrors,
+  toDateString,
+  listAllChoresForRoom,
+  deleteChoreAndLogs,
+} from './chore';
 import { listChoreTemplatesForRoomType } from './choreTemplate';
 
 const client = generateClient<Schema>();
@@ -18,7 +23,9 @@ export const ROOM_TYPE_LABELS: Record<NonNullable<RoomType>, string> = {
   GENERAL_ROOM: '방',
 };
 
-export const ROOM_TYPES = Object.keys(ROOM_TYPE_LABELS) as Array<NonNullable<RoomType>>;
+export const ROOM_TYPES = Object.keys(ROOM_TYPE_LABELS) as Array<
+  NonNullable<RoomType>
+>;
 
 export const ROOM_SIZE_LABELS: Record<NonNullable<RoomSize>, string> = {
   VERY_SMALL: '매우 작음',
@@ -28,11 +35,16 @@ export const ROOM_SIZE_LABELS: Record<NonNullable<RoomSize>, string> = {
   VERY_BIG: '매우 큼',
 };
 
-export const ROOM_SIZES = Object.keys(ROOM_SIZE_LABELS) as Array<NonNullable<RoomSize>>;
+export const ROOM_SIZES = Object.keys(ROOM_SIZE_LABELS) as Array<
+  NonNullable<RoomSize>
+>;
 
 export const DEFAULT_ROOM_SIZE: NonNullable<RoomSize> = 'NORMAL';
 
-export const ROOM_TYPE_DEFAULT_SIZE: Record<NonNullable<RoomType>, NonNullable<RoomSize>> = {
+export const ROOM_TYPE_DEFAULT_SIZE: Record<
+  NonNullable<RoomType>,
+  NonNullable<RoomSize>
+> = {
   LIVING_ROOM: 'VERY_BIG',
   BATHROOM: 'SMALL',
   KITCHEN: 'BIG',
@@ -59,7 +71,9 @@ export function roomDisplayName(room: RoomRow): string {
 }
 
 export async function listRoomsForFamily(familyId: string): Promise<RoomRow[]> {
-  const { data: rooms, errors } = await client.models.Room.listRoomByFamilyId({ familyId });
+  const { data: rooms, errors } = await client.models.Room.listRoomByFamilyId({
+    familyId,
+  });
   throwIfErrors(errors, '방 목록을 불러오지 못했습니다.');
   return rooms;
 }
@@ -72,7 +86,10 @@ async function listAllRoomsForFamily(familyId: string): Promise<RoomRow[]> {
       data,
       nextToken: token,
       errors,
-    } = await client.models.Room.listRoomByFamilyId({ familyId }, { nextToken });
+    } = await client.models.Room.listRoomByFamilyId(
+      { familyId },
+      { nextToken },
+    );
     throwIfErrors(errors, '방 목록을 불러오지 못했습니다.');
     results.push(...data);
     nextToken = token;

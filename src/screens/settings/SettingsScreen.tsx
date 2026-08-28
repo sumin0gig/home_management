@@ -1,39 +1,43 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { signOutUser, getAuthErrorMessage } from '../../api/auth';
-import { commonColor } from '../../styles/commonStyle';
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { signOutUser, getAuthErrorMessage } from "../../api/auth";
+import { commonColor } from "../../styles/commonStyle";
 
 function SettingsScreen(): React.JSX.Element {
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>( null );
 
   const handleSignOut = async () => {
     try {
       await signOutUser();
     } catch (err) {
-      setError(getAuthErrorMessage(err));
+      setError( getAuthErrorMessage( err ) );
     }
   };
 
   return (
-    <View style={styles.container}>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Pressable style={styles.button} onPress={handleSignOut}>
-        <Text style={styles.buttonText}>로그아웃</Text>
+    <View style={ styles.container }>
+      {
+        error
+        ? <Text style={ styles.error }> { error } </Text>
+        : null
+      }
+      <Pressable style={ styles.button } onPress={ handleSignOut }>
+        <Text style={ styles.buttonText }> 로그아웃 </Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create( {
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
     backgroundColor: commonColor.backgroundColor,
   },
   error: {
-    color: '#d32f2f',
+    color: "#d32f2f",
     marginBottom: 12,
   },
   button: {
@@ -43,10 +47,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-});
+} );
 
 export default SettingsScreen;
