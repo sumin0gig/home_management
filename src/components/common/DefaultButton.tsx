@@ -16,12 +16,12 @@ interface Props {
   textStyle?: StyleProp<TextStyle>;
 }
 
-function DefaultButton( {
+const DefaultButton = ( {
   text,
   onPress,
   style,
   textStyle,
-}: Props ): React.JSX.Element {
+}: Props ): React.JSX.Element => {
   return (
     <Pressable style={ [styles.button, style] } onPress={ onPress }>
       <Text style={ [styles.text, textStyle] }> { text } </Text>
