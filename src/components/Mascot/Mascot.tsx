@@ -1,15 +1,9 @@
 import React, { useEffect } from "react";
-import Animated, {
-  Easing,
-  useAnimatedProps,
-  useSharedValue,
-  withDelay,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedProps } from "react-native-reanimated";
 import Svg, { G } from "react-native-svg";
 import { colors } from "../../styles/commonStyle";
-import { useIdleAnimations } from "./animations/useIdleAnimations";
+import { ACTIONS } from "./actions";
+import { useMascotSharedValues } from "./animations/useMascotSharedValues";
 import Body from "./parts/Body";
 import Eye from "./parts/Eye";
 import Face from "./parts/Face";
@@ -43,80 +37,55 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   const TailComponent = TAIL_VARIANTS[config.tailStyle];
   const tailPivot = TAIL_PIVOTS[config.tailStyle];
 
-  const idle = useIdleAnimations();
-
-  const jumpY = useSharedValue( 0 );
-  const squashX = useSharedValue( 1 );
-  const squashY = useSharedValue( 1 );
-
-  const triggerJump = () => {
-    squashX.value = withSequence(
-      withTiming( 1.15, { duration: 90 } ),
-      withTiming( 0.92, { duration: 160 } ),
-      withTiming( 1.12, { duration: 100 } ),
-      withTiming( 1, { duration: 140 } ),
-    );
-    squashY.value = withSequence(
-      withTiming( 0.85, { duration: 90 } ),
-      withTiming( 1.08, { duration: 160 } ),
-      withTiming( 0.88, { duration: 100 } ),
-      withTiming( 1, { duration: 140 } ),
-    );
-    jumpY.value = withSequence(
-      withDelay(
-        90,
-        withTiming( -34, { duration: 160, easing: Easing.out( Easing.quad ) } ),
-      ),
-      withTiming( 0, { duration: 160, easing: Easing.in( Easing.quad ) } ),
-    );
-  };
+  const values = useMascotSharedValues();
 
   useEffect( () => {
-    if (action === "jump") {
-      triggerJump();
-    }
+    ACTIONS[action]( values );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action] );
 
   const rootAnimatedProps = useAnimatedProps( () => ({
-    y: jumpY.value,
-    transform: [{ scaleX: squashX.value }, { scaleY: squashY.value }],
+    y: values.jumpY.value,
+    transform: [
+      { scaleX: values.squashX.value },
+      { scaleY: values.squashY.value },
+    ],
   }) );
 
   const headAnimatedProps = useAnimatedProps( () => ({
-    y: HEAD_BASE_Y + idle.headBob.value,
+    y: HEAD_BASE_Y + values.headBob.value,
   }) );
 
   const bodyAnimatedProps = useAnimatedProps( () => ({
-    transform: [{ scaleY: idle.bodyBreath.value }],
+    transform: [{ scaleY: values.bodyBreath.value }],
   }) );
 
   const earLAnimatedProps = useAnimatedProps( () => ({
-    rotation: idle.earLTwitch.value,
+    rotation: values.earLTwitch.value,
   }) );
 
   const earRAnimatedProps = useAnimatedProps( () => ({
-    rotation: idle.earRTwitch.value,
+    rotation: values.earRTwitch.value,
   }) );
 
   const eyeLAnimatedProps = useAnimatedProps( () => ({
-    ry: idle.eyeLBlink.value,
+    ry: values.eyeLBlink.value,
   }) );
 
   const eyeRAnimatedProps = useAnimatedProps( () => ({
-    ry: idle.eyeRBlink.value,
+    ry: values.eyeRBlink.value,
   }) );
 
   const tailAnimatedProps = useAnimatedProps( () => ({
-    rotation: idle.tailWag.value,
+    rotation: values.tailWag.value,
   }) );
 
   const frontLegsAnimatedProps = useAnimatedProps( () => ({
-    y: FRONT_LEG_Y + idle.frontLegsBounce.value,
+    y: FRONT_LEG_Y + values.frontLegsBounce.value,
   }) );
 
   const backLegsAnimatedProps = useAnimatedProps( () => ({
-    y: BACK_LEG_Y + idle.backLegsBounce.value,
+    y: BACK_LEG_Y + values.backLegsBounce.value,
   }) );
 
   return (
