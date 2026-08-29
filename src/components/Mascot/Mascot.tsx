@@ -14,6 +14,8 @@ import { TAIL_PIVOTS, TAIL_VARIANTS } from "./variants/tails";
 
 const AnimatedG = Animated.createAnimatedComponent( G );
 
+const DEFAULT_ACTION: MascotAction = "idle";
+
 const HEAD_BASE_Y = 70;
 const EAR_BOX = { width: 34, height: 46 };
 const EAR_L_ORIGIN = { x: -40, y: -63 };
@@ -46,7 +48,7 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
       return;
     }
     const timer = setTimeout( () => {
-      ACTIONS.idle.run( values );
+      ACTIONS[DEFAULT_ACTION].run( values );
     }, duration );
     return () => clearTimeout( timer );
     // eslint-disable-next-line react-hooks/exhaustive-deps
