@@ -63,5 +63,10 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "overrides": {
+    "@babel/types": "7.25.6",
+    "@babel/traverse": "7.25.6",
+    "@babel/generator": "7.25.6"
   }
 }
