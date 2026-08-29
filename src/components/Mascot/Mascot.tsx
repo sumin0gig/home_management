@@ -1,5 +1,4 @@
-import React from "react";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import React, { useEffect } from "react";
 import Animated, {
   Easing,
   useAnimatedProps,
@@ -15,7 +14,7 @@ import Body from "./parts/Body";
 import Eye from "./parts/Eye";
 import Face from "./parts/Face";
 import Leg from "./parts/Leg";
-import type { MascotConfig } from "./types";
+import type { MascotAction, MascotConfig } from "./types";
 import { EAR_PIVOTS, EAR_VARIANTS } from "./variants/ears";
 import { TAIL_PIVOTS, TAIL_VARIANTS } from "./variants/tails";
 
@@ -33,10 +32,11 @@ const ROOT_PIVOT = { x: 100, y: 210 };
 
 interface Props {
   config: MascotConfig;
+  action: MascotAction;
   size?: number;
 }
 
-const Mascot = ({ config, size = 200 }: Props): React.JSX.Element => {
+const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   const fill = config.fillColor ?? colors.yellow;
   const EarComponent = EAR_VARIANTS[config.earStyle];
   const earPivot = EAR_PIVOTS[config.earStyle];
@@ -71,9 +71,12 @@ const Mascot = ({ config, size = 200 }: Props): React.JSX.Element => {
     );
   };
 
-  const tapGesture = Gesture.Tap().onEnd( () => {
-    triggerJump();
-  } );
+  useEffect( () => {
+    if (action === "jump") {
+      triggerJump();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [action] );
 
   const rootAnimatedProps = useAnimatedProps( () => ({
     y: jumpY.value,
@@ -117,101 +120,99 @@ const Mascot = ({ config, size = 200 }: Props): React.JSX.Element => {
   }) );
 
   return (
-    <GestureDetector gesture={ tapGesture }>
-      <Svg width={ size } height={ size * 1.1 } viewBox="0 0 200 220">
-        <AnimatedG
-          origin={ `${ROOT_PIVOT.x}, ${ROOT_PIVOT.y}` }
-          animatedProps={ rootAnimatedProps }
-        >
-          <Leg
-            x={ 45 }
-            y={ BACK_LEG_Y }
-            width={ 18 }
-            height={ 30 }
-            fill={ fill }
-            animatedProps={ backLegsAnimatedProps }
-          />
-          <Leg
-            x={ 137 }
-            y={ BACK_LEG_Y }
-            width={ 18 }
-            height={ 30 }
-            fill={ fill }
-            animatedProps={ backLegsAnimatedProps }
-          />
-          <G x={ TAIL_ATTACH.x } y={ TAIL_ATTACH.y - tailPivot.y }>
-            <AnimatedG
-              origin={ `${tailPivot.x}, ${tailPivot.y}` }
-              animatedProps={ tailAnimatedProps }
-            >
-              <TailComponent
-                width={ TAIL_BOX.width }
-                height={ TAIL_BOX.height }
-                fill={ fill }
-              />
-            </AnimatedG>
-          </G>
-          <Body fill={ fill } animatedProps={ bodyAnimatedProps } />
-          <Leg
-            x={ 62 }
-            y={ FRONT_LEG_Y }
-            width={ 20 }
-            height={ 32 }
-            fill={ fill }
-            animatedProps={ frontLegsAnimatedProps }
-          />
-          <Leg
-            x={ 118 }
-            y={ FRONT_LEG_Y }
-            width={ 20 }
-            height={ 32 }
-            fill={ fill }
-            animatedProps={ frontLegsAnimatedProps }
-          />
-          <G x={ 100 }>
-            <AnimatedG animatedProps={ headAnimatedProps }>
-              <G x={ EAR_L_ORIGIN.x } y={ EAR_L_ORIGIN.y }>
-                <AnimatedG
-                  origin={ `${earPivot.x}, ${earPivot.y}` }
-                  animatedProps={ earLAnimatedProps }
-                >
-                  <EarComponent
-                    width={ EAR_BOX.width }
-                    height={ EAR_BOX.height }
-                    fill={ fill }
-                  />
-                </AnimatedG>
-              </G>
-              <G x={ EAR_R_ORIGIN.x } y={ EAR_R_ORIGIN.y }>
-                <AnimatedG
-                  origin={ `${earPivot.x}, ${earPivot.y}` }
-                  animatedProps={ earRAnimatedProps }
-                >
-                  <EarComponent
-                    width={ EAR_BOX.width }
-                    height={ EAR_BOX.height }
-                    fill={ fill }
-                  />
-                </AnimatedG>
-              </G>
-              <Face fill={ fill } />
-              <Eye
-                cx={ -15 }
-                cy={ -3 }
-                fill={ colors.black }
-                animatedProps={ eyeLAnimatedProps }
-              />
-              <Eye
-                cx={ 15 }
-                cy={ -3 }
-                fill={ colors.black }
-                animatedProps={ eyeRAnimatedProps }
-              />
-            </AnimatedG>
-          </G>
-        </AnimatedG>
-      </Svg>
-    </GestureDetector>
+    <Svg width={ size } height={ size * 1.1 } viewBox="0 0 200 220">
+      <AnimatedG
+        origin={ `${ROOT_PIVOT.x}, ${ROOT_PIVOT.y}` }
+        animatedProps={ rootAnimatedProps }
+      >
+        <Leg
+          x={ 45 }
+          y={ BACK_LEG_Y }
+          width={ 18 }
+          height={ 30 }
+          fill={ fill }
+          animatedProps={ backLegsAnimatedProps }
+        />
+        <Leg
+          x={ 137 }
+          y={ BACK_LEG_Y }
+          width={ 18 }
+          height={ 30 }
+          fill={ fill }
+          animatedProps={ backLegsAnimatedProps }
+        />
+        <G x={ TAIL_ATTACH.x } y={ TAIL_ATTACH.y - tailPivot.y }>
+          <AnimatedG
+            origin={ `${tailPivot.x}, ${tailPivot.y}` }
+            animatedProps={ tailAnimatedProps }
+          >
+            <TailComponent
+              width={ TAIL_BOX.width }
+              height={ TAIL_BOX.height }
+              fill={ fill }
+            />
+          </AnimatedG>
+        </G>
+        <Body fill={ fill } animatedProps={ bodyAnimatedProps } />
+        <Leg
+          x={ 62 }
+          y={ FRONT_LEG_Y }
+          width={ 20 }
+          height={ 32 }
+          fill={ fill }
+          animatedProps={ frontLegsAnimatedProps }
+        />
+        <Leg
+          x={ 118 }
+          y={ FRONT_LEG_Y }
+          width={ 20 }
+          height={ 32 }
+          fill={ fill }
+          animatedProps={ frontLegsAnimatedProps }
+        />
+        <G x={ 100 }>
+          <AnimatedG animatedProps={ headAnimatedProps }>
+            <G x={ EAR_L_ORIGIN.x } y={ EAR_L_ORIGIN.y }>
+              <AnimatedG
+                origin={ `${earPivot.x}, ${earPivot.y}` }
+                animatedProps={ earLAnimatedProps }
+              >
+                <EarComponent
+                  width={ EAR_BOX.width }
+                  height={ EAR_BOX.height }
+                  fill={ fill }
+                />
+              </AnimatedG>
+            </G>
+            <G x={ EAR_R_ORIGIN.x } y={ EAR_R_ORIGIN.y }>
+              <AnimatedG
+                origin={ `${earPivot.x}, ${earPivot.y}` }
+                animatedProps={ earRAnimatedProps }
+              >
+                <EarComponent
+                  width={ EAR_BOX.width }
+                  height={ EAR_BOX.height }
+                  fill={ fill }
+                />
+              </AnimatedG>
+            </G>
+            <Face fill={ fill } />
+            <Eye
+              cx={ -15 }
+              cy={ -3 }
+              fill={ colors.black }
+              animatedProps={ eyeLAnimatedProps }
+            />
+            <Eye
+              cx={ 15 }
+              cy={ -3 }
+              fill={ colors.black }
+              animatedProps={ eyeRAnimatedProps }
+            />
+          </AnimatedG>
+        </G>
+      </AnimatedG>
+    </Svg>
   );
 };
 

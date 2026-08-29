@@ -22,3 +22,5 @@ export interface MascotConfig {
   tailStyle: TailVariant;
   fillColor?: string;
 }
+
+export type MascotAction = "idle" | "jump";
