@@ -14,6 +14,7 @@ import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString, type ChoreRow } from "../../api/chore";
 import { roomDisplayName } from "../../api/room";
 import { commonColor } from "../../styles/commonStyle";
+import Button from "../../components/common/Button";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "RoomDetail">;
 
@@ -61,12 +62,12 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
           { formatDueLabel( item.nextDueDate, today ) }
         </Text>
       </Pressable>
-      <Pressable
-        style={ styles.completeButton }
+      <Button
+        text="완료"
         onPress={ () => completeChore( item ) }
-      >
-        <Text style={ styles.completeButtonText }> 완료 </Text>
-      </Pressable>
+        style={ styles.completeButton }
+        textStyle={ styles.completeButtonText }
+      />
     </View>
   );
 
@@ -86,12 +87,12 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         : null
       }
 
-      <Pressable
-        style={ styles.addButton }
+      <Button
+        text="+ 집안일 추가"
         onPress={ () => navigation.navigate( "ChoreForm", { roomId } ) }
-      >
-        <Text style={ styles.addButtonText }> + 집안일 추가 </Text>
-      </Pressable>
+        style={ styles.addButton }
+        textStyle={ styles.addButtonText }
+      />
 
       <ScrollView>
         {

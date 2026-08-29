@@ -232,7 +232,7 @@ const styles = StyleSheet.create( {
   },
   memberRole: {
     fontSize: 13,
-    color: "#777",
+    color: commonColor.textSecondary,
     marginTop: 2,
   },
   removeText: {
@@ -240,7 +240,7 @@ const styles = StyleSheet.create( {
     fontWeight: "600",
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.negative,
     marginBottom: 16,
     textAlign: "center",
   },

@@ -16,6 +16,7 @@ export const commonColor = {
   negative: '#D9705B',
   touchable: '#F2BDA6',
   backgroundColor: colors.white,
+  textSecondary: colors.gray,
 } as const;
 
 export const commonStyle = {} as const;
