@@ -1,8 +1,25 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { choreReminder } from '../functions/choreReminder/resource';
+import { createUserOnLogin } from '../functions/createUserOnLogin/resource';
 
 const schema = a
   .schema({
+    User: a
+      .model({
+        userId: a.id().required(),
+        email: a.string(),
+        displayName: a.string(),
+      })
+      .identifier(['userId'])
+      .authorization(allow => [
+        allow
+          .ownerDefinedIn('userId')
+          .identityClaim('sub')
+          .to(['read', 'update']),
+        allow.authenticated().to(['read']),
+        allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+      ]),
+
     Family: a
       .model({
         name: a.string().required(),
@@ -136,7 +153,10 @@ const schema = a
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
       ]),
   })
-  .authorization(allow => [allow.resource(choreReminder).to(['query'])]);
+  .authorization(allow => [
+    allow.resource(choreReminder).to(['query']),
+    allow.resource(createUserOnLogin).to(['query', 'mutate']),
+  ]);
 
 export type Schema = ClientSchema<typeof schema>;
 
