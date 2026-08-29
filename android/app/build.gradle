@@ -118,4 +118,27 @@ dependencies {
     }
 }
 
+// google-services.json is generated from google-services.json.template at build time
+// so the Firebase API key isn't hardcoded/committed. Set GOOGLE_API_KEY in your
+// environment before building (see google-services.json.template).
+task generateGoogleServicesJson {
+    doLast {
+        def apiKey = System.getenv("GOOGLE_API_KEY")
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            throw new GradleException(
+                "GOOGLE_API_KEY environment variable is not set. " +
+                "google-services.json is generated from google-services.json.template at build time; " +
+                "set GOOGLE_API_KEY and re-run the build."
+            )
+        }
+        def templateFile = file("google-services.json.template")
+        def outputFile = file("google-services.json")
+        outputFile.text = templateFile.text.replace('${GOOGLE_API_KEY}', apiKey)
+    }
+}
+
+tasks.matching { it.name ==~ /process.*GoogleServices/ }.configureEach {
+    dependsOn generateGoogleServicesJson
+}
+
 apply plugin: "com.google.gms.google-services"

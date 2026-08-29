@@ -34,6 +34,8 @@ local.properties
 *.keystore
 !debug.keystore
 .kotlin/
+# Generated from google-services.json.template at build time (see android/app/build.gradle)
+android/app/google-services.json
 
 # node.js
 #
