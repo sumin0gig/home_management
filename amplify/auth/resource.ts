@@ -1,4 +1,5 @@
 import { defineAuth, secret } from '@aws-amplify/backend';
+import { createUserOnLogin } from '../functions/createUserOnLogin/resource';
 
 /**
  * `domainPrefix` is required by the underlying construct whenever
@@ -36,4 +37,15 @@ export const auth = defineAuth({
     externalProviders,
   },
   groups: ['Admin'],
+  /**
+   * `postAuthentication` (not `postConfirmation`) so the `User` row gets
+   * created/kept in sync on every sign-in, not just a possible first-time
+   * federated confirmation — this app only offers Google sign-in via
+   * Hosted UI redirect, and `postConfirmation`'s firing behavior for
+   * federated-only flows is inconsistent across Cognito configurations.
+   * The handler is idempotent (checks before creating).
+   */
+  triggers: {
+    postAuthentication: createUserOnLogin,
+  },
 });
