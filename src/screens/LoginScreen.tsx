@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { signInWithGoogle, getAuthErrorMessage } from "../api/auth";
 import { commonColor } from "../styles/commonStyle";
+import DefaultButton from "../components/common/DefaultButton";
 
 function LoginScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
@@ -26,9 +27,12 @@ function LoginScreen(): React.JSX.Element {
         : null
       }
 
-      <Pressable style={ styles.button } onPress={ handleGoogleSignIn }>
-        <Text style={ styles.buttonText }> Google로 로그인 </Text>
-      </Pressable>
+      <DefaultButton
+        text="Google로 로그인"
+        onPress={ handleGoogleSignIn }
+        style={ styles.button }
+        textStyle={ styles.buttonText }
+      />
     </View>
   );
 }

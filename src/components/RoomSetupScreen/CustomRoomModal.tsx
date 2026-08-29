@@ -8,6 +8,7 @@ import {
   type RoomSize,
 } from "../../api/room";
 import { commonColor } from "../../styles/commonStyle";
+import DefaultButton from "../common/DefaultButton";
 
 interface Props {
   visible: boolean;
@@ -75,9 +76,12 @@ function CustomRoomModal( {
         ) ) }
       </View>
       <View style={ styles.modalButtonRow }>
-        <Pressable style={ styles.modalCancelButton } onPress={ handleClose }>
-          <Text style={ styles.modalCancelButtonText }> 취소 </Text>
-        </Pressable>
+        <DefaultButton
+          text="취소"
+          onPress={ handleClose }
+          style={ styles.modalCancelButton }
+          textStyle={ styles.modalCancelButtonText }
+        />
         <Pressable
           style={ styles.modalAddButton }
           onPress={ handleSubmit }
@@ -135,6 +139,7 @@ const styles = StyleSheet.create( {
   },
   modalCancelButton: {
     flex: 1,
+    backgroundColor: "transparent",
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",

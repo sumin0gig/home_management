@@ -16,6 +16,7 @@ import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../api/chore";
 import { commonColor } from "../../styles/commonStyle";
 import ModalView from "../../components/common/ModalView";
+import DefaultButton from "../../components/common/DefaultButton";
 import RoomBlockTile from "../../components/RoomSetupScreen/RoomBlockTile";
 import {
   ROOM_TYPES,
@@ -249,9 +250,12 @@ const AddRoomModal = ( {
         onChangeText={ setNewRoomLabel }
       />
       <View style={ styles.addRoomButtonRow }>
-        <Pressable style={ styles.cancelButton } onPress={ handleClose }>
-          <Text style={ styles.cancelButtonText }> 취소 </Text>
-        </Pressable>
+        <DefaultButton
+          text="취소"
+          onPress={ handleClose }
+          style={ styles.cancelButton }
+          textStyle={ styles.cancelButtonText }
+        />
         <Pressable
           style={ styles.saveRoomButton }
           onPress={ handleSave }
@@ -320,6 +324,7 @@ const styles = StyleSheet.create( {
   },
   cancelButton: {
     flex: 1,
+    backgroundColor: "transparent",
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",

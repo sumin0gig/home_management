@@ -22,6 +22,7 @@ import {
 } from "../../api/chore";
 import { roomDisplayName } from "../../api/room";
 import { commonColor } from "../../styles/commonStyle";
+import DefaultButton from "../../components/common/DefaultButton";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "ChoreForm">;
 
@@ -319,9 +320,12 @@ function ChoreFormScreen( { navigation, route }: Props ): React.JSX.Element {
 
       {
         isEditMode
-        ? <Pressable style={ styles.deleteButton } onPress={ handleDelete }>
-          <Text style={ styles.deleteButtonText }> 삭제 </Text>
-        </Pressable>
+        ? <DefaultButton
+          text="삭제"
+          onPress={ handleDelete }
+          style={ styles.deleteButton }
+          textStyle={ styles.deleteButtonText }
+        />
         : null
       }
 
@@ -422,6 +426,7 @@ const styles = StyleSheet.create( {
     fontWeight: "600",
   },
   deleteButton: {
+    backgroundColor: "transparent",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

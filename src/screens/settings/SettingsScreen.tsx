@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { signOutUser, getAuthErrorMessage } from "../../api/auth";
 import { commonColor } from "../../styles/commonStyle";
+import DefaultButton from "../../components/common/DefaultButton";
 
 function SettingsScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
@@ -21,9 +22,12 @@ function SettingsScreen(): React.JSX.Element {
         ? <Text style={ styles.error }> { error } </Text>
         : null
       }
-      <Pressable style={ styles.button } onPress={ handleSignOut }>
-        <Text style={ styles.buttonText }> 로그아웃 </Text>
-      </Pressable>
+      <DefaultButton
+        text="로그아웃"
+        onPress={ handleSignOut }
+        style={ styles.button }
+        textStyle={ styles.buttonText }
+      />
     </View>
   );
 }
