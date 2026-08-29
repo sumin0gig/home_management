@@ -5,9 +5,9 @@ import {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import type { ActionDefinition } from "./types";
+import type { ActionDefinition, ActionRunner } from "./types";
 
-const idle: ActionDefinition = values => {
+const run: ActionRunner = values => {
   const sine = Easing.inOut( Easing.sin );
 
   values.headBob.value = withRepeat(
@@ -96,5 +96,7 @@ const idle: ActionDefinition = values => {
     ),
   );
 };
+
+const idle: ActionDefinition = { run };
 
 export default idle;

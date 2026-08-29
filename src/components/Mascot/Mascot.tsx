@@ -40,7 +40,15 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   const values = useMascotSharedValues();
 
   useEffect( () => {
-    ACTIONS[action]( values );
+    const { run, duration } = ACTIONS[action];
+    run( values );
+    if (duration == null) {
+      return;
+    }
+    const timer = setTimeout( () => {
+      ACTIONS.idle.run( values );
+    }, duration );
+    return () => clearTimeout( timer );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action] );
 

@@ -15,4 +15,14 @@ export interface MascotSharedValues {
   backLegsBounce: SharedValue<number>;
 }
 
-export type ActionDefinition = (values: MascotSharedValues) => void;
+export type ActionRunner = (values: MascotSharedValues) => void;
+
+export interface ActionDefinition {
+  run: ActionRunner;
+  /**
+   * Playback duration in ms for one-shot actions — Mascot auto-reverts to
+   * "idle" after this many ms. Omit for actions that loop forever (idle
+   * itself).
+   */
+  duration?: number;
+}
