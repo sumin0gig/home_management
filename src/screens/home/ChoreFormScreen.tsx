@@ -22,7 +22,7 @@ import {
 } from "../../api/chore";
 import { roomDisplayName } from "../../api/room";
 import { commonColor } from "../../styles/commonStyle";
-import Button from "../../components/common/Button";
+import DefaultButton from "../../components/common/DefaultButton";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "ChoreForm">;
 
@@ -320,7 +320,7 @@ function ChoreFormScreen( { navigation, route }: Props ): React.JSX.Element {
 
       {
         isEditMode
-        ? <Button
+        ? <DefaultButton
           text="삭제"
           onPress={ handleDelete }
           style={ styles.deleteButton }

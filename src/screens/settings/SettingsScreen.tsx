@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { signOutUser, getAuthErrorMessage } from "../../api/auth";
 import { commonColor } from "../../styles/commonStyle";
-import Button from "../../components/common/Button";
+import DefaultButton from "../../components/common/DefaultButton";
 
 function SettingsScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
@@ -22,7 +22,7 @@ function SettingsScreen(): React.JSX.Element {
         ? <Text style={ styles.error }> { error } </Text>
         : null
       }
-      <Button
+      <DefaultButton
         text="로그아웃"
         onPress={ handleSignOut }
         style={ styles.button }

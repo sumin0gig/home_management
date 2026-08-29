@@ -16,7 +16,7 @@ import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../api/chore";
 import { commonColor } from "../../styles/commonStyle";
 import ModalView from "../../components/common/ModalView";
-import Button from "../../components/common/Button";
+import DefaultButton from "../../components/common/DefaultButton";
 import RoomBlockTile from "../../components/RoomSetupScreen/RoomBlockTile";
 import {
   ROOM_TYPES,
@@ -250,7 +250,7 @@ const AddRoomModal = ( {
         onChangeText={ setNewRoomLabel }
       />
       <View style={ styles.addRoomButtonRow }>
-        <Button
+        <DefaultButton
           text="취소"
           onPress={ handleClose }
           style={ styles.cancelButton }

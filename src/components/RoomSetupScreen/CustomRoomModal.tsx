@@ -8,7 +8,7 @@ import {
   type RoomSize,
 } from "../../api/room";
 import { commonColor } from "../../styles/commonStyle";
-import Button from "../common/Button";
+import DefaultButton from "../common/DefaultButton";
 
 interface Props {
   visible: boolean;
@@ -76,7 +76,7 @@ function CustomRoomModal( {
         ) ) }
       </View>
       <View style={ styles.modalButtonRow }>
-        <Button
+        <DefaultButton
           text="취소"
           onPress={ handleClose }
           style={ styles.modalCancelButton }

@@ -16,7 +16,7 @@ interface Props {
   textStyle?: StyleProp<TextStyle>;
 }
 
-function Button( {
+function DefaultButton( {
   text,
   onPress,
   style,
@@ -43,4 +43,4 @@ const styles = StyleSheet.create( {
   },
 } );
 
-export default Button;
+export default DefaultButton;
