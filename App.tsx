@@ -9,7 +9,10 @@ import React, { useEffect } from 'react';
 import { StatusBar, StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer, type LinkingOptions } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  type LinkingOptions,
+} from '@react-navigation/native';
 
 import { Amplify } from 'aws-amplify';
 import outputs from './amplify_outputs.json';

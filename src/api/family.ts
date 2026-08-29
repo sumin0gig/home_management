@@ -18,7 +18,10 @@ function generateInviteCode(): string {
   return code;
 }
 
-export async function createFamily(name: string, displayName: string): Promise<FamilyRow> {
+export async function createFamily(
+  name: string,
+  displayName: string,
+): Promise<FamilyRow> {
   const user = await getCurrentAuthUser();
   const { data: family, errors } = await client.models.Family.create({
     name,
@@ -49,9 +52,10 @@ export async function joinFamilyByInviteCode(
   const user = await getCurrentAuthUser();
   const normalizedCode = inviteCode.trim().toUpperCase();
 
-  const { data: families, errors } = await client.models.Family.listFamilyByInviteCode({
-    inviteCode: normalizedCode,
-  });
+  const { data: families, errors } =
+    await client.models.Family.listFamilyByInviteCode({
+      inviteCode: normalizedCode,
+    });
   throwIfErrors(errors, '초대 코드를 확인하는 중 오류가 발생했습니다.');
 
   const family = families[0];
@@ -86,9 +90,11 @@ export async function getMyFamily(): Promise<{
     return null;
   }
 
-  const { data: family, errors: familyErrors } = await client.models.Family.get({
-    id: membership.familyId,
-  });
+  const { data: family, errors: familyErrors } = await client.models.Family.get(
+    {
+      id: membership.familyId,
+    },
+  );
   throwIfErrors(familyErrors, '가족 정보를 불러오지 못했습니다.');
   if (!family) {
     return null;
@@ -97,7 +103,9 @@ export async function getMyFamily(): Promise<{
   return { family, membership };
 }
 
-export async function listFamilyMembers(familyId: string): Promise<FamilyMemberRow[]> {
+export async function listFamilyMembers(
+  familyId: string,
+): Promise<FamilyMemberRow[]> {
   const { data: members, errors } = await client.models.FamilyMember.list({
     filter: { familyId: { eq: familyId } },
   });
@@ -105,13 +113,20 @@ export async function listFamilyMembers(familyId: string): Promise<FamilyMemberR
   return members;
 }
 
-export async function renameFamily(familyId: string, name: string): Promise<void> {
+export async function renameFamily(
+  familyId: string,
+  name: string,
+): Promise<void> {
   const { errors } = await client.models.Family.update({ id: familyId, name });
   throwIfErrors(errors, '가족 이름 변경에 실패했습니다.');
 }
 
-export async function removeFamilyMember(memberRecordId: string): Promise<void> {
-  const { errors } = await client.models.FamilyMember.delete({ id: memberRecordId });
+export async function removeFamilyMember(
+  memberRecordId: string,
+): Promise<void> {
+  const { errors } = await client.models.FamilyMember.delete({
+    id: memberRecordId,
+  });
   throwIfErrors(errors, '멤버 제거에 실패했습니다.');
 }
 
@@ -120,14 +135,18 @@ export async function leaveFamily(
   otherMembersCount: number,
 ): Promise<void> {
   if (membership.role === 'OWNER' && otherMembersCount > 0) {
-    throw new Error('다른 구성원이 있는 동안에는 소유자가 가족을 떠날 수 없습니다.');
+    throw new Error(
+      '다른 구성원이 있는 동안에는 소유자가 가족을 떠날 수 없습니다.',
+    );
   }
 
   if (membership.role === 'OWNER') {
     await deleteAllRoomsForFamily(membership.familyId);
   }
 
-  const { errors } = await client.models.FamilyMember.delete({ id: membership.id });
+  const { errors } = await client.models.FamilyMember.delete({
+    id: membership.id,
+  });
   throwIfErrors(errors, '가족을 떠나지 못했습니다.');
 
   if (membership.role === 'OWNER') {

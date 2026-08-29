@@ -9,8 +9,15 @@ const Drawer = createDrawerNavigator<MainDrawerParamList>();
 
 function MainNavigator(): React.JSX.Element {
   return (
-    <Drawer.Navigator initialRouteName="HomeTab" screenOptions={{ headerShown: false }}>
-      <Drawer.Screen name="HomeTab" component={HomeStackNavigator} options={{ title: '홈' }} />
+    <Drawer.Navigator
+      initialRouteName="HomeTab"
+      screenOptions={{ headerShown: false }}
+    >
+      <Drawer.Screen
+        name="HomeTab"
+        component={HomeStackNavigator}
+        options={{ title: '홈' }}
+      />
       <Drawer.Screen
         name="FamilyTab"
         component={FamilyStackNavigator}

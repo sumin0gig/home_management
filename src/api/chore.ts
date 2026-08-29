@@ -27,7 +27,11 @@ export function toDateString(date: Date): string {
 
 function addMonthsClamped(date: Date, months: number): Date {
   const day = date.getDate();
-  const firstOfTargetMonth = new Date(date.getFullYear(), date.getMonth() + months, 1);
+  const firstOfTargetMonth = new Date(
+    date.getFullYear(),
+    date.getMonth() + months,
+    1,
+  );
   const lastDayOfTargetMonth = new Date(
     firstOfTargetMonth.getFullYear(),
     firstOfTargetMonth.getMonth() + 1,
@@ -77,12 +81,16 @@ export function throwIfErrors(errors: unknown, fallbackMessage: string): void {
 }
 
 export async function listChoresForRoom(roomId: string): Promise<ChoreRow[]> {
-  const { data: chores, errors } = await client.models.Chore.listChoreByRoomId({ roomId });
+  const { data: chores, errors } = await client.models.Chore.listChoreByRoomId({
+    roomId,
+  });
   throwIfErrors(errors, '집안일 목록을 불러오지 못했습니다.');
   return chores;
 }
 
-export async function listAllChoresForRoom(roomId: string): Promise<ChoreRow[]> {
+export async function listAllChoresForRoom(
+  roomId: string,
+): Promise<ChoreRow[]> {
   const results: ChoreRow[] = [];
   let nextToken: string | null | undefined;
   do {
@@ -98,7 +106,10 @@ export async function listAllChoresForRoom(roomId: string): Promise<ChoreRow[]> 
   return results;
 }
 
-export async function createChore(roomId: string, input: ChoreInput): Promise<ChoreRow> {
+export async function createChore(
+  roomId: string,
+  input: ChoreInput,
+): Promise<ChoreRow> {
   const { data: chore, errors } = await client.models.Chore.create({
     roomId,
     title: input.title,
@@ -141,12 +152,17 @@ async function deleteAllChoreLogsForChore(choreId: string): Promise<void> {
       data: logs,
       nextToken: token,
       errors,
-    } = await client.models.ChoreLog.listChoreLogByChoreId({ choreId }, { nextToken });
+    } = await client.models.ChoreLog.listChoreLogByChoreId(
+      { choreId },
+      { nextToken },
+    );
     throwIfErrors(errors, '완료 기록 삭제에 실패했습니다.');
     const deleteResults = await Promise.all(
       logs.map(log => client.models.ChoreLog.delete({ id: log.id })),
     );
-    deleteResults.forEach(result => throwIfErrors(result.errors, '완료 기록 삭제에 실패했습니다.'));
+    deleteResults.forEach(result =>
+      throwIfErrors(result.errors, '완료 기록 삭제에 실패했습니다.'),
+    );
     nextToken = token;
   } while (nextToken);
 }
@@ -188,10 +204,16 @@ export async function completeChore(chore: ChoreRow): Promise<void> {
   throwIfErrors(updateErrors, '완료 처리에 실패했습니다.');
 }
 
-export async function listChoreLogs(choreId: string, limit = 5): Promise<ChoreLogRow[]> {
+export async function listChoreLogs(
+  choreId: string,
+  limit = 5,
+): Promise<ChoreLogRow[]> {
   // listChoreLogByChoreId has no sort key, so sortDirection isn't supported server-side —
   // fetch and sort client-side instead.
-  const { data: logs, errors } = await client.models.ChoreLog.listChoreLogByChoreId({ choreId });
+  const { data: logs, errors } =
+    await client.models.ChoreLog.listChoreLogByChoreId({ choreId });
   throwIfErrors(errors, '완료 기록을 불러오지 못했습니다.');
-  return [...logs].sort((a, b) => b.completedAt.localeCompare(a.completedAt)).slice(0, limit);
+  return [...logs]
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
+    .slice(0, limit);
 }

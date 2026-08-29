@@ -21,6 +21,14 @@ export const commonColor = {
 export const commonStyle = {} as const;
 
 export const ROOM_COLOR_PALETTE = [
-  colors.red, '#F2BDA6', colors.yellow, '#F2EBA6', colors.yellowGreen,
-  colors.green, colors.teal, colors.blue, '#A6C9F2', '#BDA6F2',
+  colors.red,
+  '#F2BDA6',
+  colors.yellow,
+  '#F2EBA6',
+  colors.yellowGreen,
+  colors.green,
+  colors.teal,
+  colors.blue,
+  '#A6C9F2',
+  '#BDA6F2',
 ] as const;

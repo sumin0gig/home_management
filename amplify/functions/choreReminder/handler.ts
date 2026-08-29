@@ -6,7 +6,9 @@ import { getMessaging } from 'firebase-admin/messaging';
 import type { Schema } from '../../data/resource';
 import { env } from '$amplify/env/chore-reminder';
 
-const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
+  env,
+);
 Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 
@@ -49,14 +51,19 @@ export const handler = async (): Promise<void> => {
   const today = todaySeoulDateString();
 
   const dueChores = await listAll(nextToken =>
-    client.models.Chore.listChoreByNextDueDate({ nextDueDate: today }, { nextToken }),
+    client.models.Chore.listChoreByNextDueDate(
+      { nextDueDate: today },
+      { nextToken },
+    ),
   );
   if (dueChores.length === 0) {
     return;
   }
 
   const roomIds = [...new Set(dueChores.map(chore => chore.roomId))];
-  const rooms = await Promise.all(roomIds.map(id => client.models.Room.get({ id })));
+  const rooms = await Promise.all(
+    roomIds.map(id => client.models.Room.get({ id })),
+  );
   const roomIdToFamilyId = new Map<string, string>();
   rooms.forEach(({ data: room }) => {
     if (room) {
@@ -101,7 +108,10 @@ export const handler = async (): Promise<void> => {
   const tokensByUser = await Promise.all(
     userIds.map(userId =>
       listAll(nextToken =>
-        client.models.DeviceToken.listDeviceTokenByUserId({ userId }, { nextToken }),
+        client.models.DeviceToken.listDeviceTokenByUserId(
+          { userId },
+          { nextToken },
+        ),
       ),
     ),
   );

@@ -9,7 +9,8 @@ function DrawerMenuButton(): React.JSX.Element {
     <Pressable
       onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
       style={styles.button}
-      hitSlop={12}>
+      hitSlop={12}
+    >
       <Text style={styles.icon}>☰</Text>
     </Pressable>
   );

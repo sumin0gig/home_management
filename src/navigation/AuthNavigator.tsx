@@ -8,7 +8,11 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 function AuthNavigator(): React.JSX.Element {
   return (
     <Stack.Navigator initialRouteName="Login">
-      <Stack.Screen name="Login" component={LoginScreen} options={{ title: '로그인' }} />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ title: '로그인' }}
+      />
     </Stack.Navigator>
   );
 }

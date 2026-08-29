@@ -133,7 +133,9 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
     }
     set({ error: null });
     try {
-      const otherMembersCount = members.filter(m => m.id !== membership.id).length;
+      const otherMembersCount = members.filter(
+        m => m.id !== membership.id,
+      ).length;
       await apiLeaveFamily(membership, otherMembersCount);
       useRoomStore.getState().reset();
       set({ status: 'none', family: null, membership: null, members: [] });

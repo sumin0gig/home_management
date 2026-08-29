@@ -11,7 +11,9 @@ import { registerDeviceToken } from '../api/deviceToken';
 
 async function requestNotificationPermission(): Promise<void> {
   if (Platform.OS === 'android' && Platform.Version >= 33) {
-    await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+    await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
   }
   await requestPermission(getMessaging());
 }
@@ -34,19 +36,25 @@ export function usePushNotifications(enabled: boolean): void {
       }
     })();
 
-    const unsubscribeTokenRefresh = onTokenRefresh(messagingInstance, async token => {
-      try {
-        await registerDeviceToken(token);
-      } catch {
-        // 무시
-      }
-    });
+    const unsubscribeTokenRefresh = onTokenRefresh(
+      messagingInstance,
+      async token => {
+        try {
+          await registerDeviceToken(token);
+        } catch {
+          // 무시
+        }
+      },
+    );
 
-    const unsubscribeMessage = onMessage(messagingInstance, async remoteMessage => {
-      const title = remoteMessage.notification?.title ?? '집안일 알림';
-      const body = remoteMessage.notification?.body ?? '';
-      Alert.alert(title, body);
-    });
+    const unsubscribeMessage = onMessage(
+      messagingInstance,
+      async remoteMessage => {
+        const title = remoteMessage.notification?.title ?? '집안일 알림';
+        const body = remoteMessage.notification?.body ?? '';
+        Alert.alert(title, body);
+      },
+    );
 
     return () => {
       unsubscribeTokenRefresh();
