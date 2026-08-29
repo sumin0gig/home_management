@@ -13,6 +13,8 @@ function ModalView( {
   onRequestClose,
   children,
 }: Props ): React.JSX.Element {
+
+  if (!visible) return <></>;
   return (
     <Modal
       visible={ visible }

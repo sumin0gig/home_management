@@ -15,6 +15,7 @@ import { useChoreStore } from "../../store/useChoreStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../api/chore";
 import { commonColor } from "../../styles/commonStyle";
+import ModalView from "../../components/common/ModalView";
 import RoomBlockTile from "../../components/RoomSetupScreen/RoomBlockTile";
 import {
   ROOM_TYPES,
@@ -30,6 +31,16 @@ import {
 } from "../../api/room";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "HomeMain">;
+
+type AddRoomModalProps = {
+  visible: boolean;
+  onClose: () => void;
+  onSubmit: (
+    roomType: NonNullable<RoomType>,
+    size: NonNullable<RoomSize>,
+    label: string,
+  ) => Promise<void>;
+};
 
 function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
@@ -48,12 +59,6 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   );
 
   const [isAddingRoom, setIsAddingRoom] = React.useState( false );
-  const [newRoomType, setNewRoomType] =
-    React.useState<NonNullable<RoomType> | null>( null );
-  const [newRoomSize, setNewRoomSize] =
-    React.useState<NonNullable<RoomSize>>( DEFAULT_ROOM_SIZE );
-  const [newRoomLabel, setNewRoomLabel] = React.useState( "" );
-  const [isSavingRoom, setIsSavingRoom] = React.useState( false );
 
   React.useEffect( () => {
     if (family?.id) {
@@ -90,133 +95,38 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     return roomDisplayName( a ).localeCompare( roomDisplayName( b ) );
   } );
 
-  const handleSaveRoom = async () => {
-    if (!newRoomType || !family) {
-      return;
-    }
-    setIsSavingRoom( true );
-    try {
-      await addRoom(
-        family.id,
-        newRoomType,
-        newRoomSize,
-        newRoomLabel.trim() || undefined,
-      );
-      setIsAddingRoom( false );
-      setNewRoomType( null );
-      setNewRoomSize( DEFAULT_ROOM_SIZE );
-      setNewRoomLabel( "" );
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsSavingRoom( false );
-    }
-  };
-
   const hasDueToday = (room: RoomRow): boolean =>
     chores.some( c => c.roomId === room.id && c.nextDueDate <= today );
 
+  const handleAddRoom = async (
+    roomType: NonNullable<RoomType>,
+    size: NonNullable<RoomSize>,
+    label: string,
+  ) => {
+    if (!family) {
+      return;
+    }
+    await addRoom( family.id, roomType, size, label.trim() || undefined );
+    setIsAddingRoom( false );
+  };
+
   return (
     <View style={ styles.container }>
-      {
-        roomError
-        ? <Text style={ styles.error }> { roomError } </Text>
-        : null
-      }
-      {
-        choreError
-        ? <Text style={ styles.error }> { choreError } </Text>
-        : null
-      }
+      { roomError && <Text style={ styles.error }> { roomError } </Text> }
+      { choreError && <Text style={ styles.error }> { choreError } </Text> }
 
-      {
-        isAddingRoom
-        ? <View style={ styles.addRoomForm }>
-          <View style={ styles.chipRow }>
-            { ROOM_TYPES.map( roomType => (
-              <Pressable
-                key={ roomType }
-                style={ [
-                  styles.chip,
-                  newRoomType === roomType && styles.chipSelected,
-                ] }
-                onPress={ () => {
-                  setNewRoomType( roomType );
-                  setNewRoomSize( ROOM_TYPE_DEFAULT_SIZE[roomType] );
-                } }
-              >
-                <Text
-                  style={
-                    newRoomType === roomType
-                      ? styles.chipTextSelected
-                      : styles.chipText
-                  }
-                >
-                  { ROOM_TYPE_LABELS[roomType] }
-                </Text>
-              </Pressable>
-            ) ) }
-          </View>
-          <View style={ styles.chipRow }>
-            { ROOM_SIZES.map( size => (
-              <Pressable
-                key={ size }
-                style={ [
-                  styles.chip,
-                  newRoomSize === size && styles.chipSelected,
-                ] }
-                onPress={ () => setNewRoomSize( size ) }
-              >
-                <Text
-                  style={
-                    newRoomSize === size
-                      ? styles.chipTextSelected
-                      : styles.chipText
-                  }
-                >
-                  { ROOM_SIZE_LABELS[size] }
-                </Text>
-              </Pressable>
-            ) ) }
-          </View>
-          <TextInput
-            style={ styles.input }
-            placeholder="이름(선택, 예: 안방)"
-            value={ newRoomLabel }
-            onChangeText={ setNewRoomLabel }
-          />
-          <View style={ styles.addRoomButtonRow }>
-            <Pressable
-              style={ styles.cancelButton }
-              onPress={ () => {
-                setIsAddingRoom( false );
-                setNewRoomType( null );
-                setNewRoomSize( DEFAULT_ROOM_SIZE );
-                setNewRoomLabel( "" );
-              } }
-            >
-              <Text style={ styles.cancelButtonText }> 취소 </Text>
-            </Pressable>
-            <Pressable
-              style={ styles.saveRoomButton }
-              onPress={ handleSaveRoom }
-              disabled={ isSavingRoom || !newRoomType }
-            >
-              {
-                isSavingRoom
-                ? <ActivityIndicator color="#fff" />
-                : <Text style={ styles.addButtonText }> 추가 </Text>
-              }
-            </Pressable>
-          </View>
-        </View>
-        : <Pressable
-          style={ styles.addRoomLink }
-          onPress={ () => setIsAddingRoom( true ) }
-        >
-          <Text style={ styles.addRoomLinkText }> + 방 추가 </Text>
-        </Pressable>
-      }
+      <Pressable
+        style={ styles.addRoomLink }
+        onPress={ () => setIsAddingRoom( true ) }
+      >
+        <Text style={ styles.addRoomLinkText }> + 방 추가 </Text>
+      </Pressable>
+
+      <AddRoomModal
+        visible={ isAddingRoom }
+        onClose={ () => setIsAddingRoom( false ) }
+        onSubmit={ handleAddRoom }
+      />
 
       <ScrollView contentContainerStyle={ styles.roomGrid }>
         {
@@ -244,6 +154,122 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     </View>
   );
 }
+
+const AddRoomModal = ( {
+  visible,
+  onClose,
+  onSubmit,
+}: AddRoomModalProps ): React.JSX.Element => {
+  const [newRoomType, setNewRoomType] =
+    React.useState<NonNullable<RoomType> | null>( null );
+  const [newRoomSize, setNewRoomSize] =
+    React.useState<NonNullable<RoomSize>>( DEFAULT_ROOM_SIZE );
+  const [newRoomLabel, setNewRoomLabel] = React.useState( "" );
+  const [isSaving, setIsSaving] = React.useState( false );
+
+  const resetForm = () => {
+    setNewRoomType( null );
+    setNewRoomSize( DEFAULT_ROOM_SIZE );
+    setNewRoomLabel( "" );
+  };
+
+  const handleSelectRoomType = (roomType: NonNullable<RoomType>) => {
+    setNewRoomType( roomType );
+    setNewRoomSize( ROOM_TYPE_DEFAULT_SIZE[roomType] );
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const handleSave = async () => {
+    if (!newRoomType) {
+      return;
+    }
+    setIsSaving( true );
+    try {
+      await onSubmit( newRoomType, newRoomSize, newRoomLabel );
+      resetForm();
+    } catch {
+      // 에러는 store의 error 상태로 표시됨
+    } finally {
+      setIsSaving( false );
+    }
+  };
+
+  return (
+    <ModalView visible={ visible } onRequestClose={ handleClose }>
+      <Text style={ styles.modalTitle }> 방 추가 </Text>
+      <View style={ styles.chipRow }>
+        { ROOM_TYPES.map( roomType => (
+          <Pressable
+            key={ roomType }
+            style={ [
+              styles.chip,
+              newRoomType === roomType && styles.chipSelected,
+            ] }
+            onPress={ () => handleSelectRoomType( roomType ) }
+          >
+            <Text
+              style={
+                newRoomType === roomType
+                  ? styles.chipTextSelected
+                  : styles.chipText
+              }
+            >
+              { ROOM_TYPE_LABELS[roomType] }
+            </Text>
+          </Pressable>
+        ) ) }
+      </View>
+      <View style={ styles.chipRow }>
+        { ROOM_SIZES.map( size => (
+          <Pressable
+            key={ size }
+            style={ [
+              styles.chip,
+              newRoomSize === size && styles.chipSelected,
+            ] }
+            onPress={ () => setNewRoomSize( size ) }
+          >
+            <Text
+              style={
+                newRoomSize === size
+                  ? styles.chipTextSelected
+                  : styles.chipText
+              }
+            >
+              { ROOM_SIZE_LABELS[size] }
+            </Text>
+          </Pressable>
+        ) ) }
+      </View>
+      <TextInput
+        style={ styles.input }
+        placeholder="이름(선택, 예: 안방)"
+        value={ newRoomLabel }
+        onChangeText={ setNewRoomLabel }
+      />
+      <View style={ styles.addRoomButtonRow }>
+        <Pressable style={ styles.cancelButton } onPress={ handleClose }>
+          <Text style={ styles.cancelButtonText }> 취소 </Text>
+        </Pressable>
+        <Pressable
+          style={ styles.saveRoomButton }
+          onPress={ handleSave }
+          disabled={ isSaving || !newRoomType }
+        >
+          {
+            isSaving
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={ styles.addButtonText }> 추가 </Text>
+          }
+        </Pressable>
+      </View>
+    </ModalView>
+  );
+};
 
 const styles = StyleSheet.create( {
   container: {
@@ -286,12 +312,10 @@ const styles = StyleSheet.create( {
     color: commonColor.touchable,
     fontWeight: "600",
   },
-  addRoomForm: {
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 20,
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 16,
   },
   addRoomButtonRow: {
     flexDirection: "row",
