@@ -1,9 +1,7 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
   ROOM_TYPE_LABELS,
-  ROOM_SIZES,
-  ROOM_SIZE_LABELS,
   ROOM_SIZE_WIDTH_RATIO,
   type RoomType,
   type RoomSize,
@@ -31,8 +29,6 @@ function RoomBlockTile( {
   onPress,
   hasDueToday,
 }: Props ): React.JSX.Element {
-  const sizeIndex = ROOM_SIZES.indexOf( block.size );
-
   return (
     <Pressable
       onPress={ onPress }
@@ -93,34 +89,6 @@ const styles = StyleSheet.create( {
   removeText: {
     color: commonColor.negative,
     fontWeight: "600",
-  },
-  sizeStepper: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  stepperArrow: {
-    color: commonColor.touchable,
-    fontSize: 16,
-    fontWeight: "700",
-    paddingHorizontal: 6,
-  },
-  stepperArrowDisabled: {
-    color: "#c3d4f7",
-  },
-  sizeLabel: {
-    fontSize: 12,
-    color: "#333",
-  },
-  labelInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    fontSize: 12,
-    backgroundColor: "#fff",
   },
 } );
 

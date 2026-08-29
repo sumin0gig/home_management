@@ -36,19 +36,10 @@ describe( "RoomSetupScreen", () => {
     expect( mockedCreateRoom ).not.toHaveBeenCalled();
   } );
 
-  test( "방 종류를 탭하면 기본 크기(보통)로 타일이 추가된다", () => {
+  test( "방 종류를 탭하면 타일이 추가된다", () => {
     const { getByText, getAllByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 침실" ) );
     expect( getAllByText( "침실" ) ).toHaveLength( 1 );
-    expect( getByText( "보통" ) ).toBeTruthy();
-  } );
-
-  test( "크기 스테퍼로 타일 크기를 조절할 수 있다", () => {
-    const { getByText, queryByText } = render( <RoomSetupScreen /> );
-    fireEvent.press( getByText( "+ 침실" ) );
-    fireEvent.press( getByText( "▶" ) );
-    expect( queryByText( "보통" ) ).toBeNull();
-    expect( getByText( "큼" ) ).toBeTruthy();
   } );
 
   test( "제거 버튼을 탭하면 타일이 사라진다", () => {
@@ -63,7 +54,7 @@ describe( "RoomSetupScreen", () => {
       id: "r1",
       familyId: "f1",
       roomType: "BEDROOM",
-      size: "NORMAL",
+      size: "BIG",
       label: null,
     } );
 
@@ -75,7 +66,7 @@ describe( "RoomSetupScreen", () => {
       expect( mockedCreateRoom ).toHaveBeenCalledWith(
         "f1",
         "BEDROOM",
-        "NORMAL",
+        "BIG",
         undefined,
       ),
     );
@@ -86,7 +77,7 @@ describe( "RoomSetupScreen", () => {
       id: "r1",
       familyId: "f1",
       roomType: "BEDROOM",
-      size: "NORMAL",
+      size: "BIG",
       label: null,
     } );
 
@@ -99,13 +90,13 @@ describe( "RoomSetupScreen", () => {
     expect( mockedCreateRoom ).toHaveBeenCalledWith(
       "f1",
       "BEDROOM",
-      "NORMAL",
+      "BIG",
       undefined,
     );
     expect( mockedCreateRoom ).toHaveBeenCalledWith(
       "f1",
       "LIVING_ROOM",
-      "NORMAL",
+      "VERY_BIG",
       undefined,
     );
   } );
