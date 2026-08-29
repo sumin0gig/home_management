@@ -16,9 +16,9 @@ export const handler: PostAuthenticationTriggerHandler = async event => {
   const email = event.request.userAttributes.email;
   const displayName = event.request.userAttributes.name ?? email ?? '이름 없음';
 
-  const { data: existing } = await client.models.User.get({ userId });
+  const { data: existing } = await client.models.User.get({ id: userId });
   if (!existing) {
-    await client.models.User.create({ userId, email, displayName });
+    await client.models.User.create({ id: userId, email, displayName });
   }
 
   return event;
