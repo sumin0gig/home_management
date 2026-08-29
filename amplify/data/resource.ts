@@ -9,6 +9,8 @@ const schema = a
         userId: a.id().required(),
         email: a.string(),
         displayName: a.string(),
+        earStyle: a.enum(['ROUND', 'POINTY', 'FLOPPY']),
+        tailStyle: a.enum(['STRAIGHT', 'CURLY']),
       })
       .identifier(['userId'])
       .authorization(allow => [
