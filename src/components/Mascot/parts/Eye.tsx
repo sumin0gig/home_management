@@ -5,6 +5,8 @@ import type { VariantAnimatedProps } from "../types";
 
 const AnimatedEllipse = Animated.createAnimatedComponent( Ellipse );
 
+export const EYE_RADIUS = 7;
+
 interface Props {
   cx: number;
   cy: number;
@@ -17,8 +19,8 @@ const Eye = ({ cx, cy, fill, animatedProps }: Props): React.JSX.Element => {
     <AnimatedEllipse
       cx={ cx }
       cy={ cy }
-      rx={ 7 }
-      ry={ 7 }
+      rx={ EYE_RADIUS }
+      ry={ EYE_RADIUS }
       fill={ fill }
       animatedProps={ animatedProps }
     />

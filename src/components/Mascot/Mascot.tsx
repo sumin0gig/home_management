@@ -4,8 +4,8 @@ import Svg, { G } from "react-native-svg";
 import { colors } from "../../styles/commonStyle";
 import { ACTIONS } from "./actions";
 import { useMascotSharedValues } from "./animations/useMascotSharedValues";
-import Body from "./parts/Body";
-import Eye from "./parts/Eye";
+import Body, { BODY_BOX } from "./parts/Body";
+import Eye, { EYE_RADIUS } from "./parts/Eye";
 import Face from "./parts/Face";
 import Leg from "./parts/Leg";
 import type { MascotAction, MascotConfig } from "./types";
@@ -16,15 +16,27 @@ const AnimatedG = Animated.createAnimatedComponent( G );
 
 const DEFAULT_ACTION: MascotAction = "idle";
 
-const HEAD_BASE_Y = 70;
+// Side-view quadruped layout: head sits beside the body (not stacked on top
+// of it), 4 legs run in a row along the body's underside, and the tail
+// attaches near the body's rear-top corner — see mascot_rig_demo.html.
+const VIEW_BOX = { width: 280, height: 200 };
+const HEAD_X = 100;
+const HEAD_BASE_Y = 90;
 const EAR_BOX = { width: 34, height: 46 };
 const EAR_L_ORIGIN = { x: -40, y: -63 };
 const EAR_R_ORIGIN = { x: 6, y: -63 };
 const TAIL_BOX = { width: 50, height: 30 };
-const TAIL_ATTACH = { x: 145, y: 140 };
-const FRONT_LEG_Y = 155;
-const BACK_LEG_Y = 150;
-const ROOT_PIVOT = { x: 100, y: 210 };
+const TAIL_ATTACH = { x: BODY_BOX.x + BODY_BOX.width + 2, y: BODY_BOX.y + 5 };
+const GROUND_Y = 185;
+const FRONT_LEG_HEIGHT = 32;
+const BACK_LEG_HEIGHT = 30;
+const FRONT_LEG_Y = GROUND_Y - FRONT_LEG_HEIGHT;
+const BACK_LEG_Y = GROUND_Y - BACK_LEG_HEIGHT;
+// 4 legs spread evenly under the body, front-to-back (nearest the head first).
+const LEG_X = [0.105, 0.342, 0.579, 0.803].map(
+  ratio => BODY_BOX.x + ratio * BODY_BOX.width,
+);
+const ROOT_PIVOT = { x: VIEW_BOX.width / 2, y: GROUND_Y };
 
 interface Props {
   config: MascotConfig;
@@ -57,8 +69,8 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   const rootAnimatedProps = useAnimatedProps( () => ({
     y: values.jumpY.value,
     transform: [
-      { scaleX: values.squashX.value },
-      { scaleY: values.squashY.value },
+      { scaleX: 1 + values.squashX.value },
+      { scaleY: 1 + values.squashY.value },
     ],
   }) );
 
@@ -67,7 +79,7 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   }) );
 
   const bodyAnimatedProps = useAnimatedProps( () => ({
-    transform: [{ scaleY: values.bodyBreath.value }],
+    transform: [{ scaleY: 1 + values.bodyBreath.value }],
   }) );
 
   const earLAnimatedProps = useAnimatedProps( () => ({
@@ -79,47 +91,47 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   }) );
 
   const eyeLAnimatedProps = useAnimatedProps( () => ({
-    ry: values.eyeLBlink.value,
+    ry: EYE_RADIUS + values.eyeLBlink.value,
   }) );
 
   const eyeRAnimatedProps = useAnimatedProps( () => ({
-    ry: values.eyeRBlink.value,
+    ry: EYE_RADIUS + values.eyeRBlink.value,
   }) );
 
   const tailAnimatedProps = useAnimatedProps( () => ({
     rotation: values.tailWag.value,
   }) );
 
-  const frontLegsAnimatedProps = useAnimatedProps( () => ({
-    y: FRONT_LEG_Y + values.frontLegsBounce.value,
+  // The 4 legs run in a row front-to-back (LEG_X[0] nearest the head,
+  // LEG_X[3] nearest the tail). Alternating legs bounce together (0&2 vs
+  // 1&3) so the row ripples like a resting quadruped's weight shift,
+  // instead of all 4 (or each front/back row) moving in unison.
+  const legAAnimatedProps = useAnimatedProps( () => ({
+    y: FRONT_LEG_Y + values.legPairABounce.value,
   }) );
 
-  const backLegsAnimatedProps = useAnimatedProps( () => ({
-    y: BACK_LEG_Y + values.backLegsBounce.value,
+  const legBAnimatedProps = useAnimatedProps( () => ({
+    y: FRONT_LEG_Y + values.legPairBBounce.value,
+  }) );
+
+  const legCAnimatedProps = useAnimatedProps( () => ({
+    y: BACK_LEG_Y + values.legPairABounce.value,
+  }) );
+
+  const legDAnimatedProps = useAnimatedProps( () => ({
+    y: BACK_LEG_Y + values.legPairBBounce.value,
   }) );
 
   return (
-    <Svg width={ size } height={ size * 1.1 } viewBox="0 0 200 220">
+    <Svg
+      width={ size }
+      height={ size * (VIEW_BOX.height / VIEW_BOX.width) }
+      viewBox={ `0 0 ${VIEW_BOX.width} ${VIEW_BOX.height}` }
+    >
       <AnimatedG
         origin={ `${ROOT_PIVOT.x}, ${ROOT_PIVOT.y}` }
         animatedProps={ rootAnimatedProps }
       >
-        <Leg
-          x={ 45 }
-          y={ BACK_LEG_Y }
-          width={ 18 }
-          height={ 30 }
-          fill={ fill }
-          animatedProps={ backLegsAnimatedProps }
-        />
-        <Leg
-          x={ 137 }
-          y={ BACK_LEG_Y }
-          width={ 18 }
-          height={ 30 }
-          fill={ fill }
-          animatedProps={ backLegsAnimatedProps }
-        />
         <G x={ TAIL_ATTACH.x } y={ TAIL_ATTACH.y - tailPivot.y }>
           <AnimatedG
             origin={ `${tailPivot.x}, ${tailPivot.y}` }
@@ -134,22 +146,38 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
         </G>
         <Body fill={ fill } animatedProps={ bodyAnimatedProps } />
         <Leg
-          x={ 62 }
+          x={ LEG_X[0] }
           y={ FRONT_LEG_Y }
           width={ 20 }
-          height={ 32 }
+          height={ FRONT_LEG_HEIGHT }
           fill={ fill }
-          animatedProps={ frontLegsAnimatedProps }
+          animatedProps={ legAAnimatedProps }
         />
         <Leg
-          x={ 118 }
+          x={ LEG_X[1] }
           y={ FRONT_LEG_Y }
           width={ 20 }
-          height={ 32 }
+          height={ FRONT_LEG_HEIGHT }
           fill={ fill }
-          animatedProps={ frontLegsAnimatedProps }
+          animatedProps={ legBAnimatedProps }
         />
-        <G x={ 100 }>
+        <Leg
+          x={ LEG_X[2] }
+          y={ BACK_LEG_Y }
+          width={ 18 }
+          height={ BACK_LEG_HEIGHT }
+          fill={ fill }
+          animatedProps={ legCAnimatedProps }
+        />
+        <Leg
+          x={ LEG_X[3] }
+          y={ BACK_LEG_Y }
+          width={ 18 }
+          height={ BACK_LEG_HEIGHT }
+          fill={ fill }
+          animatedProps={ legDAnimatedProps }
+        />
+        <G x={ HEAD_X }>
           <AnimatedG animatedProps={ headAnimatedProps }>
             <G x={ EAR_L_ORIGIN.x } y={ EAR_L_ORIGIN.y }>
               <AnimatedG

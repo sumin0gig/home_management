@@ -15,7 +15,7 @@ const FloppyEar = ({
     <AnimatedPath
       d="M17,44 C4,42 2,22 9,8 C15,0 27,3 30,15 C33,27 28,40 17,44 Z"
       fill={ fill }
-      animatedProps={ animatedProps }
+      { ...(animatedProps && { animatedProps }) }
     />
   );
 };

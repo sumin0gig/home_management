@@ -15,16 +15,16 @@ const JUMP_DURATION_MS =
 
 const run: ActionRunner = values => {
   values.squashX.value = withSequence(
-    withTiming( 1.15, { duration: SQUASH_ANTICIPATION_MS } ),
-    withTiming( 0.92, { duration: SQUASH_RISE_MS } ),
-    withTiming( 1.12, { duration: SQUASH_FALL_MS } ),
-    withTiming( 1, { duration: SQUASH_SETTLE_MS } ),
+    withTiming( 0.15, { duration: SQUASH_ANTICIPATION_MS } ),
+    withTiming( -0.08, { duration: SQUASH_RISE_MS } ),
+    withTiming( 0.12, { duration: SQUASH_FALL_MS } ),
+    withTiming( 0, { duration: SQUASH_SETTLE_MS } ),
   );
   values.squashY.value = withSequence(
-    withTiming( 0.85, { duration: SQUASH_ANTICIPATION_MS } ),
-    withTiming( 1.08, { duration: SQUASH_RISE_MS } ),
-    withTiming( 0.88, { duration: SQUASH_FALL_MS } ),
-    withTiming( 1, { duration: SQUASH_SETTLE_MS } ),
+    withTiming( -0.15, { duration: SQUASH_ANTICIPATION_MS } ),
+    withTiming( 0.08, { duration: SQUASH_RISE_MS } ),
+    withTiming( -0.12, { duration: SQUASH_FALL_MS } ),
+    withTiming( 0, { duration: SQUASH_SETTLE_MS } ),
   );
   values.jumpY.value = withSequence(
     withDelay(

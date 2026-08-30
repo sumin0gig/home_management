@@ -6,7 +6,12 @@ interface Props {
 }
 
 const Face = ({ fill }: Props): React.JSX.Element => {
-  return <Circle cx={ 0 } cy={ 0 } r={ 40 } fill={ fill } />;
+  return <Circle
+    cx={ 0 }
+    cy={ 0 }
+    r={ 40 }
+    fill={ fill }
+  />;
 };
 
 export default Face;

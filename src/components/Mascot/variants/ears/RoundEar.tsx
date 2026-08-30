@@ -18,7 +18,7 @@ const RoundEar = ({
       rx={ 15 }
       ry={ 18 }
       fill={ fill }
-      animatedProps={ animatedProps }
+      { ...(animatedProps && { animatedProps }) }
     />
   );
 };

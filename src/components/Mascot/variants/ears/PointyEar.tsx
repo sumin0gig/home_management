@@ -15,7 +15,7 @@ const PointyEar = ({
     <AnimatedPath
       d="M4,44 L17,4 L30,44 Q17,50 4,44 Z"
       fill={ fill }
-      animatedProps={ animatedProps }
+      { ...(animatedProps && { animatedProps }) }
     />
   );
 };

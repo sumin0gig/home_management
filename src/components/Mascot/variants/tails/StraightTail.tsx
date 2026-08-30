@@ -19,7 +19,7 @@ const StraightTail = ({
       height={ 14 }
       rx={ 7 }
       fill={ fill }
-      animatedProps={ animatedProps }
+      { ...(animatedProps && { animatedProps }) }
     />
   );
 };
