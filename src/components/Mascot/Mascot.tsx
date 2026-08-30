@@ -66,16 +66,23 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action] );
 
+  // G only exposes x/y/rotation as JS-render-time convenience props (they get
+  // baked into a matrix by react-native-svg's own render pass) — Reanimated's
+  // per-frame native updates bypass that render pass entirely, so setting
+  // them via animatedProps silently no-ops. `transform` (RN-style array or an
+  // SVG transform string) is a real native prop and animates correctly; use
+  // that for every G/Rect/Ellipse animatedProps below instead of the y/
+  // rotation shorthand.
   const rootAnimatedProps = useAnimatedProps( () => ({
-    y: values.jumpY.value,
     transform: [
+      { translateY: values.jumpY.value },
       { scaleX: 1 + values.squashX.value },
       { scaleY: 1 + values.squashY.value },
     ],
   }) );
 
   const headAnimatedProps = useAnimatedProps( () => ({
-    y: HEAD_BASE_Y + values.headBob.value,
+    transform: [{ translateY: values.headBob.value }],
   }) );
 
   const bodyAnimatedProps = useAnimatedProps( () => ({
@@ -83,11 +90,11 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   }) );
 
   const earLAnimatedProps = useAnimatedProps( () => ({
-    rotation: values.earLTwitch.value,
+    transform: [{ rotate: `${values.earLTwitch.value}deg` }],
   }) );
 
   const earRAnimatedProps = useAnimatedProps( () => ({
-    rotation: values.earRTwitch.value,
+    transform: [{ rotate: `${values.earRTwitch.value}deg` }],
   }) );
 
   const eyeLAnimatedProps = useAnimatedProps( () => ({
@@ -99,7 +106,7 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   }) );
 
   const tailAnimatedProps = useAnimatedProps( () => ({
-    rotation: values.tailWag.value,
+    transform: [{ rotate: `${values.tailWag.value}deg` }],
   }) );
 
   // The 4 legs run in a row front-to-back (LEG_X[0] nearest the head,
@@ -177,7 +184,7 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
           fill={ fill }
           animatedProps={ legDAnimatedProps }
         />
-        <G x={ HEAD_X }>
+        <G x={ HEAD_X } y={ HEAD_BASE_Y }>
           <AnimatedG animatedProps={ headAnimatedProps }>
             <G x={ EAR_L_ORIGIN.x } y={ EAR_L_ORIGIN.y }>
               <AnimatedG

@@ -25,14 +25,6 @@ const run: ActionRunner = values => {
     -1,
   );
 
-  values.bodyBreath.value = withRepeat(
-    withSequence(
-      withTiming( 0.035, { duration: 1300, easing: sine } ),
-      withTiming( 0, { duration: 1300, easing: sine } ),
-    ),
-    -1,
-  );
-
   values.earLTwitch.value = withRepeat(
     withSequence(
       withTiming( 0, { duration: 4680, easing: sine } ),
@@ -83,16 +75,16 @@ const run: ActionRunner = values => {
 
   values.tailWag.value = withRepeat(
     withSequence(
-      withTiming( 11, { duration: 850, easing: sine } ),
-      withTiming( -9, { duration: 850, easing: sine } ),
+      withTiming( 11, { duration: 850, easing: Easing.linear } ),
+      withTiming( -9, { duration: 850, easing: Easing.linear } ),
     ),
     -1,
   );
 
   values.legPairABounce.value = withRepeat(
     withSequence(
-      withTiming( -5 * PX_SCALE, { duration: 1100, easing: sine } ),
-      withTiming( 0, { duration: 1100, easing: sine } ),
+      withTiming( -5 * PX_SCALE, { duration: 1100, easing: Easing.linear } ),
+      withTiming( 0, { duration: 1100, easing: Easing.linear } ),
     ),
     -1,
   );
@@ -101,8 +93,8 @@ const run: ActionRunner = values => {
     1100,
     withRepeat(
       withSequence(
-        withTiming( -5 * PX_SCALE, { duration: 1100, easing: sine } ),
-        withTiming( 0, { duration: 1100, easing: sine } ),
+        withTiming( -5 * PX_SCALE, { duration: 1100, easing: Easing.linear } ),
+        withTiming( 0, { duration: 1100, easing: Easing.linear } ),
       ),
       -1,
     ),
