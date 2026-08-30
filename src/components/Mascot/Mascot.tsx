@@ -181,6 +181,7 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
         />
         <G x={ HEAD_X } y={ HEAD_BASE_Y }>
           <AnimatedG animatedProps={ headAnimatedProps }>
+            <Face fill={ fill } />
             <G x={ EAR_L_ORIGIN.x } y={ EAR_L_ORIGIN.y }>
               <AnimatedG
                 origin={ `${earPivot.x}, ${earPivot.y}` }
@@ -193,7 +194,12 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
                 />
               </AnimatedG>
             </G>
-            <G x={ EAR_R_ORIGIN.x } y={ EAR_R_ORIGIN.y }>
+            { /* Mirrored horizontally so an asymmetric ear shape (e.g. the
+                floppy variant, which flares outward to one side) droops
+                away from the head on both sides instead of both ears
+                flaring the same absolute direction. A no-op for the
+                left-right-symmetric round/pointy shapes. */ }
+            <G transform={ `translate(${EAR_BOX.width + EAR_R_ORIGIN.x}, ${EAR_R_ORIGIN.y}) scale(-1, 1)` }>
               <AnimatedG
                 origin={ `${earPivot.x}, ${earPivot.y}` }
                 animatedProps={ earRAnimatedProps }
@@ -205,7 +211,6 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
                 />
               </AnimatedG>
             </G>
-            <Face fill={ fill } />
             <Eye
               cx={ -15 }
               cy={ -3 }
