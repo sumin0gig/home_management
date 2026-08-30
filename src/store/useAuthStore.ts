@@ -4,6 +4,7 @@ import { getCurrentAuthUser } from '../api/auth';
 import { useFamilyStore } from './useFamilyStore';
 import { useChoreStore } from './useChoreStore';
 import { useRoomStore } from './useRoomStore';
+import { useMascotStore } from './useMascotStore';
 
 type AuthStatus = 'loading' | 'signedIn' | 'signedOut';
 
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthState>(set => ({
         useFamilyStore.getState().reset();
         useChoreStore.getState().reset();
         useRoomStore.getState().reset();
+        useMascotStore.getState().reset();
       }
     });
   },

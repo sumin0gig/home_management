@@ -3,10 +3,12 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import FamilyOnboarding from '../components/FamilyOnboarding/FamilyOnboarding';
+import MascotSetup from '../components/MascotSetup/MascotSetup';
 import RoomSetupScreen from '../components/RoomSetupScreen/RoomSetupScreen';
 import RoomWaitingScreen from '../components/RoomWaitingScreen/RoomWaitingScreen';
 import { useAuthStore } from '../store/useAuthStore';
 import { useFamilyStore } from '../store/useFamilyStore';
+import { useMascotStore } from '../store/useMascotStore';
 import { useRoomStore } from '../store/useRoomStore';
 import { usePushNotifications } from '../notifications/usePushNotifications';
 
@@ -18,6 +20,9 @@ function RootNavigator(): React.JSX.Element {
   );
 
   usePushNotifications(authStatus === 'signedIn');
+
+  const mascotStatus = useMascotStore( state => state.status );
+  const fetchMyMascot = useMascotStore( state => state.fetchMyMascot );
 
   const familyStatus = useFamilyStore( state => state.status );
   const fetchMyFamily = useFamilyStore( state => state.fetchMyFamily );
@@ -36,9 +41,15 @@ function RootNavigator(): React.JSX.Element {
 
   useEffect(() => {
     if (authStatus === 'signedIn') {
+      fetchMyMascot();
+    }
+  }, [authStatus, fetchMyMascot]);
+
+  useEffect(() => {
+    if (mascotStatus === 'created') {
       fetchMyFamily();
     }
-  }, [authStatus, fetchMyFamily]);
+  }, [mascotStatus, fetchMyFamily]);
 
   useEffect(() => {
     if (familyStatus === 'joined' && family) {
@@ -48,7 +59,8 @@ function RootNavigator(): React.JSX.Element {
 
   const isLoading =
     authStatus === 'loading' ||
-    (authStatus === 'signedIn' && familyStatus === 'loading');
+    (authStatus === 'signedIn' && mascotStatus === 'loading') ||
+    (mascotStatus === 'created' && familyStatus === 'loading');
   const isRoomsLoading = familyStatus === 'joined' && roomStatus === 'idle';
 
   if (isLoading) {
@@ -61,6 +73,10 @@ function RootNavigator(): React.JSX.Element {
 
   if (authStatus !== 'signedIn') {
     return <AuthNavigator />;
+  }
+
+  if (mascotStatus === 'none') {
+    return <MascotSetup />;
   }
 
   if (familyStatus === 'none') {

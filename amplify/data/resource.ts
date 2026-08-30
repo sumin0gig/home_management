@@ -8,14 +8,31 @@ const schema = a
       .model({
         email: a.string(),
         displayName: a.string(),
-        earStyle: a.enum(['ROUND', 'POINTY', 'FLOPPY']),
-        tailStyle: a.enum(['STRAIGHT', 'CURLY']),
+        mascot: a.hasOne('Mascot', 'userId'),
       })
       .authorization(allow => [
         allow
           .ownerDefinedIn('id')
           .identityClaim('sub')
           .to(['create', 'read', 'update']),
+        allow.authenticated().to(['read']),
+        allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+      ]),
+
+    Mascot: a
+      .model({
+        userId: a.id().required(),
+        user: a.belongsTo('User', 'userId'),
+        earStyle: a.enum(['ROUND', 'POINTY', 'FLOPPY']),
+        tailStyle: a.enum(['STRAIGHT', 'CURLY']),
+        fillColor: a.string(),
+      })
+      .secondaryIndexes(index => [index('userId')])
+      .authorization(allow => [
+        allow
+          .ownerDefinedIn('userId')
+          .identityClaim('sub')
+          .to(['create', 'read', 'update', 'delete']),
         allow.authenticated().to(['read']),
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
       ]),
