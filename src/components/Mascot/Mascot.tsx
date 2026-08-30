@@ -3,6 +3,7 @@ import Animated, { useAnimatedProps } from "react-native-reanimated";
 import Svg, { G } from "react-native-svg";
 import { colors } from "../../styles/commonStyle";
 import { ACTIONS } from "./actions";
+import { rotateDeg, scaleXY, translateY } from "./animations/svgTransforms";
 import { useMascotSharedValues } from "./animations/useMascotSharedValues";
 import Body, { BODY_BOX } from "./parts/Body";
 import Eye, { EYE_RADIUS } from "./parts/Eye";
@@ -66,35 +67,29 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action] );
 
-  // G only exposes x/y/rotation as JS-render-time convenience props (they get
-  // baked into a matrix by react-native-svg's own render pass) — Reanimated's
-  // per-frame native updates bypass that render pass entirely, so setting
-  // them via animatedProps silently no-ops. `transform` (RN-style array or an
-  // SVG transform string) is a real native prop and animates correctly; use
-  // that for every G/Rect/Ellipse animatedProps below instead of the y/
-  // rotation shorthand.
+  // See animations/svgTransforms.ts for why every G/Rect/Ellipse animatedProps
+  // below uses `transform` instead of the x/y/rotation shorthand.
   const rootAnimatedProps = useAnimatedProps( () => ({
     transform: [
-      { translateY: values.jumpY.value },
-      { scaleX: 1 + values.squashX.value },
-      { scaleY: 1 + values.squashY.value },
+      ...translateY( values.jumpY.value ),
+      ...scaleXY( 1 + values.squashX.value, 1 + values.squashY.value ),
     ],
   }) );
 
   const headAnimatedProps = useAnimatedProps( () => ({
-    transform: [{ translateY: values.headBob.value }],
+    transform: translateY( values.headBob.value ),
   }) );
 
   const bodyAnimatedProps = useAnimatedProps( () => ({
-    transform: [{ scaleY: 1 + values.bodyBreath.value }],
+    transform: scaleXY( 1, 1 + values.bodyBreath.value ),
   }) );
 
   const earLAnimatedProps = useAnimatedProps( () => ({
-    transform: [{ rotate: `${values.earLTwitch.value}deg` }],
+    transform: rotateDeg( values.earLTwitch.value ),
   }) );
 
   const earRAnimatedProps = useAnimatedProps( () => ({
-    transform: [{ rotate: `${values.earRTwitch.value}deg` }],
+    transform: rotateDeg( values.earRTwitch.value ),
   }) );
 
   const eyeLAnimatedProps = useAnimatedProps( () => ({
@@ -106,7 +101,7 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   }) );
 
   const tailAnimatedProps = useAnimatedProps( () => ({
-    transform: [{ rotate: `${values.tailWag.value}deg` }],
+    transform: rotateDeg( values.tailWag.value ),
   }) );
 
   // The 4 legs run in a row front-to-back (LEG_X[0] nearest the head,

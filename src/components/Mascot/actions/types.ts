@@ -1,27 +1,34 @@
 import type { SharedValue } from "react-native-reanimated";
 
+/**
+ * Every field here is a DELTA from a fixed base value owned elsewhere — never
+ * an absolute value. Actions only ever assign deltas (0 at rest, per
+ * `useMascotSharedValues`); `Mascot.tsx` is the only place that sums
+ * base + delta when building `useAnimatedProps`. Each field comment below
+ * just names where that base lives.
+ */
 export interface MascotSharedValues {
-  /** Offset from the root's resting y (0) — added directly, no base to sum. */
+  /** Root's resting y (0) — no separate base constant. */
   jumpY: SharedValue<number>;
-  /** Offset from neutral scale (1) — 0 is undistorted. */
+  /** Neutral scale (1). */
   squashX: SharedValue<number>;
-  /** Offset from neutral scale (1) — 0 is undistorted. */
+  /** Neutral scale (1). */
   squashY: SharedValue<number>;
-  /** Offset from HEAD_BASE_Y (Mascot.tsx) — 0 is resting position. */
+  /** HEAD_BASE_Y, Mascot.tsx. */
   headBob: SharedValue<number>;
-  /** Offset from neutral scale (1) — 0 is undistorted. */
+  /** Neutral scale (1). */
   bodyBreath: SharedValue<number>;
-  /** Offset from resting rotation (0deg). */
+  /** Resting rotation (0deg). */
   earLTwitch: SharedValue<number>;
-  /** Offset from resting rotation (0deg). */
+  /** Resting rotation (0deg). */
   earRTwitch: SharedValue<number>;
-  /** Offset from Eye's base radius (EYE_RADIUS in parts/Eye) — 0 is open. */
+  /** EYE_RADIUS, parts/Eye.tsx. */
   eyeLBlink: SharedValue<number>;
   eyeRBlink: SharedValue<number>;
-  /** Offset from resting rotation (0deg). */
+  /** Resting rotation (0deg). */
   tailWag: SharedValue<number>;
   /**
-   * Offset from FRONT_LEG_Y / BACK_LEG_Y (Mascot.tsx).
+   * FRONT_LEG_Y / BACK_LEG_Y, Mascot.tsx.
    *
    * Diagonal leg pairs (front-left+back-right vs front-right+back-left) bounce
    * in alternating phase, like a resting quadruped's weight shift — NOT the
