@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { signOutUser } from "../../api/auth";
+import { ensureUserExists } from "../../api/user";
 import { commonColor } from "../../styles/commonStyle";
 
 function FamilyOnboarding(): React.JSX.Element {
@@ -22,6 +23,30 @@ function FamilyOnboarding(): React.JSX.Element {
   const [inviteCode, setInviteCode] = React.useState( "" );
   const [isCreating, setIsCreating] = React.useState( false );
   const [isJoining, setIsJoining] = React.useState( false );
+  const [isBootstrapping, setIsBootstrapping] = React.useState( true );
+  const [bootstrapError, setBootstrapError] = React.useState<string | null>(
+    null,
+  );
+
+  React.useEffect( () => {
+    let cancelled = false;
+    ensureUserExists()
+      .catch( () => {
+        if (!cancelled) {
+          setBootstrapError(
+            "사용자 정보를 등록하지 못했습니다. 다시 시도해주세요.",
+          );
+        }
+      } )
+      .finally( () => {
+        if (!cancelled) {
+          setIsBootstrapping( false );
+        }
+      } );
+    return () => {
+      cancelled = true;
+    };
+  }, [] );
 
   const handleCreate = async () => {
     if (!familyName.trim()) {
@@ -51,6 +76,14 @@ function FamilyOnboarding(): React.JSX.Element {
     }
   };
 
+  if (isBootstrapping) {
+    return (
+      <View style={ [styles.container, styles.centered] }>
+        <ActivityIndicator color={ commonColor.touchable } />
+      </View>
+    );
+  }
+
   return (
     <View style={ styles.container }>
       <Pressable
@@ -59,6 +92,12 @@ function FamilyOnboarding(): React.JSX.Element {
       >
         <Text style={ styles.logoutLinkText }> 로그아웃 </Text>
       </Pressable>
+
+      {
+        bootstrapError
+        ? <Text style={ styles.error }> { bootstrapError } </Text>
+        : null
+      }
 
       {
         error
@@ -118,6 +157,9 @@ const styles = StyleSheet.create( {
     justifyContent: "center",
     padding: 24,
     backgroundColor: commonColor.backgroundColor,
+  },
+  centered: {
+    alignItems: "center",
   },
   logoutLink: {
     position: "absolute",

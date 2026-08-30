@@ -15,7 +15,7 @@ const schema = a
         allow
           .ownerDefinedIn('id')
           .identityClaim('sub')
-          .to(['read', 'update']),
+          .to(['create', 'read', 'update']),
         allow.authenticated().to(['read']),
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
       ]),
