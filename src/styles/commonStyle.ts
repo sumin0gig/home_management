@@ -14,7 +14,7 @@ export const colors = {
 export const commonColor = {
   overlay: 'rgba(0, 0, 0, 0.4)',
   negative: '#D9705B',
-  touchable: '#F2BDA6',
+  touchable: '#a36044',
   backgroundColor: colors.white,
   textSecondary: colors.gray,
 } as const;
