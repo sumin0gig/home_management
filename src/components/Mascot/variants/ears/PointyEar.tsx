@@ -13,7 +13,7 @@ const PointyEar = ({
 }: EarVariantProps): React.JSX.Element => {
   return (
     <AnimatedPath
-      d="M4,44 L17,4 L30,44 Q17,50 4,44 Z"
+      d="M4,44 Q0,24 17,4 Q34,24 30,44 Q17,50 4,44 Z"
       fill={ fill }
       { ...(animatedProps && { animatedProps }) }
     />
