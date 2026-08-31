@@ -1,56 +1,19 @@
 import React from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Mascot from "../Mascot/Mascot";
-import type { EarVariant, TailVariant } from "../Mascot/types";
+import MascotStyleEditor from "../Mascot/MascotStyleEditor";
+import { EAR_OPTIONS, TAIL_OPTIONS } from "../Mascot/optionMaps";
 import { signOutUser } from "../../api/auth";
 import type { MascotInput } from "../../api/mascot";
 import { useMascotStore } from "../../store/useMascotStore";
 import { colors, commonColor } from "../../styles/commonStyle";
-
-type Tab = "ear" | "tail" | "color";
-
-const EAR_OPTIONS: Array<{
-  value: MascotInput["earStyle"];
-  label: string;
-  variant: EarVariant;
-}> = [
-  { value: "ROUND", label: "둥근 귀", variant: "round" },
-  { value: "POINTY", label: "뾰족한 귀", variant: "pointy" },
-  { value: "FLOPPY", label: "늘어진 귀", variant: "floppy" },
-];
-
-const TAIL_OPTIONS: Array<{
-  value: MascotInput["tailStyle"];
-  label: string;
-  variant: TailVariant;
-}> = [
-  { value: "STRAIGHT", label: "일자 꼬리", variant: "straight" },
-  { value: "CURLY", label: "말린 꼬리", variant: "curly" },
-];
-
-const COLOR_OPTIONS = [
-  colors.red,
-  colors.yellow,
-  colors.yellowGreen,
-  colors.green,
-  colors.teal,
-  colors.blue,
-];
 
 function MascotSetup(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const error = useMascotStore( state => state.error );
   const createMascot = useMascotStore( state => state.createMascot );
 
-  const [activeTab, setActiveTab] = React.useState<Tab>( "ear" );
   const [earStyle, setEarStyle] =
     React.useState<MascotInput["earStyle"]>( "ROUND" );
   const [tailStyle, setTailStyle] =
@@ -101,116 +64,16 @@ function MascotSetup(): React.JSX.Element {
         : null
       }
 
-      <View style={ styles.tabRow }>
-        <Pressable
-          style={ [styles.tab, activeTab === "ear" && styles.tabActive] }
-          onPress={ () => setActiveTab( "ear" ) }
-        >
-          <Text
-            style={ [
-              styles.tabText,
-              activeTab === "ear" && styles.tabTextActive,
-            ] }
-          >
-            귀 모양
-          </Text>
-        </Pressable>
-        <Pressable
-          style={ [styles.tab, activeTab === "tail" && styles.tabActive] }
-          onPress={ () => setActiveTab( "tail" ) }
-        >
-          <Text
-            style={ [
-              styles.tabText,
-              activeTab === "tail" && styles.tabTextActive,
-            ] }
-          >
-            꼬리 모양
-          </Text>
-        </Pressable>
-        <Pressable
-          style={ [styles.tab, activeTab === "color" && styles.tabActive] }
-          onPress={ () => setActiveTab( "color" ) }
-        >
-          <Text
-            style={ [
-              styles.tabText,
-              activeTab === "color" && styles.tabTextActive,
-            ] }
-          >
-            색상
-          </Text>
-        </Pressable>
+      <View style={ styles.editorContainer }>
+        <MascotStyleEditor
+          earStyle={ earStyle }
+          tailStyle={ tailStyle }
+          fillColor={ fillColor }
+          onChangeEarStyle={ setEarStyle }
+          onChangeTailStyle={ setTailStyle }
+          onChangeFillColor={ setFillColor }
+        />
       </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={ false }
-        style={ styles.optionScroll }
-        contentContainerStyle={ styles.optionRow }
-      >
-        {
-          activeTab === "ear"
-          ? EAR_OPTIONS.map( option => (
-            <Pressable
-              key={ option.value }
-              style={ [
-                styles.optionChip,
-                earStyle === option.value && styles.optionChipSelected,
-              ] }
-              onPress={ () => setEarStyle( option.value ) }
-            >
-              <Text
-                style={ [
-                  styles.optionChipText,
-                  earStyle === option.value && styles.optionChipTextSelected,
-                ] }
-              >
-                { option.label }
-              </Text>
-            </Pressable>
-          ) )
-          : null
-        }
-        {
-          activeTab === "tail"
-          ? TAIL_OPTIONS.map( option => (
-            <Pressable
-              key={ option.value }
-              style={ [
-                styles.optionChip,
-                tailStyle === option.value && styles.optionChipSelected,
-              ] }
-              onPress={ () => setTailStyle( option.value ) }
-            >
-              <Text
-                style={ [
-                  styles.optionChipText,
-                  tailStyle === option.value && styles.optionChipTextSelected,
-                ] }
-              >
-                { option.label }
-              </Text>
-            </Pressable>
-          ) )
-          : null
-        }
-        {
-          activeTab === "color"
-          ? COLOR_OPTIONS.map( color => (
-            <Pressable
-              key={ color }
-              style={ [
-                styles.colorSwatch,
-                { backgroundColor: color },
-                fillColor === color && styles.colorSwatchSelected,
-              ] }
-              onPress={ () => setFillColor( color ) }
-            />
-          ) )
-          : null
-        }
-      </ScrollView>
 
       <Pressable
         style={ styles.submitButton }
@@ -257,64 +120,8 @@ const styles = StyleSheet.create( {
     marginBottom: 12,
     textAlign: "center",
   },
-  tabRow: {
-    flexDirection: "row",
-    marginBottom: 16,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: "#eee",
-  },
-  tabActive: {
-    borderBottomColor: commonColor.touchable,
-  },
-  tabText: {
-    fontSize: 14,
-    color: "#999",
-    fontWeight: "600",
-  },
-  tabTextActive: {
-    color: commonColor.touchable,
-  },
-  optionScroll: {
-    flexGrow: 0,
+  editorContainer: {
     marginBottom: 32,
-  },
-  optionRow: {
-    flexDirection: "row",
-    gap: 10,
-    paddingVertical: 4,
-  },
-  optionChip: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  optionChipSelected: {
-    borderColor: commonColor.touchable,
-    backgroundColor: commonColor.touchable,
-  },
-  optionChipText: {
-    color: "#555",
-    fontWeight: "600",
-  },
-  optionChipTextSelected: {
-    color: "#fff",
-  },
-  colorSwatch: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  colorSwatchSelected: {
-    borderColor: commonColor.touchable,
   },
   submitButton: {
     backgroundColor: commonColor.touchable,

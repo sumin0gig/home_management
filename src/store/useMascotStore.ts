@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import {
   getMyMascot,
   createMascot as apiCreateMascot,
+  updateMascot as apiUpdateMascot,
   type MascotRow,
   type MascotInput,
 } from '../api/mascot';
@@ -14,6 +15,7 @@ interface MascotState {
   error: string | null;
   fetchMyMascot: () => Promise<void>;
   createMascot: (input: MascotInput) => Promise<void>;
+  updateMascot: (input: Partial<MascotInput>) => Promise<void>;
   reset: () => void;
 }
 
@@ -23,7 +25,7 @@ const initialState = {
   error: null as string | null,
 };
 
-export const useMascotStore = create<MascotState>(set => ({
+export const useMascotStore = create<MascotState>((set, get) => ({
   ...initialState,
 
   fetchMyMascot: async () => {
@@ -41,6 +43,21 @@ export const useMascotStore = create<MascotState>(set => ({
     try {
       const mascot = await apiCreateMascot(input);
       set({ status: 'created', mascot });
+    } catch (err) {
+      set({ error: (err as Error).message });
+      throw err;
+    }
+  },
+
+  updateMascot: async (input: Partial<MascotInput>) => {
+    set({ error: null });
+    const { mascot } = get();
+    if (!mascot) {
+      return;
+    }
+    try {
+      const updated = await apiUpdateMascot(mascot.id, input);
+      set({ mascot: updated });
     } catch (err) {
       set({ error: (err as Error).message });
       throw err;
