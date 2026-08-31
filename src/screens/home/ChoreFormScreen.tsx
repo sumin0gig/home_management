@@ -94,7 +94,7 @@ function ChoreFormScreen( { navigation, route }: Props ): React.JSX.Element {
     );
   };
 
-  const handleSave = async () => {
+  const onSubmit = async () => {
     if (!roomId) {
       setError( "방을 선택해주세요." );
       return;
@@ -141,7 +141,7 @@ function ChoreFormScreen( { navigation, route }: Props ): React.JSX.Element {
     }
   };
 
-  const handleDelete = () => {
+  const onDelete = () => {
     if (!choreId) {
       return;
     }
@@ -308,7 +308,7 @@ function ChoreFormScreen( { navigation, route }: Props ): React.JSX.Element {
 
       <Pressable
         style={ styles.saveButton }
-        onPress={ handleSave }
+        onPress={ onSubmit }
         disabled={ isSaving }
       >
         {
@@ -322,7 +322,7 @@ function ChoreFormScreen( { navigation, route }: Props ): React.JSX.Element {
         isEditMode
         ? <DefaultButton
           text="삭제"
-          onPress={ handleDelete }
+          onPress={ onDelete }
           style={ styles.deleteButton }
           textStyle={ styles.deleteButtonText }
         />

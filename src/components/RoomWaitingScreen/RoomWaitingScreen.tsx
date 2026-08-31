@@ -18,7 +18,7 @@ function RoomWaitingScreen(): React.JSX.Element {
   const fetchRooms = useRoomStore( state => state.fetchRooms );
   const [isRefreshing, setIsRefreshing] = React.useState( false );
 
-  const handleRefresh = async () => {
+  const onRefresh = async () => {
     if (!family) {
       return;
     }
@@ -47,7 +47,7 @@ function RoomWaitingScreen(): React.JSX.Element {
 
       <Pressable
         style={ styles.button }
-        onPress={ handleRefresh }
+        onPress={ onRefresh }
         disabled={ isRefreshing }
       >
         {

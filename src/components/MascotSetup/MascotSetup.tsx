@@ -1,5 +1,11 @@
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Mascot from "../Mascot/Mascot";
 import MascotStyleEditor from "../Mascot/MascotStyleEditor";
@@ -28,7 +34,7 @@ function MascotSetup(): React.JSX.Element {
     TAIL_OPTIONS.find( option => option.value === tailStyle )?.variant ??
     "straight";
 
-  const handleSubmit = async () => {
+  const onSubmit = async () => {
     setIsSaving( true );
     try {
       await createMascot( { earStyle, tailStyle, fillColor } );
@@ -77,7 +83,7 @@ function MascotSetup(): React.JSX.Element {
 
       <Pressable
         style={ styles.submitButton }
-        onPress={ handleSubmit }
+        onPress={ onSubmit }
         disabled={ isSaving }
       >
         {

@@ -48,7 +48,7 @@ function FamilyOnboarding(): React.JSX.Element {
     };
   }, [] );
 
-  const handleCreate = async () => {
+  const onCreate = async () => {
     if (!familyName.trim()) {
       return;
     }
@@ -62,7 +62,7 @@ function FamilyOnboarding(): React.JSX.Element {
     }
   };
 
-  const handleJoin = async () => {
+  const onJoin = async () => {
     if (!inviteCode.trim()) {
       return;
     }
@@ -115,7 +115,7 @@ function FamilyOnboarding(): React.JSX.Element {
         />
         <Pressable
           style={ styles.button }
-          onPress={ handleCreate }
+          onPress={ onCreate }
           disabled={ isCreating }
         >
           {
@@ -135,11 +135,7 @@ function FamilyOnboarding(): React.JSX.Element {
           onChangeText={ setInviteCode }
           autoCapitalize="characters"
         />
-        <Pressable
-          style={ styles.button }
-          onPress={ handleJoin }
-          disabled={ isJoining }
-        >
+        <Pressable style={ styles.button } onPress={ onJoin } disabled={ isJoining }>
           {
             isJoining
             ? <ActivityIndicator color="#fff" />

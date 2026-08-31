@@ -7,7 +7,7 @@ import DefaultButton from "../../components/common/DefaultButton";
 function SettingsScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
 
-  const handleSignOut = async () => {
+  const onSignOut = async () => {
     try {
       await signOutUser();
     } catch (err) {
@@ -24,7 +24,7 @@ function SettingsScreen(): React.JSX.Element {
       }
       <DefaultButton
         text="로그아웃"
-        onPress={ handleSignOut }
+        onPress={ onSignOut }
         style={ styles.button }
         textStyle={ styles.buttonText }
       />

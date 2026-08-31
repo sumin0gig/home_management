@@ -74,7 +74,7 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     height: 0,
   } );
 
-  const handleOverlayLayout = (e: LayoutChangeEvent) => {
+  const onOverlayLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setWanderBounds( { width, height } );
   };
@@ -114,7 +114,7 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const hasDueToday = (room: RoomRow): boolean =>
     chores.some( c => c.roomId === room.id && c.nextDueDate <= today );
 
-  const handleAddRoom = async (
+  const onAddRoom = async (
     roomType: NonNullable<RoomType>,
     size: NonNullable<RoomSize>,
     label: string,
@@ -154,7 +154,7 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
         <AddRoomModal
           visible={ isAddingRoom }
           onClose={ () => setIsAddingRoom( false ) }
-          onSubmit={ handleAddRoom }
+          onSubmit={ onAddRoom }
         />
 
         <ScrollView contentContainerStyle={ styles.roomGrid }>
@@ -185,7 +185,7 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
       <View
         style={ styles.wanderLayer }
         pointerEvents="box-none"
-        onLayout={ handleOverlayLayout }
+        onLayout={ onOverlayLayout }
       >
         {
           mascotConfig
@@ -203,8 +203,8 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
 
 const AddRoomModal = ( {
   visible,
-  onClose,
-  onSubmit,
+  onClose: onCloseModal,
+  onSubmit: onSubmitRoom,
 }: AddRoomModalProps ): React.JSX.Element => {
   const [newRoomType, setNewRoomType] =
     React.useState<NonNullable<RoomType> | null>( null );
@@ -219,23 +219,23 @@ const AddRoomModal = ( {
     setNewRoomLabel( "" );
   };
 
-  const handleSelectRoomType = (roomType: NonNullable<RoomType>) => {
+  const onSelectRoomType = (roomType: NonNullable<RoomType>) => {
     setNewRoomType( roomType );
     setNewRoomSize( ROOM_TYPE_DEFAULT_SIZE[roomType] );
   };
 
-  const handleClose = () => {
+  const onClose = () => {
     resetForm();
-    onClose();
+    onCloseModal();
   };
 
-  const handleSave = async () => {
+  const onSubmit = async () => {
     if (!newRoomType) {
       return;
     }
     setIsSaving( true );
     try {
-      await onSubmit( newRoomType, newRoomSize, newRoomLabel );
+      await onSubmitRoom( newRoomType, newRoomSize, newRoomLabel );
       resetForm();
     } catch {
       // 에러는 store의 error 상태로 표시됨
@@ -245,7 +245,7 @@ const AddRoomModal = ( {
   };
 
   return (
-    <ModalView visible={ visible } onRequestClose={ handleClose }>
+    <ModalView visible={ visible } onRequestClose={ onClose }>
       <Text style={ styles.modalTitle }> 방 추가 </Text>
       <View style={ styles.chipRow }>
         { ROOM_TYPES.map( roomType => (
@@ -255,7 +255,7 @@ const AddRoomModal = ( {
               styles.chip,
               newRoomType === roomType && styles.chipSelected,
             ] }
-            onPress={ () => handleSelectRoomType( roomType ) }
+            onPress={ () => onSelectRoomType( roomType ) }
           >
             <Text
               style={
@@ -300,13 +300,13 @@ const AddRoomModal = ( {
       <View style={ styles.addRoomButtonRow }>
         <DefaultButton
           text="취소"
-          onPress={ handleClose }
+          onPress={ onClose }
           style={ styles.cancelButton }
           textStyle={ styles.cancelButtonText }
         />
         <Pressable
           style={ styles.saveRoomButton }
-          onPress={ handleSave }
+          onPress={ onSubmit }
           disabled={ isSaving || !newRoomType }
         >
           {

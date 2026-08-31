@@ -18,8 +18,8 @@ interface Props {
 
 function CustomRoomModal( {
   visible,
-  onClose,
-  onSubmit,
+  onClose: onCloseProp,
+  onSubmit: onSubmitProp,
 }: Props ): React.JSX.Element {
   const [name, setName] = React.useState( "" );
   const [size, setSize] =
@@ -30,21 +30,21 @@ function CustomRoomModal( {
     setSize( DEFAULT_ROOM_SIZE );
   };
 
-  const handleClose = () => {
+  const onClose = () => {
     resetForm();
-    onClose();
+    onCloseProp();
   };
 
-  const handleSubmit = () => {
+  const onSubmit = () => {
     if (!name.trim()) {
       return;
     }
-    onSubmit( name.trim(), size );
+    onSubmitProp( name.trim(), size );
     resetForm();
   };
 
   return (
-    <ModalView visible={ visible } onRequestClose={ handleClose }>
+    <ModalView visible={ visible } onRequestClose={ onClose }>
       <Text style={ styles.modalTitle }> 다른 방 만들기 </Text>
       <TextInput
         style={ styles.input }
@@ -78,13 +78,13 @@ function CustomRoomModal( {
       <View style={ styles.modalButtonRow }>
         <DefaultButton
           text="취소"
-          onPress={ handleClose }
+          onPress={ onClose }
           style={ styles.modalCancelButton }
           textStyle={ styles.modalCancelButtonText }
         />
         <Pressable
           style={ styles.modalAddButton }
-          onPress={ handleSubmit }
+          onPress={ onSubmit }
           disabled={ !name.trim() }
         >
           <Text style={ styles.modalAddButtonText }> 추가 </Text>

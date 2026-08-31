@@ -51,7 +51,7 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
     mascot.happiness ?? 0,
   );
 
-  const handleSave = async () => {
+  const onSubmit = async () => {
     setIsSaving( true );
     try {
       await updateMascot( { earStyle, tailStyle, fillColor } );
@@ -106,7 +106,7 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
 
       <Pressable
         style={ styles.saveButton }
-        onPress={ handleSave }
+        onPress={ onSubmit }
         disabled={ isSaving }
       >
         {

@@ -7,7 +7,7 @@ import DefaultButton from "../components/common/DefaultButton";
 function LoginScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
 
-  const handleGoogleSignIn = async () => {
+  const onGoogleSignIn = async () => {
     setError( null );
     try {
       await signInWithGoogle();
@@ -29,7 +29,7 @@ function LoginScreen(): React.JSX.Element {
 
       <DefaultButton
         text="Google로 로그인"
-        onPress={ handleGoogleSignIn }
+        onPress={ onGoogleSignIn }
         style={ styles.button }
         textStyle={ styles.buttonText }
       />

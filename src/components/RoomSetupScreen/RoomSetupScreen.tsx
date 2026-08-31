@@ -34,7 +34,7 @@ function RoomSetupScreen(): React.JSX.Element {
   const [submitError, setSubmitError] = React.useState<string | null>( null );
   const [isCustomModalVisible, setIsCustomModalVisible] = React.useState( false );
 
-  const handleAddBlock = (roomType: NonNullable<RoomType>) => {
+  const onAddBlock = (roomType: NonNullable<RoomType>) => {
     setBlocks( prev => [
       ...prev,
       {
@@ -46,7 +46,7 @@ function RoomSetupScreen(): React.JSX.Element {
     ] );
   };
 
-  const handleAddCustomBlock = (name: string, size: NonNullable<RoomSize>) => {
+  const onAddCustomBlock = (name: string, size: NonNullable<RoomSize>) => {
     setBlocks( prev => [
       ...prev,
       {
@@ -59,11 +59,11 @@ function RoomSetupScreen(): React.JSX.Element {
     setIsCustomModalVisible( false );
   };
 
-  const handleRemoveBlock = (key: string) => {
+  const onRemoveBlock = (key: string) => {
     setBlocks( prev => prev.filter( b => b.key !== key ) );
   };
 
-  const handleSubmit = async () => {
+  const onSubmit = async () => {
     if (!family || blocks.length === 0) {
       return;
     }
@@ -112,7 +112,7 @@ function RoomSetupScreen(): React.JSX.Element {
           <Pressable
             key={ roomType }
             style={ styles.paletteChip }
-            onPress={ () => handleAddBlock( roomType ) }
+            onPress={ () => onAddBlock( roomType ) }
           >
             <Text style={ styles.paletteChipText }>
               + { ROOM_TYPE_LABELS[roomType] }
@@ -138,7 +138,7 @@ function RoomSetupScreen(): React.JSX.Element {
             <RoomBlockTile
               key={ block.key }
               block={ block }
-              onRemove={ () => handleRemoveBlock( block.key ) }
+              onRemove={ () => onRemoveBlock( block.key ) }
             />
           ) )
         }
@@ -146,7 +146,7 @@ function RoomSetupScreen(): React.JSX.Element {
 
       <Pressable
         style={ styles.submitButton }
-        onPress={ handleSubmit }
+        onPress={ onSubmit }
         disabled={ isSaving || blocks.length === 0 }
       >
         {
@@ -159,7 +159,7 @@ function RoomSetupScreen(): React.JSX.Element {
       <CustomRoomModal
         visible={ isCustomModalVisible }
         onClose={ () => setIsCustomModalVisible( false ) }
-        onSubmit={ handleAddCustomBlock }
+        onSubmit={ onAddCustomBlock }
       />
     </View>
   );

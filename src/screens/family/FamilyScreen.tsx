@@ -37,12 +37,12 @@ function FamilyScreen(): React.JSX.Element {
 
   const isOwner = membership.role === "OWNER";
 
-  const handleStartEdit = () => {
+  const onStartEdit = () => {
     setNameDraft( family.name );
     setIsEditingName( true );
   };
 
-  const handleSaveName = async () => {
+  const onSaveName = async () => {
     if (!nameDraft.trim()) {
       return;
     }
@@ -57,7 +57,7 @@ function FamilyScreen(): React.JSX.Element {
     }
   };
 
-  const handleRemoveMember = (member: FamilyMemberRow) => {
+  const onRemoveMember = (member: FamilyMemberRow) => {
     Alert.alert( "멤버 제거", `${member.displayName}님을 가족에서 제거할까요?`, [
       { text: "취소", style: "cancel" },
       {
@@ -68,7 +68,7 @@ function FamilyScreen(): React.JSX.Element {
     ] );
   };
 
-  const handleLeave = () => {
+  const onLeave = () => {
     Alert.alert( "가족 떠나기", "정말 이 가족을 떠나시겠어요?", [
       { text: "취소", style: "cancel" },
       {
@@ -107,7 +107,7 @@ function FamilyScreen(): React.JSX.Element {
               autoFocus
             />
             <Pressable
-              onPress={ handleSaveName }
+              onPress={ onSaveName }
               disabled={ isSaving }
               style={ styles.saveButton }
             >
@@ -116,7 +116,7 @@ function FamilyScreen(): React.JSX.Element {
               </Text>
             </Pressable>
           </View>
-          : <Pressable onPress={ isOwner ? handleStartEdit : undefined }>
+          : <Pressable onPress={ isOwner ? onStartEdit : undefined }>
             <Text style={ styles.familyName }>
               { family.name }
               { isOwner ? " ✎" : "" }
@@ -143,7 +143,7 @@ function FamilyScreen(): React.JSX.Element {
             </View>
             {
               isOwner && item.id !== membership.id
-              ? <Pressable onPress={ () => handleRemoveMember( item ) }>
+              ? <Pressable onPress={ () => onRemoveMember( item ) }>
                 <Text style={ styles.removeText }> 제거 </Text>
               </Pressable>
               : null
@@ -154,7 +154,7 @@ function FamilyScreen(): React.JSX.Element {
 
       <Pressable
         style={ styles.leaveButton }
-        onPress={ handleLeave }
+        onPress={ onLeave }
         disabled={ isLeaving }
       >
         <Text style={ styles.leaveButtonText }>
