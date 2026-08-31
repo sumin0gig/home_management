@@ -1,7 +1,9 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentAuthUser, fetchDisplayName } from './auth';
+import { getMyMascot, updateMascot } from './mascot';
 import { throwIfErrors } from './shared';
+import { computeHappinessGain } from '../utils/happiness';
 
 const client = generateClient<Schema>();
 
@@ -196,6 +198,16 @@ export async function completeChore(chore: ChoreRow): Promise<void> {
     nextDueDate,
   });
   throwIfErrors(updateErrors, '완료 처리에 실패했습니다.');
+
+  try {
+    const mascot = await getMyMascot();
+    if (mascot) {
+      const gain = computeHappinessGain(chore);
+      await updateMascot(mascot.id, { happiness: (mascot.happiness ?? 0) + gain });
+    }
+  } catch {
+    // 마스코트 행복도 갱신 실패가 집안일 완료 자체를 실패시키면 안 됨
+  }
 }
 
 export async function listChoreLogs(

@@ -11,6 +11,7 @@ export interface MascotInput {
   earStyle: 'ROUND' | 'POINTY' | 'FLOPPY';
   tailStyle: 'STRAIGHT' | 'CURLY';
   fillColor?: string;
+  happiness?: number;
 }
 
 export async function getMyMascot(): Promise<MascotRow | null> {

@@ -9,6 +9,7 @@ import {
   type ChoreInput,
 } from '../api/chore';
 import { listRoomsForFamily } from '../api/room';
+import { useMascotStore } from './useMascotStore';
 
 type ChoreStatus = 'idle' | 'loading' | 'loaded';
 
@@ -96,6 +97,7 @@ export const useChoreStore = create<ChoreState>((set, get) => ({
       if (currentFamilyId) {
         await get().fetchChoresForFamily(currentFamilyId);
       }
+      await useMascotStore.getState().fetchMyMascot();
     } catch (err) {
       set({ error: (err as Error).message });
       throw err;
