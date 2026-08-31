@@ -26,6 +26,7 @@ const schema = a
         earStyle: a.enum(['ROUND', 'POINTY', 'FLOPPY']),
         tailStyle: a.enum(['STRAIGHT', 'CURLY']),
         fillColor: a.string(),
+        happiness: a.integer().default(0),
       })
       .secondaryIndexes(index => [index('userId')])
       .authorization(allow => [
