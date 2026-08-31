@@ -8,6 +8,7 @@ export type HomeStackParamList = {
   HomeMain: undefined;
   RoomDetail: { roomId: string };
   ChoreForm: { choreId?: string; roomId?: string } | undefined;
+  MascotDetail: undefined;
 };
 
 export type FamilyStackParamList = {
