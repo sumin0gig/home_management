@@ -1,7 +1,7 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentAuthUser } from './auth';
-import { throwIfErrors } from './chore';
+import { throwIfErrors } from './shared';
 
 const client = generateClient<Schema>();
 

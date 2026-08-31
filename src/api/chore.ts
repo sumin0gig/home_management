@@ -1,6 +1,7 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentAuthUser, fetchDisplayName } from './auth';
+import { throwIfErrors } from './shared';
 
 const client = generateClient<Schema>();
 
@@ -71,13 +72,6 @@ export function computeNextDueDate(chore: ChoreInput, from: Date): string {
     return toDateString(new Date(fromYear, nextMonthInSameYear - 1, 1));
   }
   return toDateString(new Date(fromYear + 1, months[0] - 1, 1));
-}
-
-export function throwIfErrors(errors: unknown, fallbackMessage: string): void {
-  if (errors && Array.isArray(errors) && errors.length > 0) {
-    const message = (errors[0] as { message?: string })?.message;
-    throw new Error(message ?? fallbackMessage);
-  }
 }
 
 export async function listChoresForRoom(roomId: string): Promise<ChoreRow[]> {

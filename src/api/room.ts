@@ -1,11 +1,11 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import {
-  throwIfErrors,
   toDateString,
   listAllChoresForRoom,
   deleteChoreAndLogs,
 } from './chore';
+import { throwIfErrors } from './shared';
 import { listChoreTemplatesForRoomType } from './choreTemplate';
 
 const client = generateClient<Schema>();
