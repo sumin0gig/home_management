@@ -1,6 +1,7 @@
 import React from "react";
 import {
   ActivityIndicator,
+  type LayoutChangeEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,11 +14,17 @@ import type { HomeStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { useChoreStore } from "../../store/useChoreStore";
 import { useRoomStore } from "../../store/useRoomStore";
+import { useMascotStore } from "../../store/useMascotStore";
 import { toDateString } from "../../api/chore";
 import { commonColor } from "../../styles/commonStyle";
 import ModalView from "../../components/common/ModalView";
 import DefaultButton from "../../components/common/DefaultButton";
 import RoomBlockTile from "../../components/RoomSetupScreen/RoomBlockTile";
+import WanderingMascot from "../../components/Mascot/WanderingMascot";
+import {
+  EAR_OPTIONS,
+  TAIL_OPTIONS,
+} from "../../components/Mascot/optionMaps";
 import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
@@ -59,7 +66,18 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     state => state.fetchChoresForFamily,
   );
 
+  const mascot = useMascotStore( state => state.mascot );
+
   const [isAddingRoom, setIsAddingRoom] = React.useState( false );
+  const [wanderBounds, setWanderBounds] = React.useState( {
+    width: 0,
+    height: 0,
+  } );
+
+  const handleOverlayLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setWanderBounds( { width, height } );
+  };
 
   React.useEffect( () => {
     if (family?.id) {
@@ -108,47 +126,77 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     setIsAddingRoom( false );
   };
 
+  const mascotConfig = mascot
+    ? {
+      earStyle:
+        EAR_OPTIONS.find( option => option.value === mascot.earStyle )
+          ?.variant ?? "round",
+      tailStyle:
+        TAIL_OPTIONS.find( option => option.value === mascot.tailStyle )
+          ?.variant ?? "straight",
+      fillColor: mascot.fillColor ?? undefined,
+    }
+    : null;
+
   return (
-    <View style={ styles.container }>
-      { roomError && <Text style={ styles.error }> { roomError } </Text> }
-      { choreError && <Text style={ styles.error }> { choreError } </Text> }
+    <View style={ styles.root }>
+      <View style={ styles.container }>
+        { roomError && <Text style={ styles.error }> { roomError } </Text> }
+        { choreError && <Text style={ styles.error }> { choreError } </Text> }
 
-      <Pressable
-        style={ styles.addRoomLink }
-        onPress={ () => setIsAddingRoom( true ) }
+        <Pressable
+          style={ styles.addRoomLink }
+          onPress={ () => setIsAddingRoom( true ) }
+        >
+          <Text style={ styles.addRoomLinkText }> + 방 추가 </Text>
+        </Pressable>
+
+        <AddRoomModal
+          visible={ isAddingRoom }
+          onClose={ () => setIsAddingRoom( false ) }
+          onSubmit={ handleAddRoom }
+        />
+
+        <ScrollView contentContainerStyle={ styles.roomGrid }>
+          {
+            sortedRooms.length === 0
+            ? <Text style={ styles.emptySection }>
+              등록된 방이 없습니다. 방을 추가해주세요.
+            </Text>
+            : sortedRooms.map( room => (
+              <RoomBlockTile
+                key={ room.id }
+                block={ {
+                  key: room.id,
+                  roomType: room.roomType ?? "GENERAL_ROOM",
+                  size: room.size ?? DEFAULT_ROOM_SIZE,
+                  label: room.label ?? "",
+                } }
+                onPress={ () =>
+                  navigation.navigate( "RoomDetail", { roomId: room.id } )
+                }
+                hasDueToday={ hasDueToday( room ) }
+              />
+            ) )
+          }
+        </ScrollView>
+      </View>
+
+      <View
+        style={ styles.wanderLayer }
+        pointerEvents="box-none"
+        onLayout={ handleOverlayLayout }
       >
-        <Text style={ styles.addRoomLinkText }> + 방 추가 </Text>
-      </Pressable>
-
-      <AddRoomModal
-        visible={ isAddingRoom }
-        onClose={ () => setIsAddingRoom( false ) }
-        onSubmit={ handleAddRoom }
-      />
-
-      <ScrollView contentContainerStyle={ styles.roomGrid }>
         {
-          sortedRooms.length === 0
-          ? <Text style={ styles.emptySection }>
-            등록된 방이 없습니다. 방을 추가해주세요.
-          </Text>
-          : sortedRooms.map( room => (
-            <RoomBlockTile
-              key={ room.id }
-              block={ {
-                key: room.id,
-                roomType: room.roomType ?? "GENERAL_ROOM",
-                size: room.size ?? DEFAULT_ROOM_SIZE,
-                label: room.label ?? "",
-              } }
-              onPress={ () =>
-                navigation.navigate( "RoomDetail", { roomId: room.id } )
-              }
-              hasDueToday={ hasDueToday( room ) }
-            />
-          ) )
+          mascotConfig
+          ? <WanderingMascot
+            config={ mascotConfig }
+            bounds={ wanderBounds }
+            onPress={ () => navigation.navigate( "MascotDetail" ) }
+          />
+          : null
         }
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -273,6 +321,12 @@ const AddRoomModal = ( {
 };
 
 const styles = StyleSheet.create( {
+  root: {
+    flex: 1,
+  },
+  wanderLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
   container: {
     flex: 1,
     padding: 24,
