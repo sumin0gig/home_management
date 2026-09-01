@@ -2,31 +2,21 @@ import React from "react";
 import { Alert } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import ChoreFormScreen from "../../../src/screens/home/ChoreFormScreen";
-import { useChoreStore } from "../../../src/store/useChoreStore";
+import { useChoreStore, listChoreLogs } from "../../../src/store/useChoreStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
-import {
-  createChore,
-  updateChore,
-  deleteChoreAndLogs,
-  listChoreLogs,
-} from "../../../src/api/chore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
-import type { RoomRow } from "../../../src/api/room";
-import type { ChoreRow, ChoreLogRow } from "../../../src/api/chore";
+import type { RoomRow } from "../../../src/store/useRoomStore";
+import type { ChoreRow, ChoreLogRow } from "../../../src/store/useChoreStore";
 
-jest.mock( "../../../src/api/chore", () => ( {
-  ...jest.requireActual( "../../../src/api/chore" ),
-  createChore: jest.fn(),
-  updateChore: jest.fn(),
-  deleteChoreAndLogs: jest.fn(),
+jest.mock( "../../../src/store/useChoreStore", () => ( {
+  ...jest.requireActual( "../../../src/store/useChoreStore" ),
   listChoreLogs: jest.fn(),
-  completeChore: jest.fn(),
 } ) );
 
-const mockedCreateChore = createChore as jest.Mock;
-const mockedUpdateChore = updateChore as jest.Mock;
-const mockedDeleteChoreAndLogs = deleteChoreAndLogs as jest.Mock;
+const mockedCreateChore = jest.fn();
+const mockedUpdateChore = jest.fn();
+const mockedDeleteChore = jest.fn();
 const mockedListChoreLogs = listChoreLogs as jest.Mock;
 
 const bedroom: RoomRow = {
@@ -79,6 +69,11 @@ describe( "ChoreFormScreen", () => {
     jest.clearAllMocks();
     resetAllStores();
     useRoomStore.setState( { rooms: [bedroom] } );
+    useChoreStore.setState( {
+      createChore: mockedCreateChore,
+      updateChore: mockedUpdateChore,
+      deleteChore: mockedDeleteChore,
+    } );
     mockedListChoreLogs.mockResolvedValue( [] );
   } );
 
@@ -186,12 +181,12 @@ describe( "ChoreFormScreen", () => {
         expect.stringContaining( "완료 기록도 모두 함께 삭제" ),
         expect.any( Array ),
       );
-      expect( mockedDeleteChoreAndLogs ).not.toHaveBeenCalled();
+      expect( mockedDeleteChore ).not.toHaveBeenCalled();
       jest.restoreAllMocks();
     } );
 
     test( "삭제 확인을 누르면 deleteChore를 호출한다", async () => {
-      mockedDeleteChoreAndLogs.mockResolvedValue( undefined );
+      mockedDeleteChore.mockResolvedValue( undefined );
       jest.spyOn( Alert, "alert" ).mockImplementation( (_t, _m, buttons) => {
         buttons?.find( b => b.style === "destructive" )?.onPress?.();
       } );
@@ -205,7 +200,7 @@ describe( "ChoreFormScreen", () => {
       fireEvent.press( getByText( "삭제" ) );
 
       await waitFor( () =>
-        expect( mockedDeleteChoreAndLogs ).toHaveBeenCalledWith( "c1" ),
+        expect( mockedDeleteChore ).toHaveBeenCalledWith( "c1" ),
       );
       expect( navigation.goBack ).toHaveBeenCalled();
       jest.restoreAllMocks();
@@ -224,7 +219,7 @@ describe( "ChoreFormScreen", () => {
       );
       fireEvent.press( getByText( "삭제" ) );
 
-      expect( mockedDeleteChoreAndLogs ).not.toHaveBeenCalled();
+      expect( mockedDeleteChore ).not.toHaveBeenCalled();
       expect( navigation.goBack ).not.toHaveBeenCalled();
       jest.restoreAllMocks();
     } );

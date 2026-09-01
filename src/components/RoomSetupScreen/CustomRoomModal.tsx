@@ -6,7 +6,7 @@ import {
   ROOM_SIZE_LABELS,
   DEFAULT_ROOM_SIZE,
   type RoomSize,
-} from "../../api/room";
+} from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../common/DefaultButton";
 

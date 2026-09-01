@@ -2,18 +2,12 @@ import React from "react";
 import { Alert } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import FamilyScreen from "../../../src/screens/family/FamilyScreen";
-import {
-  removeFamilyMember,
-  leaveFamily as apiLeaveFamily,
-} from "../../../src/api/family";
 import { useFamilyStore } from "../../../src/store/useFamilyStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
-import type { FamilyRow, FamilyMemberRow } from "../../../src/api/family";
+import type { FamilyRow, FamilyMemberRow } from "../../../src/store/useFamilyStore";
 
-jest.mock( "../../../src/api/family" );
-
-const mockedRemoveFamilyMember = removeFamilyMember as jest.Mock;
-const mockedApiLeaveFamily = apiLeaveFamily as jest.Mock;
+const mockedRemoveMember = jest.fn();
+const mockedLeaveFamily = jest.fn();
 
 const family: FamilyRow = {
   id: "f1",
@@ -42,6 +36,10 @@ describe( "FamilyScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
+    useFamilyStore.setState( {
+      removeMember: mockedRemoveMember,
+      leaveFamily: mockedLeaveFamily,
+    } );
     jest.spyOn( Alert, "alert" ).mockImplementation( (_title, _msg, buttons) => {
       const confirmButton = buttons?.find( b => b.style === "destructive" );
       confirmButton?.onPress?.();
@@ -88,11 +86,11 @@ describe( "FamilyScreen", () => {
       membership: ownerMembership,
       members: [ownerMembership, otherMember],
     } );
-    mockedRemoveFamilyMember.mockResolvedValue( undefined );
+    mockedRemoveMember.mockResolvedValue( undefined );
     const { getByText } = render( <FamilyScreen /> );
     fireEvent.press( getByText( "제거" ) );
     await waitFor( () =>
-      expect( mockedRemoveFamilyMember ).toHaveBeenCalledWith( "m2" ),
+      expect( mockedRemoveMember ).toHaveBeenCalledWith( "m2" ),
     );
   } );
 
@@ -103,9 +101,9 @@ describe( "FamilyScreen", () => {
       membership: otherMember,
       members: [ownerMembership, otherMember],
     } );
-    mockedApiLeaveFamily.mockResolvedValue( undefined );
+    mockedLeaveFamily.mockResolvedValue( undefined );
     const { getByText } = render( <FamilyScreen /> );
     fireEvent.press( getByText( "가족 떠나기" ) );
-    await waitFor( () => expect( mockedApiLeaveFamily ).toHaveBeenCalled() );
+    await waitFor( () => expect( mockedLeaveFamily ).toHaveBeenCalled() );
   } );
 } );

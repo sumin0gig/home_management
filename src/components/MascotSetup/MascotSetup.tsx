@@ -11,8 +11,7 @@ import Mascot from "../Mascot/Mascot";
 import MascotStyleEditor from "../Mascot/MascotStyleEditor";
 import { EAR_OPTIONS, TAIL_OPTIONS } from "../Mascot/optionMaps";
 import { signOutUser } from "../../api/auth";
-import type { MascotInput } from "../../api/mascot";
-import { useMascotStore } from "../../store/useMascotStore";
+import { useMascotStore, type MascotInput } from "../../store/useMascotStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 
 function MascotSetup(): React.JSX.Element {

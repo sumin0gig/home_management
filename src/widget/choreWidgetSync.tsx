@@ -2,7 +2,8 @@ import React from 'react';
 import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { requestWidgetUpdate } from 'react-native-android-widget';
-import { toDateString, type ChoreRow } from '../api/chore';
+import { toDateString } from '../utils/date';
+import type { ChoreRow } from '../store/useChoreStore';
 import { ChoreWidget } from './ChoreWidget';
 
 export const WIDGET_TOP_CHORES_STORAGE_KEY = 'ChoreWidget:topChores';

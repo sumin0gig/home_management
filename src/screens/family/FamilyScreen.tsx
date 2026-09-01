@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { useFamilyStore } from "../../store/useFamilyStore";
-import type { FamilyMemberRow } from "../../api/family";
+import type { FamilyMemberRow } from "../../store/useFamilyStore";
 import { commonColor } from "../../styles/commonStyle";
 
 function FamilyScreen(): React.JSX.Element {
@@ -43,18 +43,13 @@ function FamilyScreen(): React.JSX.Element {
   };
 
   const onSaveName = async () => {
-    if (!nameDraft.trim()) {
-      return;
-    }
+    if (!nameDraft.trim()) return;
     setIsSaving( true );
+
     try {
       await renameFamily( nameDraft.trim() );
       setIsEditingName( false );
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsSaving( false );
-    }
+    } finally { setIsSaving( false ) };
   };
 
   const onRemoveMember = (member: FamilyMemberRow) => {

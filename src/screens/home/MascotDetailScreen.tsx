@@ -5,8 +5,7 @@ import type { HomeStackParamList } from "../../navigation/types";
 import Mascot from "../../components/Mascot/Mascot";
 import MascotStyleEditor from "../../components/Mascot/MascotStyleEditor";
 import { EAR_OPTIONS, TAIL_OPTIONS } from "../../components/Mascot/optionMaps";
-import type { MascotInput } from "../../api/mascot";
-import { useMascotStore } from "../../store/useMascotStore";
+import { useMascotStore, type MascotInput } from "../../store/useMascotStore";
 import { computeHappinessLevel } from "../../utils/happiness";
 import { commonColor } from "../../styles/commonStyle";
 
@@ -40,12 +39,8 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
     );
   }
 
-  const earVariant =
-    EAR_OPTIONS.find( option => option.value === earStyle )?.variant ??
-    "round";
-  const tailVariant =
-    TAIL_OPTIONS.find( option => option.value === tailStyle )?.variant ??
-    "straight";
+  const earVariant = EAR_OPTIONS.find( option => option.value === earStyle )?.variant ?? "round";
+  const tailVariant = TAIL_OPTIONS.find( option => option.value === tailStyle )?.variant ?? "straight";
 
   const { level, gaugeValue, gaugeMax } = computeHappinessLevel(
     mascot.happiness ?? 0,

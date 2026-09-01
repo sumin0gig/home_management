@@ -5,7 +5,7 @@ import {
   ROOM_SIZE_WIDTH_RATIO,
   type RoomType,
   type RoomSize,
-} from "../../api/room";
+} from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
 import { getRoomColor } from "../../utils/commonUtils";
 

@@ -1,19 +1,15 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import RoomSetupScreen from "../../../../../src/components/RoomSetupScreen/RoomSetupScreen";
-import { createRoom } from "../../../../../src/api/room";
 import { signOutUser } from "../../../../../src/api/auth";
 import { useFamilyStore } from "../../../../../src/store/useFamilyStore";
+import { useRoomStore } from "../../../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../../../src/test-utils/resetStores";
-import type { FamilyRow } from "../../../../../src/api/family";
+import type { FamilyRow } from "../../../../../src/store/useFamilyStore";
 
 jest.mock( "../../../../../src/api/auth" );
-jest.mock( "../../../../../src/api/room", () => ( {
-  ...jest.requireActual( "../../../../../src/api/room" ),
-  createRoom: jest.fn(),
-} ) );
 
-const mockedCreateRoom = createRoom as jest.Mock;
+const mockedAddRoom = jest.fn();
 const mockedSignOutUser = signOutUser as jest.Mock;
 
 const family: FamilyRow = {
@@ -28,12 +24,13 @@ describe( "RoomSetupScreen", () => {
     jest.clearAllMocks();
     resetAllStores();
     useFamilyStore.setState( { status: "joined", family } );
+    useRoomStore.setState( { addRoom: mockedAddRoom } );
   } );
 
   test( "방을 하나도 추가하지 않으면 집 만들기가 비활성화된다", () => {
     const { getByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "집 만들기" ) );
-    expect( mockedCreateRoom ).not.toHaveBeenCalled();
+    expect( mockedAddRoom ).not.toHaveBeenCalled();
   } );
 
   test( "방 종류를 탭하면 타일이 추가된다", () => {
@@ -50,20 +47,14 @@ describe( "RoomSetupScreen", () => {
   } );
 
   test( "타일을 추가하고 집 만들기를 누르면 addRoom이 호출된다", async () => {
-    mockedCreateRoom.mockResolvedValue( {
-      id: "r1",
-      familyId: "f1",
-      roomType: "BEDROOM",
-      size: "BIG",
-      label: null,
-    } );
+    mockedAddRoom.mockResolvedValue( undefined );
 
     const { getByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 침실" ) );
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () =>
-      expect( mockedCreateRoom ).toHaveBeenCalledWith(
+      expect( mockedAddRoom ).toHaveBeenCalledWith(
         "f1",
         "BEDROOM",
         "BIG",
@@ -73,27 +64,21 @@ describe( "RoomSetupScreen", () => {
   } );
 
   test( "여러 방을 추가하고 집 만들기를 누르면 모든 방에 대해 addRoom이 호출된다", async () => {
-    mockedCreateRoom.mockResolvedValue( {
-      id: "r1",
-      familyId: "f1",
-      roomType: "BEDROOM",
-      size: "BIG",
-      label: null,
-    } );
+    mockedAddRoom.mockResolvedValue( undefined );
 
     const { getByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 침실" ) );
     fireEvent.press( getByText( "+ 거실" ) );
     fireEvent.press( getByText( "집 만들기" ) );
 
-    await waitFor( () => expect( mockedCreateRoom ).toHaveBeenCalledTimes( 2 ) );
-    expect( mockedCreateRoom ).toHaveBeenCalledWith(
+    await waitFor( () => expect( mockedAddRoom ).toHaveBeenCalledTimes( 2 ) );
+    expect( mockedAddRoom ).toHaveBeenCalledWith(
       "f1",
       "BEDROOM",
       "BIG",
       undefined,
     );
-    expect( mockedCreateRoom ).toHaveBeenCalledWith(
+    expect( mockedAddRoom ).toHaveBeenCalledWith(
       "f1",
       "LIVING_ROOM",
       "VERY_BIG",
@@ -112,17 +97,11 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "+ 다른 방 만들기" ) );
     fireEvent.press( getByText( "추가" ) );
     fireEvent.press( getByText( "집 만들기" ) );
-    expect( mockedCreateRoom ).not.toHaveBeenCalled();
+    expect( mockedAddRoom ).not.toHaveBeenCalled();
   } );
 
   test( "이름과 크기를 입력하고 추가하면 커스텀 타일이 생성되고 집 만들기 시 GENERAL_ROOM으로 저장된다", async () => {
-    mockedCreateRoom.mockResolvedValue( {
-      id: "r1",
-      familyId: "f1",
-      roomType: "GENERAL_ROOM",
-      size: "BIG",
-      label: "서재",
-    } );
+    mockedAddRoom.mockResolvedValue( undefined );
 
     const { getByText, getByPlaceholderText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 다른 방 만들기" ) );
@@ -135,7 +114,7 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () =>
-      expect( mockedCreateRoom ).toHaveBeenCalledWith(
+      expect( mockedAddRoom ).toHaveBeenCalledWith(
         "f1",
         "GENERAL_ROOM",
         "BIG",
@@ -150,7 +129,7 @@ describe( "RoomSetupScreen", () => {
     fireEvent.changeText( getByPlaceholderText( "방 이름(예: 서재)" ), "서재" );
     fireEvent.press( getByText( "취소" ) );
     fireEvent.press( getByText( "집 만들기" ) );
-    expect( mockedCreateRoom ).not.toHaveBeenCalled();
+    expect( mockedAddRoom ).not.toHaveBeenCalled();
   } );
 
   test( "로그아웃 링크를 탭하면 signOutUser를 호출한다", () => {

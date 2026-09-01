@@ -3,18 +3,12 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import RoomDetailScreen from "../../../src/screens/home/RoomDetailScreen";
 import { useRoomStore } from "../../../src/store/useRoomStore";
 import { useChoreStore } from "../../../src/store/useChoreStore";
-import { completeChore } from "../../../src/api/chore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
-import type { RoomRow } from "../../../src/api/room";
-import type { ChoreRow } from "../../../src/api/chore";
+import type { RoomRow } from "../../../src/store/useRoomStore";
+import type { ChoreRow } from "../../../src/store/useChoreStore";
 
-jest.mock( "../../../src/api/chore", () => ( {
-  ...jest.requireActual( "../../../src/api/chore" ),
-  completeChore: jest.fn(),
-} ) );
-
-const mockedCompleteChore = completeChore as jest.Mock;
+const mockedCompleteChore = jest.fn();
 
 const bedroom: RoomRow = {
   id: "r1",
@@ -54,7 +48,11 @@ describe( "RoomDetailScreen", () => {
     jest.clearAllMocks();
     resetAllStores();
     useRoomStore.setState( { rooms: [bedroom], status: "loaded" } );
-    useChoreStore.setState( { chores: [chore], status: "loaded" } );
+    useChoreStore.setState( {
+      chores: [chore],
+      status: "loaded",
+      completeChore: mockedCompleteChore,
+    } );
   } );
 
   test( "선택한 방의 집안일 목록을 보여준다", () => {

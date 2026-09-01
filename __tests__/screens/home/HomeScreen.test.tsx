@@ -2,28 +2,15 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import HomeScreen from "../../../src/screens/home/HomeScreen";
 import { useFamilyStore } from "../../../src/store/useFamilyStore";
-import { listRoomsForFamily, createRoom } from "../../../src/api/room";
-import { listChoresForRoom } from "../../../src/api/chore";
+import { useRoomStore } from "../../../src/store/useRoomStore";
+import { useChoreStore } from "../../../src/store/useChoreStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
-import type { FamilyRow } from "../../../src/api/family";
-import type { RoomRow } from "../../../src/api/room";
-import type { ChoreRow } from "../../../src/api/chore";
+import type { FamilyRow } from "../../../src/store/useFamilyStore";
+import type { RoomRow } from "../../../src/store/useRoomStore";
+import type { ChoreRow } from "../../../src/store/useChoreStore";
 
-jest.mock( "../../../src/api/family" );
-jest.mock( "../../../src/api/room", () => ( {
-  ...jest.requireActual( "../../../src/api/room" ),
-  listRoomsForFamily: jest.fn(),
-  createRoom: jest.fn(),
-} ) );
-jest.mock( "../../../src/api/chore", () => ( {
-  ...jest.requireActual( "../../../src/api/chore" ),
-  listChoresForRoom: jest.fn(),
-} ) );
-
-const mockedListRoomsForFamily = listRoomsForFamily as jest.Mock;
-const mockedCreateRoom = createRoom as jest.Mock;
-const mockedListChoresForRoom = listChoresForRoom as jest.Mock;
+const mockedAddRoom = jest.fn();
 
 const family: FamilyRow = {
   id: "f1",
@@ -62,37 +49,39 @@ describe( "HomeScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
+    // fetchRooms/fetchChoresForFamily는 마운트 시 useEffect로 호출된다. 여기서는
+    // 실제 Amplify 호출 대신 테스트가 미리 seed한 rooms/chores 상태를 그대로 두도록
+    // no-op으로 막아둔다 (렌더 결과는 store 상태만으로 검증한다).
+    useRoomStore.setState( { fetchRooms: jest.fn(), addRoom: mockedAddRoom } );
+    useChoreStore.setState( { fetchChoresForFamily: jest.fn() } );
+    useFamilyStore.setState( { status: "joined", family } );
   } );
 
-  test( "방 목록을 타일로 보여주고, 오늘 해야 할 집안일이 있으면 표시를 남긴다", async () => {
-    mockedListRoomsForFamily.mockResolvedValue( [bedroom] );
-    mockedListChoresForRoom.mockResolvedValue( [chore] );
-    useFamilyStore.setState( { status: "joined", family } );
+  test( "방 목록을 타일로 보여주고, 오늘 해야 할 집안일이 있으면 표시를 남긴다", () => {
+    useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
+    useChoreStore.setState( { status: "loaded", chores: [chore] } );
 
     const { getByText, getByTestId } = renderHomeScreen();
 
-    await waitFor( () => expect( getByText( "침실" ) ).toBeTruthy() );
+    expect( getByText( "침실" ) ).toBeTruthy();
     expect( getByTestId( "due-badge-r1" ) ).toBeTruthy();
   } );
 
-  test( "오늘 해야 할 집안일이 없으면 표시를 남기지 않는다", async () => {
-    mockedListRoomsForFamily.mockResolvedValue( [bedroom] );
-    mockedListChoresForRoom.mockResolvedValue( [] );
-    useFamilyStore.setState( { status: "joined", family } );
+  test( "오늘 해야 할 집안일이 없으면 표시를 남기지 않는다", () => {
+    useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
+    useChoreStore.setState( { status: "loaded", chores: [] } );
 
     const { getByText, queryByTestId } = renderHomeScreen();
 
-    await waitFor( () => expect( getByText( "침실" ) ).toBeTruthy() );
+    expect( getByText( "침실" ) ).toBeTruthy();
     expect( queryByTestId( "due-badge-r1" ) ).toBeNull();
   } );
 
-  test( "방을 탭하면 RoomDetail로 이동한다", async () => {
-    mockedListRoomsForFamily.mockResolvedValue( [bedroom] );
-    mockedListChoresForRoom.mockResolvedValue( [] );
-    useFamilyStore.setState( { status: "joined", family } );
+  test( "방을 탭하면 RoomDetail로 이동한다", () => {
+    useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
+    useChoreStore.setState( { status: "loaded", chores: [] } );
 
     const { getByText, navigation } = renderHomeScreen();
-    await waitFor( () => expect( getByText( "침실" ) ).toBeTruthy() );
     fireEvent.press( getByText( "침실" ) );
 
     expect( navigation.navigate ).toHaveBeenCalledWith( "RoomDetail", {
@@ -100,21 +89,19 @@ describe( "HomeScreen", () => {
     } );
   } );
 
-  test( "+ 방 추가로 방을 만들면 createRoom을 호출한다", async () => {
-    mockedListRoomsForFamily.mockResolvedValue( [] );
-    mockedListChoresForRoom.mockResolvedValue( [] );
-    mockedCreateRoom.mockResolvedValue( bedroom );
-    useFamilyStore.setState( { status: "joined", family } );
+  test( "+ 방 추가로 방을 만들면 addRoom을 호출한다", async () => {
+    useRoomStore.setState( { status: "loaded", rooms: [] } );
+    useChoreStore.setState( { status: "loaded", chores: [] } );
+    mockedAddRoom.mockResolvedValue( undefined );
 
     const { getByText } = renderHomeScreen();
-    await waitFor( () => expect( getByText( "+ 방 추가" ) ).toBeTruthy() );
 
     fireEvent.press( getByText( "+ 방 추가" ) );
     fireEvent.press( getByText( "침실" ) );
     fireEvent.press( getByText( "추가" ) );
 
     await waitFor( () =>
-      expect( mockedCreateRoom ).toHaveBeenCalledWith(
+      expect( mockedAddRoom ).toHaveBeenCalledWith(
         "f1",
         "BEDROOM",
         "BIG",

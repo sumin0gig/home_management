@@ -1,9 +1,9 @@
-import type { ChoreRow } from '../api/chore';
+import type { ChoreRow } from '../store/useChoreStore';
 
 const BASE_LEVEL_CAP = 100;
 const LEVEL_CAP_GROWTH = 1.2;
 
-// Mirrors the day-count approximation computeNextDueDate (src/api/chore.ts)
+// Mirrors the day-count approximation computeNextDueDate (src/store/useChoreStore.ts)
 // already uses for interval math: DAY=1, WEEK=7, MONTH=30 days.
 export function computeHappinessGain(chore: ChoreRow): number {
   if (chore.recurrenceType === 'YEARLY_MONTHS') {

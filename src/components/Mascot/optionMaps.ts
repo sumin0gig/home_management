@@ -1,4 +1,4 @@
-import type { MascotInput } from "../../api/mascot";
+import type { MascotInput } from "../../store/useMascotStore";
 import { colors } from "../../styles/commonStyle";
 import type { EarVariant, TailVariant } from "./types";
 

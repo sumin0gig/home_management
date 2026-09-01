@@ -15,7 +15,7 @@ import { useFamilyStore } from "../../store/useFamilyStore";
 import { useChoreStore } from "../../store/useChoreStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { useMascotStore } from "../../store/useMascotStore";
-import { toDateString } from "../../api/chore";
+import { toDateString } from "../../utils/date";
 import { commonColor } from "../../styles/commonStyle";
 import ModalView from "../../components/common/ModalView";
 import DefaultButton from "../../components/common/DefaultButton";
@@ -36,7 +36,7 @@ import {
   type RoomRow,
   type RoomType,
   type RoomSize,
-} from "../../api/room";
+} from "../../store/useRoomStore";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "HomeMain">;
 

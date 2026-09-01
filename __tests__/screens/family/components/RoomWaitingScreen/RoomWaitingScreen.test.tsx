@@ -1,20 +1,16 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import RoomWaitingScreen from "../../../../../src/components/RoomWaitingScreen/RoomWaitingScreen";
-import { listRoomsForFamily } from "../../../../../src/api/room";
 import { signOutUser } from "../../../../../src/api/auth";
 import { useFamilyStore } from "../../../../../src/store/useFamilyStore";
+import { useRoomStore } from "../../../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../../../src/test-utils/resetStores";
-import type { FamilyRow } from "../../../../../src/api/family";
+import type { FamilyRow } from "../../../../../src/store/useFamilyStore";
 
 jest.mock( "../../../../../src/api/auth" );
-jest.mock( "../../../../../src/api/room", () => ( {
-  ...jest.requireActual( "../../../../../src/api/room" ),
-  listRoomsForFamily: jest.fn(),
-} ) );
 
-const mockedListRoomsForFamily = listRoomsForFamily as jest.Mock;
 const mockedSignOutUser = signOutUser as jest.Mock;
+const mockedFetchRooms = jest.fn();
 
 const family: FamilyRow = {
   id: "f1",
@@ -28,6 +24,7 @@ describe( "RoomWaitingScreen", () => {
     jest.clearAllMocks();
     resetAllStores();
     useFamilyStore.setState( { status: "joined", family } );
+    useRoomStore.setState( { fetchRooms: mockedFetchRooms } );
   } );
 
   test( "대기 안내 문구를 표시한다", () => {
@@ -36,11 +33,11 @@ describe( "RoomWaitingScreen", () => {
   } );
 
   test( "새로고침 버튼을 탭하면 fetchRooms를 호출한다", async () => {
-    mockedListRoomsForFamily.mockResolvedValue( [] );
+    mockedFetchRooms.mockResolvedValue( undefined );
     const { getByText } = render( <RoomWaitingScreen /> );
     fireEvent.press( getByText( "새로고침" ) );
     await waitFor( () =>
-      expect( mockedListRoomsForFamily ).toHaveBeenCalledWith( "f1" ),
+      expect( mockedFetchRooms ).toHaveBeenCalledWith( "f1" ),
     );
   } );
 

@@ -9,16 +9,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
-import { useRoomStore } from "../../store/useRoomStore";
-import { signOutUser } from "../../api/auth";
 import {
+  useRoomStore,
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   ROOM_SIZES,
   ROOM_TYPE_DEFAULT_SIZE,
   type RoomType,
   type RoomSize,
-} from "../../api/room";
+} from "../../store/useRoomStore";
+import { signOutUser } from "../../api/auth";
 import RoomBlockTile, { type RoomBlock } from "./RoomBlockTile";
 import CustomRoomModal from "./CustomRoomModal";
 import { commonColor } from "../../styles/commonStyle";
