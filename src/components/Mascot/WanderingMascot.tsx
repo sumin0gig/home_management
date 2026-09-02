@@ -15,7 +15,7 @@ import type { MascotConfig } from "./types";
 // wander area under-using its vertical space.
 const MASCOT_ASPECT_RATIO = 200 / 280;
 
-const MIN_LEG_MS = 2500;
+const MIN_LEG_MS = 3800;
 const MAX_LEG_MS = 5000;
 const PX_PER_MS = 0.05; // duration scales with travel distance, not fixed
 
