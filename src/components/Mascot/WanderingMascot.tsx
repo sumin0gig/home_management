@@ -90,7 +90,7 @@ function WanderingMascot( {
   return (
     <Animated.View style={ [styles.wrapper, animatedStyle] }>
       <Pressable onPress={ onPress }>
-        <Mascot config={ config } action="idle" size={ size } />
+        <Mascot config={ config } action="walk" size={ size } />
       </Pressable>
     </Animated.View>
   );

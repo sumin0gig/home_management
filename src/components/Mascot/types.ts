@@ -23,4 +23,4 @@ export interface MascotConfig {
   fillColor?: string;
 }
 
-export type MascotAction = "idle" | "jump";
+export type MascotAction = "idle" | "jump" | "walk";
