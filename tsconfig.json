@@ -1,4 +1,4 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
+  "extends": "@react-native/typescript-config",
   "exclude": ["**/Pods/**", "amplify/functions/**/handler.ts"]
 }
