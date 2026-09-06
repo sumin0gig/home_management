@@ -96,7 +96,8 @@ function RoomSetupScreen(): React.JSX.Element {
         <Text style={ styles.logoutLinkText }> 로그아웃 </Text>
       </Pressable>
 
-      <Text style={ styles.title }> 우리 집은 어떻게 생겼나요? </Text>
+      <Text style={ styles.stepIndicator }> 2 / 3 단계 · 집 만들기 </Text>
+      <Text style={ styles.title }> 집의 형태는 어떻게 생겼나요? </Text>
       <Text style={ styles.description }>
         방을 추가해서 우리 집 도면을 만들어보세요. 나중에 언제든 바꿀 수 있어요.
       </Text>
@@ -179,10 +180,16 @@ const styles = StyleSheet.create( {
     color: "#555",
     fontSize: 13,
   },
+  stepIndicator: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: commonColor.touchable,
+    marginTop: 40,
+    marginBottom: 4,
+  },
   title: {
     fontSize: 20,
     fontWeight: "700",
-    marginTop: 40,
     marginBottom: 4,
   },
   description: {

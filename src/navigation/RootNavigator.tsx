@@ -41,15 +41,10 @@ function RootNavigator(): React.JSX.Element {
 
   useEffect(() => {
     if (authStatus === 'signedIn') {
+      fetchMyFamily();
       fetchMyMascot();
     }
-  }, [authStatus, fetchMyMascot]);
-
-  useEffect(() => {
-    if (mascotStatus === 'created') {
-      fetchMyFamily();
-    }
-  }, [mascotStatus, fetchMyFamily]);
+  }, [authStatus, fetchMyFamily, fetchMyMascot]);
 
   useEffect(() => {
     if (familyStatus === 'joined' && family) {
@@ -59,8 +54,7 @@ function RootNavigator(): React.JSX.Element {
 
   const isLoading =
     authStatus === 'loading' ||
-    (authStatus === 'signedIn' && mascotStatus === 'loading') ||
-    (mascotStatus === 'created' && familyStatus === 'loading');
+    (authStatus === 'signedIn' && familyStatus === 'loading');
   const isRoomsLoading = familyStatus === 'joined' && roomStatus === 'idle';
 
   if (isLoading) {
@@ -73,10 +67,6 @@ function RootNavigator(): React.JSX.Element {
 
   if (authStatus !== 'signedIn') {
     return <AuthNavigator />;
-  }
-
-  if (mascotStatus === 'none') {
-    return <MascotSetup />;
   }
 
   if (familyStatus === 'none') {
@@ -97,6 +87,18 @@ function RootNavigator(): React.JSX.Element {
       ? <RoomSetupScreen />
       : <RoomWaitingScreen />
     );
+  }
+
+  if (mascotStatus === 'loading') {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (mascotStatus === 'none') {
+    return <MascotSetup />;
   }
 
   return <MainNavigator />;

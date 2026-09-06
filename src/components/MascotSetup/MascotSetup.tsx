@@ -53,7 +53,11 @@ function MascotSetup(): React.JSX.Element {
         <Text style={ styles.logoutLinkText }> 로그아웃 </Text>
       </Pressable>
 
-      <Text style={ styles.title }> 마스코트를 만들어보세요 </Text>
+      <Text style={ styles.stepIndicator }> 3 / 3 단계 · 마스코트 만들기 </Text>
+      <Text style={ styles.title }> 집에서 함께할 친구를 만들어봐요 </Text>
+      <Text style={ styles.description }>
+        친구는 집안일을 해 행복도를 올려줄 수 있어요.
+      </Text>
 
       <View style={ styles.previewContainer }>
         <Mascot
@@ -109,10 +113,23 @@ const styles = StyleSheet.create( {
     color: "#555",
     fontSize: 13,
   },
+  stepIndicator: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: commonColor.touchable,
+    marginTop: 40,
+    marginBottom: 4,
+    textAlign: "center",
+  },
   title: {
     fontSize: 20,
     fontWeight: "700",
-    marginTop: 40,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  description: {
+    fontSize: 13,
+    color: "#666",
     marginBottom: 16,
     textAlign: "center",
   },

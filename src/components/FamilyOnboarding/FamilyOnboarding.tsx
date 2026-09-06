@@ -93,6 +93,12 @@ function FamilyOnboarding(): React.JSX.Element {
         <Text style={ styles.logoutLinkText }> 로그아웃 </Text>
       </Pressable>
 
+      <Text style={ styles.stepIndicator }> 1 / 3 단계 · 가족 만들기 </Text>
+      <Text style={ styles.title }> 함께할 가족을 만들어보세요 </Text>
+      <Text style={ styles.description }>
+        가족을 새로 만들거나, 받은 초대 코드로 참여해보세요.
+      </Text>
+
       {
         bootstrapError
         ? <Text style={ styles.error }> { bootstrapError } </Text>
@@ -150,11 +156,11 @@ function FamilyOnboarding(): React.JSX.Element {
 const styles = StyleSheet.create( {
   container: {
     flex: 1,
-    justifyContent: "center",
     padding: 24,
     backgroundColor: commonColor.backgroundColor,
   },
   centered: {
+    justifyContent: "center",
     alignItems: "center",
   },
   logoutLink: {
@@ -164,6 +170,23 @@ const styles = StyleSheet.create( {
   logoutLinkText: {
     color: "#555",
     fontSize: 13,
+  },
+  stepIndicator: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: commonColor.touchable,
+    marginTop: 40,
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  description: {
+    fontSize: 13,
+    color: "#666",
+    marginBottom: 20,
   },
   section: {
     marginBottom: 32,
