@@ -52,7 +52,7 @@ describe( "FamilyScreen", () => {
 
   // FamilyScreen은 드로워를 통해서만(=이미 가족에 속해 있을 때만) 도달하므로
   // 온보딩 분기 없이 항상 가족 홈(멤버 관리) 화면을 그대로 보여준다.
-  test( "가족 이름, 초대 코드, 멤버 목록을 표시한다", () => {
+  test( "가족 이름, 멤버 목록을 표시한다", () => {
     useFamilyStore.setState( {
       status: "joined",
       family,
@@ -61,7 +61,6 @@ describe( "FamilyScreen", () => {
     } );
     const { getByText } = render( <FamilyScreen /> );
     expect( getByText( /TestFamily/ ) ).toBeTruthy();
-    expect( getByText( "ABC123" ) ).toBeTruthy();
     expect( getByText( "me" ) ).toBeTruthy();
     expect( getByText( "partner" ) ).toBeTruthy();
   } );

@@ -13,6 +13,9 @@ export type HomeStackParamList = {
 
 export type FamilyStackParamList = {
   FamilyMain: undefined;
+  AddFamilyMember: undefined;
+  ScanFamilyQr: undefined;
+  EnterFamilyCode: undefined;
 };
 
 export type SettingsStackParamList = {

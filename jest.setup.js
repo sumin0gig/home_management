@@ -20,6 +20,10 @@ jest.mock('react-native-safe-area-context', () => {
 
 require('react-native-gesture-handler/jestSetup');
 
+jest.mock('@react-native-clipboard/clipboard', () =>
+  require('@react-native-clipboard/clipboard/jest/clipboard-mock'),
+);
+
 jest.mock('@react-native-firebase/messaging', () => ({
   __esModule: true,
   getMessaging: jest.fn(() => ({})),

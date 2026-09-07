@@ -49,7 +49,9 @@ function FamilyScreen(): React.JSX.Element {
     try {
       await renameFamily( nameDraft.trim() );
       setIsEditingName( false );
-    } finally { setIsSaving( false ) };
+    } finally {
+      setIsSaving( false );
+    }
   };
 
   const onRemoveMember = (member: FamilyMemberRow) => {
@@ -118,10 +120,6 @@ function FamilyScreen(): React.JSX.Element {
             </Text>
           </Pressable>
         }
-        <Text style={ styles.inviteLabel }> 초대 코드 (가족에게 공유하세요) </Text>
-        <Text style={ styles.inviteCode } selectable>
-          { family.inviteCode }
-        </Text>
       </View>
 
       <Text style={ styles.membersTitle }> 멤버 ( { members.length } ) </Text>
@@ -198,16 +196,6 @@ const styles = StyleSheet.create( {
   saveButtonText: {
     color: "#fff",
     fontWeight: "600",
-  },
-  inviteLabel: {
-    fontSize: 13,
-    color: "#555",
-  },
-  inviteCode: {
-    fontSize: 20,
-    fontWeight: "700",
-    letterSpacing: 4,
-    marginTop: 4,
   },
   membersTitle: {
     fontSize: 16,
