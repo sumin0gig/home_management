@@ -24,6 +24,14 @@ jest.mock('@react-native-clipboard/clipboard', () =>
   require('@react-native-clipboard/clipboard/jest/clipboard-mock'),
 );
 
+// react-native-camera-kit's Camera is a Fabric native component (codegenNativeComponent),
+// which the codegen babel plugin can't resolve outside of a real native build. We don't
+// exercise real camera behavior in tests, so a no-op component is enough.
+jest.mock('react-native-camera-kit', () => {
+  const React = require('react');
+  return { Camera: React.forwardRef(() => null) };
+});
+
 jest.mock('@react-native-firebase/messaging', () => ({
   __esModule: true,
   getMessaging: jest.fn(() => ({})),
