@@ -18,13 +18,13 @@ import { Amplify } from 'aws-amplify';
 import outputs from './amplify_outputs.json';
 import RootNavigator from './src/navigation/RootNavigator';
 import type { MainDrawerParamList } from './src/navigation/types';
-import { useChoreStore } from './src/store/useChoreStore';
-import { syncChoreWidget } from './src/widget/choreWidgetSync';
+import { useTaskStore } from './src/store/useTaskStore';
+import { syncTaskWidget } from './src/widget/taskWidgetSync';
 
 Amplify.configure(outputs);
 
-// Tapping the home-screen widget opens the app via `homemanagement://chores`,
-// which should always land on the actual chore list (HomeTab > HomeMain),
+// Tapping the home-screen widget opens the app via `homemanagement://tasks`,
+// which should always land on the actual task list (HomeTab > HomeMain),
 // even if the app was already running on a different screen.
 const linking: LinkingOptions<MainDrawerParamList> = {
   prefixes: ['homemanagement://'],
@@ -32,7 +32,7 @@ const linking: LinkingOptions<MainDrawerParamList> = {
     screens: {
       HomeTab: {
         screens: {
-          HomeMain: 'chores',
+          HomeMain: 'tasks',
         },
       },
     },
@@ -44,9 +44,9 @@ function App(): React.JSX.Element {
 
   useEffect(
     () =>
-      useChoreStore.subscribe((state, prevState) => {
-        if (state.chores !== prevState.chores) {
-          syncChoreWidget(state.chores);
+      useTaskStore.subscribe((state, prevState) => {
+        if (state.tasks !== prevState.tasks) {
+          syncTaskWidget(state.tasks);
         }
       }),
     [],

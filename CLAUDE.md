@@ -89,7 +89,7 @@ Prettier or ESLint option for it, so get the distinction right by hand):
   them.
 - Multi-line calls where the opening `(` is immediately followed by a newline
   are left alone (nothing to pad against) — e.g.
-  `useChoreStore(\n  state => state.fetchChoresForFamily,\n)`. But if the
+  `useTaskStore(\n  state => state.fetchTasksForFamily,\n)`. But if the
   first/last line of a multi-line call has other content directly touching
   the paren (e.g. `StyleSheet.create({` / `});`), pad those:
   `StyleSheet.create( {` ... `} );`.

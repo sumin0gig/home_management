@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from './types';
 import HomeScreen from '../screens/home/HomeScreen';
 import RoomDetailScreen from '../screens/home/RoomDetailScreen';
-import ChoreFormScreen from '../screens/home/ChoreFormScreen';
+import TaskFormScreen from '../screens/home/TaskFormScreen';
 import MascotDetailScreen from '../screens/home/MascotDetailScreen';
 import { renderDrawerMenuButton } from './DrawerMenuButton';
 
@@ -18,7 +18,7 @@ function HomeStackNavigator(): React.JSX.Element {
         options={{ title: '홈', headerLeft: renderDrawerMenuButton }}
       />
       <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
-      <Stack.Screen name="ChoreForm" component={ChoreFormScreen} />
+      <Stack.Screen name="TaskForm" component={TaskFormScreen} />
       <Stack.Screen name="MascotDetail" component={MascotDetailScreen} />
     </Stack.Navigator>
   );

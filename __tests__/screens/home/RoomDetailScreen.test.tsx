@@ -2,13 +2,13 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import RoomDetailScreen from "../../../src/screens/home/RoomDetailScreen";
 import { useRoomStore } from "../../../src/store/useRoomStore";
-import { useChoreStore } from "../../../src/store/useChoreStore";
+import { useTaskStore } from "../../../src/store/useTaskStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
-import type { ChoreRow } from "../../../src/store/useChoreStore";
+import type { TaskRow } from "../../../src/store/useTaskStore";
 
-const mockedCompleteChore = jest.fn();
+const mockedCompleteTask = jest.fn();
 
 const bedroom: RoomRow = {
   id: "r1",
@@ -17,7 +17,7 @@ const bedroom: RoomRow = {
   label: null,
 } as RoomRow;
 
-const chore: ChoreRow = {
+const task: TaskRow = {
   id: "c1",
   roomId: "r1",
   title: "침구 햇빛살균",
@@ -27,7 +27,7 @@ const chore: ChoreRow = {
   intervalUnit: "WEEK",
   months: null,
   nextDueDate: "2000-01-01",
-} as ChoreRow;
+} as TaskRow;
 
 function renderRoomDetailScreen(
   navigation = createMockNavigation<"RoomDetail">(),
@@ -48,10 +48,10 @@ describe( "RoomDetailScreen", () => {
     jest.clearAllMocks();
     resetAllStores();
     useRoomStore.setState( { rooms: [bedroom], status: "loaded" } );
-    useChoreStore.setState( {
-      chores: [chore],
+    useTaskStore.setState( {
+      tasks: [task],
       status: "loaded",
-      completeChore: mockedCompleteChore,
+      completeTask: mockedCompleteTask,
     } );
   } );
 
@@ -60,21 +60,21 @@ describe( "RoomDetailScreen", () => {
     expect( getByText( "침구 햇빛살균" ) ).toBeTruthy();
   } );
 
-  test( "완료 버튼을 탭하면 completeChore를 호출한다", async () => {
-    mockedCompleteChore.mockResolvedValue( undefined );
+  test( "완료 버튼을 탭하면 completeTask를 호출한다", async () => {
+    mockedCompleteTask.mockResolvedValue( undefined );
     const { getByText } = renderRoomDetailScreen();
     fireEvent.press( getByText( "완료" ) );
 
     await waitFor( () =>
-      expect( mockedCompleteChore ).toHaveBeenCalledWith( chore ),
+      expect( mockedCompleteTask ).toHaveBeenCalledWith( task ),
     );
   } );
 
-  test( "집안일 추가를 탭하면 ChoreForm으로 이동한다", () => {
+  test( "집안일 추가를 탭하면 TaskForm으로 이동한다", () => {
     const { getByText, navigation } = renderRoomDetailScreen();
     fireEvent.press( getByText( "+ 집안일 추가" ) );
 
-    expect( navigation.navigate ).toHaveBeenCalledWith( "ChoreForm", {
+    expect( navigation.navigate ).toHaveBeenCalledWith( "TaskForm", {
       roomId: "r1",
     } );
   } );

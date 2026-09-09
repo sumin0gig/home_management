@@ -1,5 +1,5 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
-import { choreReminder } from '../functions/choreReminder/resource';
+import { taskReminder } from '../functions/taskReminder/resource';
 import { createUserOnLogin } from '../functions/createUserOnLogin/resource';
 
 const schema = a
@@ -92,7 +92,7 @@ const schema = a
         ]),
         size: a.enum(['VERY_SMALL', 'SMALL', 'NORMAL', 'BIG', 'VERY_BIG']),
         label: a.string(),
-        chores: a.hasMany('Chore', 'roomId'),
+        tasks: a.hasMany('Task', 'roomId'),
       })
       .secondaryIndexes(index => [index('familyId')])
       .authorization(allow => [
@@ -100,7 +100,7 @@ const schema = a
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
       ]),
 
-    ChoreTemplate: a
+    TaskTemplate: a
       .model({
         roomType: a.enum([
           'LIVING_ROOM',
@@ -123,7 +123,7 @@ const schema = a
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
       ]),
 
-    Chore: a
+    Task: a
       .model({
         roomId: a.id().required(),
         room: a.belongsTo('Room', 'roomId'),
@@ -134,7 +134,7 @@ const schema = a
         intervalUnit: a.enum(['DAY', 'WEEK', 'MONTH']),
         months: a.integer().array(),
         nextDueDate: a.date().required(),
-        logs: a.hasMany('ChoreLog', 'choreId'),
+        logs: a.hasMany('TaskLog', 'taskId'),
       })
       .secondaryIndexes(index => [index('roomId'), index('nextDueDate')])
       .authorization(allow => [
@@ -142,15 +142,15 @@ const schema = a
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
       ]),
 
-    ChoreLog: a
+    TaskLog: a
       .model({
-        choreId: a.id().required(),
-        chore: a.belongsTo('Chore', 'choreId'),
+        taskId: a.id().required(),
+        task: a.belongsTo('Task', 'taskId'),
         completedBy: a.string().required(),
         completedByName: a.string().required(),
         completedAt: a.datetime().required(),
       })
-      .secondaryIndexes(index => [index('choreId')])
+      .secondaryIndexes(index => [index('taskId')])
       .authorization(allow => [
         allow.authenticated().to(['create', 'read', 'delete']),
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
@@ -172,7 +172,7 @@ const schema = a
       ]),
   })
   .authorization(allow => [
-    allow.resource(choreReminder).to(['query']),
+    allow.resource(taskReminder).to(['query']),
     allow.resource(createUserOnLogin).to(['query', 'mutate']),
   ]);
 

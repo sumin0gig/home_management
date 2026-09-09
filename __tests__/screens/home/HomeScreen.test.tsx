@@ -3,12 +3,12 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import HomeScreen from "../../../src/screens/home/HomeScreen";
 import { useFamilyStore } from "../../../src/store/useFamilyStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
-import { useChoreStore } from "../../../src/store/useChoreStore";
+import { useTaskStore } from "../../../src/store/useTaskStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { FamilyRow } from "../../../src/store/useFamilyStore";
 import type { RoomRow } from "../../../src/store/useRoomStore";
-import type { ChoreRow } from "../../../src/store/useChoreStore";
+import type { TaskRow } from "../../../src/store/useTaskStore";
 
 const mockedAddRoom = jest.fn();
 
@@ -26,7 +26,7 @@ const bedroom: RoomRow = {
   label: null,
 } as RoomRow;
 
-const chore: ChoreRow = {
+const task: TaskRow = {
   id: "c1",
   roomId: "r1",
   title: "침구 햇빛살균",
@@ -36,7 +36,7 @@ const chore: ChoreRow = {
   intervalUnit: "WEEK",
   months: null,
   nextDueDate: "2000-01-01",
-} as ChoreRow;
+} as TaskRow;
 
 function renderHomeScreen( navigation = createMockNavigation<"HomeMain">() ) {
   return {
@@ -49,17 +49,17 @@ describe( "HomeScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
-    // fetchRooms/fetchChoresForFamily는 마운트 시 useEffect로 호출된다. 여기서는
-    // 실제 Amplify 호출 대신 테스트가 미리 seed한 rooms/chores 상태를 그대로 두도록
+    // fetchRooms/fetchTasksForFamily는 마운트 시 useEffect로 호출된다. 여기서는
+    // 실제 Amplify 호출 대신 테스트가 미리 seed한 rooms/tasks 상태를 그대로 두도록
     // no-op으로 막아둔다 (렌더 결과는 store 상태만으로 검증한다).
     useRoomStore.setState( { fetchRooms: jest.fn(), addRoom: mockedAddRoom } );
-    useChoreStore.setState( { fetchChoresForFamily: jest.fn() } );
+    useTaskStore.setState( { fetchTasksForFamily: jest.fn() } );
     useFamilyStore.setState( { status: "joined", family } );
   } );
 
   test( "방 목록을 타일로 보여주고, 오늘 해야 할 집안일이 있으면 표시를 남긴다", () => {
     useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
-    useChoreStore.setState( { status: "loaded", chores: [chore] } );
+    useTaskStore.setState( { status: "loaded", tasks: [task] } );
 
     const { getByText, getByTestId } = renderHomeScreen();
 
@@ -69,7 +69,7 @@ describe( "HomeScreen", () => {
 
   test( "오늘 해야 할 집안일이 없으면 표시를 남기지 않는다", () => {
     useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
-    useChoreStore.setState( { status: "loaded", chores: [] } );
+    useTaskStore.setState( { status: "loaded", tasks: [] } );
 
     const { getByText, queryByTestId } = renderHomeScreen();
 
@@ -79,7 +79,7 @@ describe( "HomeScreen", () => {
 
   test( "방을 탭하면 RoomDetail로 이동한다", () => {
     useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
-    useChoreStore.setState( { status: "loaded", chores: [] } );
+    useTaskStore.setState( { status: "loaded", tasks: [] } );
 
     const { getByText, navigation } = renderHomeScreen();
     fireEvent.press( getByText( "침실" ) );
@@ -91,7 +91,7 @@ describe( "HomeScreen", () => {
 
   test( "+ 방 추가로 방을 만들면 addRoom을 호출한다", async () => {
     useRoomStore.setState( { status: "loaded", rooms: [] } );
-    useChoreStore.setState( { status: "loaded", chores: [] } );
+    useTaskStore.setState( { status: "loaded", tasks: [] } );
     mockedAddRoom.mockResolvedValue( undefined );
 
     const { getByText } = renderHomeScreen();

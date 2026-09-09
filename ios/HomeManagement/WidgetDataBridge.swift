@@ -1,7 +1,7 @@
 import Foundation
 import WidgetKit
 
-// Bridges the top-3 chore snapshot from JS into the App Group's shared
+// Bridges the top-3 task snapshot from JS into the App Group's shared
 // UserDefaults so the WidgetKit extension (ios/HomeManagementWidget) can read
 // it without needing its own network/auth access.
 //
@@ -10,15 +10,15 @@ import WidgetKit
 @objc(WidgetDataBridge)
 class WidgetDataBridge: NSObject {
   static let appGroupId = "group.com.homemanagement.widget"
-  static let storageKey = "ChoreWidget.topChores"
+  static let storageKey = "TaskWidget.topTasks"
 
   @objc
   static func requiresMainQueueSetup() -> Bool {
     return false
   }
 
-  @objc(saveTopChores:)
-  func saveTopChores(_ json: String) {
+  @objc(saveTopTasks:)
+  func saveTopTasks(_ json: String) {
     let defaults = UserDefaults(suiteName: WidgetDataBridge.appGroupId)
     defaults?.set(json, forKey: WidgetDataBridge.storageKey)
 

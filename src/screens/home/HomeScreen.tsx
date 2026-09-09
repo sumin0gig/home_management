@@ -12,7 +12,7 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { HomeStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
-import { useChoreStore } from "../../store/useChoreStore";
+import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { useMascotStore } from "../../store/useMascotStore";
 import { toDateString } from "../../utils/date";
@@ -59,11 +59,11 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const fetchRooms = useRoomStore( state => state.fetchRooms );
   const addRoom = useRoomStore( state => state.addRoom );
 
-  const chores = useChoreStore( state => state.chores );
-  const choreStatus = useChoreStore( state => state.status );
-  const choreError = useChoreStore( state => state.error );
-  const fetchChoresForFamily = useChoreStore(
-    state => state.fetchChoresForFamily,
+  const tasks = useTaskStore( state => state.tasks );
+  const taskStatus = useTaskStore( state => state.status );
+  const taskError = useTaskStore( state => state.error );
+  const fetchTasksForFamily = useTaskStore(
+    state => state.fetchTasksForFamily,
   );
 
   const mascot = useMascotStore( state => state.mascot );
@@ -88,11 +88,11 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const roomIds = rooms.map( r => r.id ).join( "," );
   React.useEffect( () => {
     if (family?.id) {
-      fetchChoresForFamily( family.id );
+      fetchTasksForFamily( family.id );
     }
-  }, [family?.id, roomIds, fetchChoresForFamily] );
+  }, [family?.id, roomIds, fetchTasksForFamily] );
 
-  if (roomStatus === "loading" || choreStatus === "loading") {
+  if (roomStatus === "loading" || taskStatus === "loading") {
     return (
       <View style={ styles.centerContainer }>
         <ActivityIndicator size="large" />
@@ -112,7 +112,7 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   } );
 
   const hasDueToday = (room: RoomRow): boolean =>
-    chores.some( c => c.roomId === room.id && c.nextDueDate <= today );
+    tasks.some( t => t.roomId === room.id && t.nextDueDate <= today );
 
   const onAddRoom = async (
     roomType: NonNullable<RoomType>,
@@ -142,7 +142,7 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     <View style={ styles.root }>
       <View style={ styles.container }>
         { roomError && <Text style={ styles.error }> { roomError } </Text> }
-        { choreError && <Text style={ styles.error }> { choreError } </Text> }
+        { taskError && <Text style={ styles.error }> { taskError } </Text> }
 
         <Pressable
           style={ styles.addRoomLink }

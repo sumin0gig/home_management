@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Hub } from 'aws-amplify/utils';
 import { getCurrentAuthUser } from '../api/auth';
 import { useFamilyStore } from './useFamilyStore';
-import { useChoreStore } from './useChoreStore';
+import { useTaskStore } from './useTaskStore';
 import { useRoomStore } from './useRoomStore';
 import { useMascotStore } from './useMascotStore';
 
@@ -33,7 +33,7 @@ export const useAuthStore = create<AuthState>(set => ({
       } else if (payload.event === 'signedOut') {
         set({ status: 'signedOut' });
         useFamilyStore.getState().reset();
-        useChoreStore.getState().reset();
+        useTaskStore.getState().reset();
         useRoomStore.getState().reset();
         useMascotStore.getState().reset();
       }

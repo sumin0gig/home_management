@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { HomeStackParamList } from "../../navigation/types";
-import { useChoreStore } from "../../store/useChoreStore";
+import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../utils/date";
-import { type ChoreRow } from "../../store/useChoreStore";
+import { type TaskRow } from "../../store/useTaskStore";
 import { roomDisplayName } from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
@@ -33,46 +33,46 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const { roomId } = route.params;
 
   const room = useRoomStore( state => state.rooms.find( r => r.id === roomId ) );
-  const chores = useChoreStore( state => state.chores );
-  const choreStatus = useChoreStore( state => state.status );
-  const choreError = useChoreStore( state => state.error );
-  const completeChore = useChoreStore( state => state.completeChore );
+  const tasks = useTaskStore( state => state.tasks );
+  const taskStatus = useTaskStore( state => state.status );
+  const taskError = useTaskStore( state => state.error );
+  const completeTask = useTaskStore( state => state.completeTask );
 
   React.useEffect( () => {
     navigation.setOptions( { title: room ? roomDisplayName( room ) : "방" } );
   }, [navigation, room] );
 
   const today = toDateString( new Date() );
-  const roomChores = chores
-    .filter( c => c.roomId === roomId )
+  const roomTasks = tasks
+    .filter( t => t.roomId === roomId )
     .sort( (a, b) => a.nextDueDate.localeCompare( b.nextDueDate ) );
 
-  const renderChore = (item: ChoreRow) => (
-    <View style={ styles.choreRow } key={ item.id }>
+  const renderTask = (item: TaskRow) => (
+    <View style={ styles.taskRow } key={ item.id }>
       <Pressable
-        style={ styles.choreInfo }
-        onPress={ () => navigation.navigate( "ChoreForm", { choreId: item.id } ) }
+        style={ styles.taskInfo }
+        onPress={ () => navigation.navigate( "TaskForm", { taskId: item.id } ) }
       >
-        <Text style={ styles.choreTitle }> { item.title } </Text>
+        <Text style={ styles.taskTitle }> { item.title } </Text>
         {
           item.description
-          ? <Text style={ styles.choreDescription }> { item.description } </Text>
+          ? <Text style={ styles.taskDescription }> { item.description } </Text>
           : null
         }
-        <Text style={ styles.choreDue }>
+        <Text style={ styles.taskDue }>
           { formatDueLabel( item.nextDueDate, today ) }
         </Text>
       </Pressable>
       <DefaultButton
         text="완료"
-        onPress={ () => completeChore( item ) }
+        onPress={ () => completeTask( item ) }
         style={ styles.completeButton }
         textStyle={ styles.completeButtonText }
       />
     </View>
   );
 
-  if (choreStatus === "loading") {
+  if (taskStatus === "loading") {
     return (
       <View style={ styles.centerContainer }>
         <ActivityIndicator size="large" />
@@ -83,23 +83,23 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   return (
     <View style={ styles.container }>
       {
-        choreError
-        ? <Text style={ styles.error }> { choreError } </Text>
+        taskError
+        ? <Text style={ styles.error }> { taskError } </Text>
         : null
       }
 
       <DefaultButton
         text="+ 집안일 추가"
-        onPress={ () => navigation.navigate( "ChoreForm", { roomId } ) }
+        onPress={ () => navigation.navigate( "TaskForm", { roomId } ) }
         style={ styles.addButton }
         textStyle={ styles.addButtonText }
       />
 
       <ScrollView>
         {
-          roomChores.length === 0
+          roomTasks.length === 0
           ? <Text style={ styles.emptySection }> 집안일이 없습니다. </Text>
-          : roomChores.map( renderChore )
+          : roomTasks.map( renderTask )
         }
       </ScrollView>
     </View>
@@ -141,7 +141,7 @@ const styles = StyleSheet.create( {
     fontSize: 16,
     fontWeight: "600",
   },
-  choreRow: {
+  taskRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -149,20 +149,20 @@ const styles = StyleSheet.create( {
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
-  choreInfo: {
+  taskInfo: {
     flex: 1,
     marginRight: 12,
   },
-  choreTitle: {
+  taskTitle: {
     fontSize: 16,
     fontWeight: "600",
   },
-  choreDescription: {
+  taskDescription: {
     fontSize: 13,
     color: "#666",
     marginTop: 2,
   },
-  choreDue: {
+  taskDue: {
     fontSize: 12,
     color: "#2f6fed",
     marginTop: 4,

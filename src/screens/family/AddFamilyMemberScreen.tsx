@@ -52,6 +52,7 @@ function AddFamilyMemberScreen( { navigation }: Props ): React.JSX.Element {
 
       <View style={ styles.codeSection }>
         <View style={ styles.codeLabelRow }>
+
           <Text style={ styles.codeLabel }> 가족 초대 코드 </Text>
           <View style={ styles.codeActions }>
             <Pressable onPress={ onCopy } style={ styles.iconButton }>
@@ -63,6 +64,7 @@ function AddFamilyMemberScreen( { navigation }: Props ): React.JSX.Element {
               <Text style={ styles.iconButtonText }> 📤 공유 </Text>
             </Pressable>
           </View>
+
         </View>
         <Text style={ styles.codeValue }> { family.inviteCode } </Text>
       </View>
@@ -76,9 +78,7 @@ type AddFamilySectionProps = {
   navigation: Props["navigation"];
 };
 
-function AddFamilySection({
-  navigation,
-}: AddFamilySectionProps): React.JSX.Element {
+function AddFamilySection({ navigation, }: AddFamilySectionProps): React.JSX.Element {
   return (
     <View style={ styles.addFamilySection }>
       <Text style={ styles.sectionTitle }> 가족 추가 </Text>

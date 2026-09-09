@@ -1,18 +1,18 @@
-import type { ChoreRow } from '../store/useChoreStore';
+import type { TaskRow } from '../store/useTaskStore';
 
 const BASE_LEVEL_CAP = 100;
 const LEVEL_CAP_GROWTH = 1.2;
 
-// Mirrors the day-count approximation computeNextDueDate (src/store/useChoreStore.ts)
+// Mirrors the day-count approximation computeNextDueDate (src/store/useTaskStore.ts)
 // already uses for interval math: DAY=1, WEEK=7, MONTH=30 days.
-export function computeHappinessGain(chore: ChoreRow): number {
-  if (chore.recurrenceType === 'YEARLY_MONTHS') {
+export function computeHappinessGain(task: TaskRow): number {
+  if (task.recurrenceType === 'YEARLY_MONTHS') {
     const monthCount =
-      chore.months?.filter((m): m is number => m !== null).length ?? 0;
+      task.months?.filter((m): m is number => m !== null).length ?? 0;
     return monthCount > 0 ? Math.round(365 / monthCount) : 30;
   }
-  const value = chore.intervalValue ?? 1;
-  switch (chore.intervalUnit) {
+  const value = task.intervalValue ?? 1;
+  switch (task.intervalUnit) {
     case 'WEEK':
       return value * 7;
     case 'MONTH':

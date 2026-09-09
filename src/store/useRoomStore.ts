@@ -93,10 +93,10 @@ async function listAllRoomsForFamily(familyId: string): Promise<RoomRow[]> {
   return results;
 }
 
-// 방을 삭제할 때 그 안의 집안일/완료 기록도 함께 지워야 한다. useChoreStore를 가져다 쓰면
-// useChoreStore -> useRoomStore(listRoomsForFamily) 방향과 순환 참조가 생기므로,
-// 여기서는 필요한 Amplify 호출을 직접 반복한다(useChoreStore.deleteChore와 로직이 겹침).
-async function listAllChoreIdsForRoom(roomId: string): Promise<string[]> {
+// 방을 삭제할 때 그 안의 집안일/완료 기록도 함께 지워야 한다. useTaskStore를 가져다 쓰면
+// useTaskStore -> useRoomStore(listRoomsForFamily) 방향과 순환 참조가 생기므로,
+// 여기서는 필요한 Amplify 호출을 직접 반복한다(useTaskStore.deleteTask와 로직이 겹침).
+async function listAllTaskIdsForRoom(roomId: string): Promise<string[]> {
   const results: string[] = [];
   let nextToken: string | null | undefined;
   do {
@@ -104,28 +104,28 @@ async function listAllChoreIdsForRoom(roomId: string): Promise<string[]> {
       data,
       nextToken: token,
       errors,
-    } = await client.models.Chore.listChoreByRoomId({ roomId }, { nextToken });
+    } = await client.models.Task.listTaskByRoomId({ roomId }, { nextToken });
     throwIfErrors(errors, '집안일 목록을 불러오지 못했습니다.');
-    results.push(...data.map(chore => chore.id));
+    results.push(...data.map(task => task.id));
     nextToken = token;
   } while (nextToken);
   return results;
 }
 
-async function deleteChoreAndLogs(choreId: string): Promise<void> {
+async function deleteTaskAndLogs(taskId: string): Promise<void> {
   let nextToken: string | null | undefined;
   do {
     const {
       data: logs,
       nextToken: token,
       errors,
-    } = await client.models.ChoreLog.listChoreLogByChoreId(
-      { choreId },
+    } = await client.models.TaskLog.listTaskLogByTaskId(
+      { taskId },
       { nextToken },
     );
     throwIfErrors(errors, '완료 기록 삭제에 실패했습니다.');
     const deleteResults = await Promise.all(
-      logs.map(log => client.models.ChoreLog.delete({ id: log.id })),
+      logs.map(log => client.models.TaskLog.delete({ id: log.id })),
     );
     deleteResults.forEach(result =>
       throwIfErrors(result.errors, '완료 기록 삭제에 실패했습니다.'),
@@ -133,15 +133,15 @@ async function deleteChoreAndLogs(choreId: string): Promise<void> {
     nextToken = token;
   } while (nextToken);
 
-  const { errors } = await client.models.Chore.delete({ id: choreId });
+  const { errors } = await client.models.Task.delete({ id: taskId });
   throwIfErrors(errors, '집안일 삭제에 실패했습니다.');
 }
 
-async function listChoreTemplatesForRoomType(
+async function listTaskTemplatesForRoomType(
   roomType: NonNullable<RoomType>,
-): Promise<Schema['ChoreTemplate']['type'][]> {
+): Promise<Schema['TaskTemplate']['type'][]> {
   const { data: templates, errors } =
-    await client.models.ChoreTemplate.listChoreTemplateByRoomType({
+    await client.models.TaskTemplate.listTaskTemplateByRoomType({
       roomType,
     });
   throwIfErrors(errors, '집안일 템플릿을 불러오지 못했습니다.');
@@ -204,11 +204,11 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         throw new Error('방 생성에 실패했습니다.');
       }
 
-      const templates = await listChoreTemplatesForRoomType(roomType);
+      const templates = await listTaskTemplatesForRoomType(roomType);
       const today = toDateString(new Date());
       await Promise.all(
         templates.map(async template => {
-          const { errors: choreErrors } = await client.models.Chore.create({
+          const { errors: taskErrors } = await client.models.Task.create({
             roomId: room.id,
             title: template.title,
             description: template.description,
@@ -218,7 +218,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
             months: template.months,
             nextDueDate: today,
           });
-          throwIfErrors(choreErrors, '집안일 시딩에 실패했습니다.');
+          throwIfErrors(taskErrors, '집안일 시딩에 실패했습니다.');
         }),
       );
 
@@ -232,8 +232,8 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   removeRoom: async (roomId: string) => {
     set({ error: null });
     try {
-      const choreIds = await listAllChoreIdsForRoom(roomId);
-      await Promise.all(choreIds.map(choreId => deleteChoreAndLogs(choreId)));
+      const taskIds = await listAllTaskIdsForRoom(roomId);
+      await Promise.all(taskIds.map(taskId => deleteTaskAndLogs(taskId)));
       const { errors } = await client.models.Room.delete({ id: roomId });
       throwIfErrors(errors, '방 삭제에 실패했습니다.');
       set({ rooms: get().rooms.filter(r => r.id !== roomId) });

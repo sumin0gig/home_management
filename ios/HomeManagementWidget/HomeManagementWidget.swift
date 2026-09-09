@@ -7,54 +7,54 @@ import WidgetKit
 // steps for the full walkthrough.
 
 private let appGroupId = "group.com.homemanagement.widget"
-private let storageKey = "ChoreWidget.topChores"
-private let choreListDeepLink = URL(string: "homemanagement://chores")
+private let storageKey = "TaskWidget.topTasks"
+private let taskListDeepLink = URL(string: "homemanagement://tasks")
 
-struct ChoreItem: Codable, Identifiable {
+struct TaskItem: Codable, Identifiable {
   let id: String
   let title: String
   let dueLabel: String
 }
 
-struct ChoreEntry: TimelineEntry {
+struct TaskEntry: TimelineEntry {
   let date: Date
-  let chores: [ChoreItem]
+  let tasks: [TaskItem]
 }
 
-struct ChoreProvider: TimelineProvider {
-  func placeholder(in context: Context) -> ChoreEntry {
-    ChoreEntry(
+struct TaskProvider: TimelineProvider {
+  func placeholder(in context: Context) -> TaskEntry {
+    TaskEntry(
       date: Date(),
-      chores: [ChoreItem(id: "placeholder", title: "화장실 청소", dueLabel: "오늘")]
+      tasks: [TaskItem(id: "placeholder", title: "화장실 청소", dueLabel: "오늘")]
     )
   }
 
-  func getSnapshot(in context: Context, completion: @escaping (ChoreEntry) -> Void) {
-    completion(ChoreEntry(date: Date(), chores: loadChores()))
+  func getSnapshot(in context: Context, completion: @escaping (TaskEntry) -> Void) {
+    completion(TaskEntry(date: Date(), tasks: loadTasks()))
   }
 
-  func getTimeline(in context: Context, completion: @escaping (Timeline<ChoreEntry>) -> Void) {
-    let entry = ChoreEntry(date: Date(), chores: loadChores())
+  func getTimeline(in context: Context, completion: @escaping (Timeline<TaskEntry>) -> Void) {
+    let entry = TaskEntry(date: Date(), tasks: loadTasks())
     // The app pushes a fresh snapshot (and calls reloadAllTimelines) whenever
-    // chores change, so the widget doesn't need to poll on its own.
+    // tasks change, so the widget doesn't need to poll on its own.
     completion(Timeline(entries: [entry], policy: .never))
   }
 
-  private func loadChores() -> [ChoreItem] {
+  private func loadTasks() -> [TaskItem] {
     guard
       let defaults = UserDefaults(suiteName: appGroupId),
       let json = defaults.string(forKey: storageKey),
       let data = json.data(using: .utf8),
-      let chores = try? JSONDecoder().decode([ChoreItem].self, from: data)
+      let tasks = try? JSONDecoder().decode([TaskItem].self, from: data)
     else {
       return []
     }
-    return chores
+    return tasks
   }
 }
 
 struct HomeManagementWidgetView: View {
-  var entry: ChoreEntry
+  var entry: TaskEntry
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
@@ -62,17 +62,17 @@ struct HomeManagementWidgetView: View {
         .font(.caption)
         .foregroundStyle(.secondary)
 
-      if entry.chores.isEmpty {
+      if entry.tasks.isEmpty {
         Text("모든 집안일을 완료했어요")
           .font(.footnote)
       } else {
-        ForEach(entry.chores) { chore in
+        ForEach(entry.tasks) { task in
           VStack(alignment: .leading, spacing: 1) {
-            Text(chore.title)
+            Text(task.title)
               .font(.subheadline)
               .fontWeight(.semibold)
               .lineLimit(1)
-            Text(chore.dueLabel)
+            Text(task.dueLabel)
               .font(.caption2)
               .foregroundStyle(.tint)
           }
@@ -81,7 +81,7 @@ struct HomeManagementWidgetView: View {
     }
     .padding()
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    .widgetURL(choreListDeepLink)
+    .widgetURL(taskListDeepLink)
   }
 }
 
@@ -89,7 +89,7 @@ struct HomeManagementWidget: Widget {
   let kind: String = "HomeManagementWidget"
 
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: ChoreProvider()) { entry in
+    StaticConfiguration(kind: kind, provider: TaskProvider()) { entry in
       HomeManagementWidgetView(entry: entry)
     }
     .configurationDisplayName("집안일")
