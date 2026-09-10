@@ -52,9 +52,14 @@ export function isRoomOverlapping(a: RoomRect, b: RoomRect): boolean {
   );
 }
 
-const GRID_COLUMNS = 10;
+// 평면도 캔버스 가로 폭(그리드 셀 개수). 자동 배치뿐 아니라 드래그 이동의
+// 경계 clamp에도 쓰이므로 export한다.
+export const GRID_COLUMNS = 10;
 
-function findNextRoomPlacement(
+// 온보딩(RoomSetupScreen) 미리보기에서 아직 저장되지 않은 draft 방들의 배치를
+// 계산할 때도 재사용하므로 export한다 — addRoom이 서버에 저장할 때 쓰는 배치
+// 로직과 동일해야 미리보기와 실제 저장 결과가 어긋나지 않는다.
+export function findNextRoomPlacement(
   existing: RoomRect[],
   width: number,
   height: number,
@@ -69,7 +74,23 @@ function findNextRoomPlacement(
   }
 }
 
-export function roomDisplayName(room: RoomRow): string {
+// FloorPlanCanvas/DraggableRoomBlock이 실제로 필요로 하는 필드만 뽑은 최소
+// 형태 — 아직 서버에 저장되지 않은 온보딩 draft 방(진짜 RoomRow가 아님)도
+// 같은 캔버스로 미리보기 렌더링할 수 있도록 RoomRow보다 느슨하게 잡는다.
+export interface FloorPlanRoom {
+  id: string;
+  roomType?: RoomType;
+  label?: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export function roomDisplayName(room: {
+  label?: string | null;
+  roomType?: RoomType;
+}): string {
   if (room.label && room.label.trim()) {
     return room.label;
   }
@@ -171,6 +192,11 @@ interface RoomState {
     label?: string,
   ) => Promise<void>;
   removeRoom: (roomId: string) => Promise<void>;
+  updateRoomPosition: (roomId: string, x: number, y: number) => Promise<void>;
+  updateRoomDetails: (
+    roomId: string,
+    updates: { roomType?: NonNullable<RoomType>; label?: string },
+  ) => Promise<void>;
   clearRoomsForFamily: (familyId: string) => Promise<void>;
   reset: () => void;
 }
@@ -250,6 +276,46 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       const { errors } = await client.models.Room.delete({ id: roomId });
       throwIfErrors(errors, '방 삭제에 실패했습니다.');
       set({ rooms: get().rooms.filter(r => r.id !== roomId) });
+    } catch (err) {
+      set({ error: (err as Error).message });
+      throw err;
+    }
+  },
+
+  updateRoomPosition: async (roomId: string, x: number, y: number) => {
+    set({ error: null });
+    try {
+      const { data: room, errors } = await client.models.Room.update({
+        id: roomId,
+        x,
+        y,
+      });
+      throwIfErrors(errors, '방 위치 변경에 실패했습니다.');
+      if (!room) {
+        throw new Error('방 위치 변경에 실패했습니다.');
+      }
+      set({ rooms: get().rooms.map(r => (r.id === roomId ? room : r)) });
+    } catch (err) {
+      set({ error: (err as Error).message });
+      throw err;
+    }
+  },
+
+  updateRoomDetails: async (
+    roomId: string,
+    updates: { roomType?: NonNullable<RoomType>; label?: string },
+  ) => {
+    set({ error: null });
+    try {
+      const { data: room, errors } = await client.models.Room.update({
+        id: roomId,
+        ...updates,
+      });
+      throwIfErrors(errors, '방 수정에 실패했습니다.');
+      if (!room) {
+        throw new Error('방 수정에 실패했습니다.');
+      }
+      set({ rooms: get().rooms.map(r => (r.id === roomId ? room : r)) });
     } catch (err) {
       set({ error: (err as Error).message });
       throw err;

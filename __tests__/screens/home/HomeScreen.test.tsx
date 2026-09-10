@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import HomeScreen from "../../../src/screens/home/HomeScreen";
 import { useFamilyStore } from "../../../src/store/useFamilyStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
@@ -9,8 +9,6 @@ import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { FamilyRow } from "../../../src/store/useFamilyStore";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 import type { TaskRow } from "../../../src/store/useTaskStore";
-
-const mockedAddRoom = jest.fn();
 
 const family: FamilyRow = {
   id: "f1",
@@ -56,12 +54,12 @@ describe( "HomeScreen", () => {
     // fetchRooms/fetchTasksForFamily는 마운트 시 useEffect로 호출된다. 여기서는
     // 실제 Amplify 호출 대신 테스트가 미리 seed한 rooms/tasks 상태를 그대로 두도록
     // no-op으로 막아둔다 (렌더 결과는 store 상태만으로 검증한다).
-    useRoomStore.setState( { fetchRooms: jest.fn(), addRoom: mockedAddRoom } );
+    useRoomStore.setState( { fetchRooms: jest.fn() } );
     useTaskStore.setState( { fetchTasksForFamily: jest.fn() } );
     useFamilyStore.setState( { status: "joined", family } );
   } );
 
-  test( "방 목록을 타일로 보여주고, 오늘 해야 할 집안일이 있으면 표시를 남긴다", () => {
+  test( "방 목록을 평면도로 보여주고, 오늘 해야 할 집안일이 있으면 표시를 남긴다", () => {
     useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
     useTaskStore.setState( { status: "loaded", tasks: [task] } );
 
@@ -93,19 +91,24 @@ describe( "HomeScreen", () => {
     } );
   } );
 
-  test( "+ 방 추가로 방을 만들면 addRoom을 호출한다", async () => {
+  test( "방이 없으면 안내 문구를 보여준다", () => {
     useRoomStore.setState( { status: "loaded", rooms: [] } );
     useTaskStore.setState( { status: "loaded", tasks: [] } );
-    mockedAddRoom.mockResolvedValue( undefined );
 
     const { getByText } = renderHomeScreen();
 
-    fireEvent.press( getByText( "+ 방 추가" ) );
-    fireEvent.press( getByText( "침실" ) );
-    fireEvent.press( getByText( "추가" ) );
+    expect(
+      getByText( "등록된 방이 없습니다. 편집에서 방을 추가해주세요." ),
+    ).toBeTruthy();
+  } );
 
-    await waitFor( () =>
-      expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined ),
-    );
+  test( "편집을 탭하면 RoomEdit으로 이동한다", () => {
+    useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
+    useTaskStore.setState( { status: "loaded", tasks: [] } );
+
+    const { getByText, navigation } = renderHomeScreen();
+    fireEvent.press( getByText( "편집" ) );
+
+    expect( navigation.navigate ).toHaveBeenCalledWith( "RoomEdit" );
   } );
 } );

@@ -7,6 +7,7 @@ export type AuthStackParamList = {
 export type HomeStackParamList = {
   HomeMain: undefined;
   RoomDetail: { roomId: string };
+  RoomEdit: undefined;
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
 };

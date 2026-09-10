@@ -3,12 +3,11 @@ import {
   ActivityIndicator,
   type LayoutChangeEvent,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { HomeStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
@@ -17,29 +16,15 @@ import { useRoomStore } from "../../store/useRoomStore";
 import { useMascotStore } from "../../store/useMascotStore";
 import { toDateString } from "../../utils/date";
 import { commonColor } from "../../styles/commonStyle";
-import ModalView from "../../components/common/ModalView";
-import DefaultButton from "../../components/common/DefaultButton";
-import RoomBlockTile from "../../components/RoomSetupScreen/RoomBlockTile";
+import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
 import WanderingMascot from "../../components/Mascot/WanderingMascot";
 import {
   EAR_OPTIONS,
   TAIL_OPTIONS,
 } from "../../components/Mascot/optionMaps";
-import {
-  ROOM_TYPES,
-  ROOM_TYPE_LABELS,
-  roomDisplayName,
-  type RoomRow,
-  type RoomType,
-} from "../../store/useRoomStore";
+import { type RoomRow } from "../../store/useRoomStore";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "HomeMain">;
-
-type AddRoomModalProps = {
-  visible: boolean;
-  onClose: () => void;
-  onSubmit: (roomType: NonNullable<RoomType>, label: string) => Promise<void>;
-};
 
 function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
@@ -48,7 +33,6 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const roomStatus = useRoomStore( state => state.status );
   const roomError = useRoomStore( state => state.error );
   const fetchRooms = useRoomStore( state => state.fetchRooms );
-  const addRoom = useRoomStore( state => state.addRoom );
 
   const tasks = useTaskStore( state => state.tasks );
   const taskStatus = useTaskStore( state => state.status );
@@ -59,7 +43,6 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
 
   const mascot = useMascotStore( state => state.mascot );
 
-  const [isAddingRoom, setIsAddingRoom] = React.useState( false );
   const [wanderBounds, setWanderBounds] = React.useState( {
     width: 0,
     height: 0,
@@ -92,26 +75,9 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   }
 
   const today = toDateString( new Date() );
-  const sortedRooms = [...rooms].sort( (a, b) => {
-    const typeOrder =
-      ROOM_TYPES.indexOf( a.roomType ?? "GENERAL_ROOM" ) -
-      ROOM_TYPES.indexOf( b.roomType ?? "GENERAL_ROOM" );
-    if (typeOrder !== 0) {
-      return typeOrder;
-    }
-    return roomDisplayName( a ).localeCompare( roomDisplayName( b ) );
-  } );
 
   const hasDueToday = (room: RoomRow): boolean =>
     tasks.some( t => t.roomId === room.id && t.nextDueDate <= today );
-
-  const onAddRoom = async (roomType: NonNullable<RoomType>, label: string) => {
-    if (!family) {
-      return;
-    }
-    await addRoom( family.id, roomType, label.trim() || undefined );
-    setIsAddingRoom( false );
-  };
 
   const mascotConfig = mascot
     ? {
@@ -132,42 +98,30 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
         { taskError && <Text style={ styles.error }> { taskError } </Text> }
 
         <Pressable
-          style={ styles.addRoomLink }
-          onPress={ () => setIsAddingRoom( true ) }
+          style={ styles.editLink }
+          onPress={ () => navigation.navigate( "RoomEdit" ) }
         >
-          <Text style={ styles.addRoomLinkText }> + 방 추가 </Text>
+          <Text style={ styles.editLinkText }> 편집 </Text>
         </Pressable>
 
-        <AddRoomModal
-          visible={ isAddingRoom }
-          onClose={ () => setIsAddingRoom( false ) }
-          onSubmit={ onAddRoom }
-        />
-
-        <ScrollView contentContainerStyle={ styles.roomGrid }>
-          {
-            sortedRooms.length === 0
-            ? <Text style={ styles.emptySection }>
-              등록된 방이 없습니다. 방을 추가해주세요.
-            </Text>
-            : sortedRooms.map( room => (
-              <RoomBlockTile
-                key={ room.id }
-                block={ {
-                  key: room.id,
-                  roomType: room.roomType ?? "GENERAL_ROOM",
-                  label: room.label ?? "",
-                  width: room.width,
-                  height: room.height,
-                } }
-                onPress={ () =>
-                  navigation.navigate( "RoomDetail", { roomId: room.id } )
-                }
-                hasDueToday={ hasDueToday( room ) }
-              />
-            ) )
-          }
-        </ScrollView>
+        {
+          rooms.length === 0
+          ? <Text style={ styles.emptySection }>
+            등록된 방이 없습니다. 편집에서 방을 추가해주세요.
+          </Text>
+          : <ScrollView
+            style={ styles.floorPlanScroll }
+            showsVerticalScrollIndicator={ false }
+          >
+            <FloorPlanCanvas
+              rooms={ rooms }
+              onRoomPress={ room =>
+                navigation.navigate( "RoomDetail", { roomId: room.id } )
+              }
+              hasDueToday={ hasDueToday }
+            />
+          </ScrollView>
+        }
       </View>
 
       <View
@@ -189,95 +143,6 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   );
 }
 
-const AddRoomModal = ( {
-  visible,
-  onClose: onCloseModal,
-  onSubmit: onSubmitRoom,
-}: AddRoomModalProps ): React.JSX.Element => {
-  const [newRoomType, setNewRoomType] =
-    React.useState<NonNullable<RoomType> | null>( null );
-  const [newRoomLabel, setNewRoomLabel] = React.useState( "" );
-  const [isSaving, setIsSaving] = React.useState( false );
-
-  const resetForm = () => {
-    setNewRoomType( null );
-    setNewRoomLabel( "" );
-  };
-
-  const onClose = () => {
-    resetForm();
-    onCloseModal();
-  };
-
-  const onSubmit = async () => {
-    if (!newRoomType) {
-      return;
-    }
-    setIsSaving( true );
-    try {
-      await onSubmitRoom( newRoomType, newRoomLabel );
-      resetForm();
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsSaving( false );
-    }
-  };
-
-  return (
-    <ModalView visible={ visible } onRequestClose={ onClose }>
-      <Text style={ styles.modalTitle }> 방 추가 </Text>
-      <View style={ styles.chipRow }>
-        { ROOM_TYPES.map( roomType => (
-          <Pressable
-            key={ roomType }
-            style={ [
-              styles.chip,
-              newRoomType === roomType && styles.chipSelected,
-            ] }
-            onPress={ () => setNewRoomType( roomType ) }
-          >
-            <Text
-              style={
-                newRoomType === roomType
-                  ? styles.chipTextSelected
-                  : styles.chipText
-              }
-            >
-              { ROOM_TYPE_LABELS[roomType] }
-            </Text>
-          </Pressable>
-        ) ) }
-      </View>
-      <TextInput
-        style={ styles.input }
-        placeholder="이름(선택, 예: 안방)"
-        value={ newRoomLabel }
-        onChangeText={ setNewRoomLabel }
-      />
-      <View style={ styles.addRoomButtonRow }>
-        <DefaultButton
-          text="취소"
-          onPress={ onClose }
-          style={ styles.cancelButton }
-          textStyle={ styles.cancelButtonText }
-        />
-        <Pressable
-          style={ styles.saveRoomButton }
-          onPress={ onSubmit }
-          disabled={ isSaving || !newRoomType }
-        >
-          {
-            isSaving
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={ styles.addButtonText }> 추가 </Text>
-          }
-        </Pressable>
-      </View>
-    </ModalView>
-  );
-};
-
 const styles = StyleSheet.create( {
   root: {
     flex: 1,
@@ -297,11 +162,6 @@ const styles = StyleSheet.create( {
     padding: 24,
     backgroundColor: commonColor.backgroundColor,
   },
-  emptyText: {
-    fontSize: 15,
-    color: "#555",
-    textAlign: "center",
-  },
   emptySection: {
     fontSize: 14,
     color: "#999",
@@ -312,85 +172,16 @@ const styles = StyleSheet.create( {
     marginBottom: 12,
     textAlign: "center",
   },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  addRoomLink: {
+  editLink: {
     alignItems: "flex-end",
     marginBottom: 20,
   },
-  addRoomLinkText: {
+  editLinkText: {
     color: commonColor.touchable,
     fontWeight: "600",
   },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
-  addRoomButtonRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  cancelButton: {
+  floorPlanScroll: {
     flex: 1,
-    backgroundColor: "transparent",
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  cancelButtonText: {
-    color: "#555",
-    fontWeight: "600",
-  },
-  saveRoomButton: {
-    flex: 1,
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-  },
-  chipSelected: {
-    backgroundColor: commonColor.touchable,
-    borderColor: commonColor.touchable,
-  },
-  chipText: {
-    color: "#333",
-  },
-  chipTextSelected: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  roomGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
   },
 } );
 
