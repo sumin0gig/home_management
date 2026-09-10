@@ -54,7 +54,12 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () =>
-      expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined ),
+      expect( mockedAddRoom ).toHaveBeenCalledWith(
+        "f1",
+        "BEDROOM",
+        undefined,
+        { x: 0, y: 0 },
+      ),
     );
   } );
 
@@ -67,11 +72,17 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () => expect( mockedAddRoom ).toHaveBeenCalledTimes( 2 ) );
-    expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined );
+    expect( mockedAddRoom ).toHaveBeenCalledWith(
+      "f1",
+      "BEDROOM",
+      undefined,
+      { x: 0, y: 0 },
+    );
     expect( mockedAddRoom ).toHaveBeenCalledWith(
       "f1",
       "LIVING_ROOM",
       undefined,
+      { x: 4, y: 0 },
     );
   } );
 
@@ -106,6 +117,7 @@ describe( "RoomSetupScreen", () => {
         "f1",
         "GENERAL_ROOM",
         "서재",
+        { x: 0, y: 0 },
       ),
     );
   } );

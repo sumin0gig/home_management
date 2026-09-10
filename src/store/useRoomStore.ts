@@ -190,6 +190,7 @@ interface RoomState {
     familyId: string,
     roomType: NonNullable<RoomType>,
     label?: string,
+    position?: { x: number; y: number },
   ) => Promise<void>;
   removeRoom: (roomId: string) => Promise<void>;
   updateRoomPosition: (roomId: string, x: number, y: number) => Promise<void>;
@@ -224,11 +225,15 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     familyId: string,
     roomType: NonNullable<RoomType>,
     label?: string,
+    position?: { x: number; y: number },
   ) => {
     set({ error: null });
     try {
       const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS[roomType];
-      const { x, y } = findNextRoomPlacement(get().rooms, width, height);
+      // 온보딩 미리보기에서 이미 위치를 정했다면(드래그로 옮긴 경우 포함)
+      // 그 좌표를 그대로 쓰고, 없을 때만 자동 배치한다.
+      const { x, y } =
+        position ?? findNextRoomPlacement(get().rooms, width, height);
       const { data: room, errors } = await client.models.Room.create({
         familyId,
         roomType,

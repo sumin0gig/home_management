@@ -87,6 +87,10 @@ function RoomSetupScreen(): React.JSX.Element {
     setBlocks( prev => prev.filter( b => b.id !== id ) );
   };
 
+  const onMoveBlock = (id: string, x: number, y: number) => {
+    setBlocks( prev => prev.map( b => ( b.id === id ? { ...b, x, y } : b ) ) );
+  };
+
   const onSubmit = async () => {
     if (!family || blocks.length === 0) {
       return;
@@ -102,6 +106,7 @@ function RoomSetupScreen(): React.JSX.Element {
           family.id,
           block.roomType,
           block.label.trim() || undefined,
+          { x: block.x, y: block.y },
         );
       }
     } catch (err) {
@@ -156,14 +161,18 @@ function RoomSetupScreen(): React.JSX.Element {
         blocks.length === 0
         ? <Text style={ styles.emptyText }> 위에서 방을 탭해 추가해보세요. </Text>
         : <>
-          <Text style={ styles.hintText }> 방을 탭하면 뺄 수 있어요. </Text>
+          <Text style={ styles.hintText }>
+            방을 탭하면 빼고, 끌면 위치를 옮길 수 있어요.
+          </Text>
           <ScrollView
             style={ styles.floorPlanScroll }
             showsVerticalScrollIndicator={ false }
           >
             <FloorPlanCanvas
               rooms={ blocks }
+              editable
               onRoomPress={ block => onRemoveBlock( block.id ) }
+              onRoomMove={ onMoveBlock }
             />
           </ScrollView>
         </>
