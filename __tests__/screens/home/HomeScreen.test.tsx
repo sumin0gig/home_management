@@ -24,6 +24,10 @@ const bedroom: RoomRow = {
   familyId: "f1",
   roomType: "BEDROOM",
   label: null,
+  x: 0,
+  y: 0,
+  width: 4,
+  height: 3,
 } as RoomRow;
 
 const task: TaskRow = {
@@ -101,12 +105,7 @@ describe( "HomeScreen", () => {
     fireEvent.press( getByText( "추가" ) );
 
     await waitFor( () =>
-      expect( mockedAddRoom ).toHaveBeenCalledWith(
-        "f1",
-        "BEDROOM",
-        "BIG",
-        undefined,
-      ),
+      expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined ),
     );
   } );
 } );

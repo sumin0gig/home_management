@@ -54,12 +54,7 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () =>
-      expect( mockedAddRoom ).toHaveBeenCalledWith(
-        "f1",
-        "BEDROOM",
-        "BIG",
-        undefined,
-      ),
+      expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined ),
     );
   } );
 
@@ -72,16 +67,10 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () => expect( mockedAddRoom ).toHaveBeenCalledTimes( 2 ) );
-    expect( mockedAddRoom ).toHaveBeenCalledWith(
-      "f1",
-      "BEDROOM",
-      "BIG",
-      undefined,
-    );
+    expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined );
     expect( mockedAddRoom ).toHaveBeenCalledWith(
       "f1",
       "LIVING_ROOM",
-      "VERY_BIG",
       undefined,
     );
   } );
@@ -100,13 +89,12 @@ describe( "RoomSetupScreen", () => {
     expect( mockedAddRoom ).not.toHaveBeenCalled();
   } );
 
-  test( "이름과 크기를 입력하고 추가하면 커스텀 타일이 생성되고 집 만들기 시 GENERAL_ROOM으로 저장된다", async () => {
+  test( "이름을 입력하고 추가하면 커스텀 타일이 생성되고 집 만들기 시 GENERAL_ROOM으로 저장된다", async () => {
     mockedAddRoom.mockResolvedValue( undefined );
 
     const { getByText, getByPlaceholderText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 다른 방 만들기" ) );
     fireEvent.changeText( getByPlaceholderText( "방 이름(예: 서재)" ), "서재" );
-    fireEvent.press( getByText( "큼" ) );
     fireEvent.press( getByText( "추가" ) );
 
     expect( getByText( "서재" ) ).toBeTruthy();
@@ -117,7 +105,6 @@ describe( "RoomSetupScreen", () => {
       expect( mockedAddRoom ).toHaveBeenCalledWith(
         "f1",
         "GENERAL_ROOM",
-        "BIG",
         "서재",
       ),
     );

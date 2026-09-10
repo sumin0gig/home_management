@@ -8,7 +8,6 @@ const client = generateClient<Schema>();
 
 export type RoomRow = Schema['Room']['type'];
 export type RoomType = RoomRow['roomType'];
-export type RoomSize = RoomRow['size'];
 
 export const ROOM_TYPE_LABELS: Record<NonNullable<RoomType>, string> = {
   LIVING_ROOM: '거실',
@@ -23,41 +22,52 @@ export const ROOM_TYPES = Object.keys(ROOM_TYPE_LABELS) as Array<
   NonNullable<RoomType>
 >;
 
-export const ROOM_SIZE_LABELS: Record<NonNullable<RoomSize>, string> = {
-  VERY_SMALL: '매우 작음',
-  SMALL: '작음',
-  NORMAL: '보통',
-  BIG: '큼',
-  VERY_BIG: '매우 큼',
-};
-
-export const ROOM_SIZES = Object.keys(ROOM_SIZE_LABELS) as Array<
-  NonNullable<RoomSize>
->;
-
-export const DEFAULT_ROOM_SIZE: NonNullable<RoomSize> = 'NORMAL';
-
-export const ROOM_TYPE_DEFAULT_SIZE: Record<
+// 평면도 편집 UI(드래그 배치/리사이즈)가 나오기 전까지, 방 생성 시 임시로 쓰는
+// 룸타입별 기본 그리드 크기. 실제 배치는 findNextRoomPlacement가 정한다.
+export const ROOM_TYPE_DEFAULT_DIMENSIONS: Record<
   NonNullable<RoomType>,
-  NonNullable<RoomSize>
+  { width: number; height: number }
 > = {
-  LIVING_ROOM: 'VERY_BIG',
-  BATHROOM: 'SMALL',
-  KITCHEN: 'BIG',
-  ENTRANCE: 'VERY_SMALL',
-  BEDROOM: 'BIG',
-  GENERAL_ROOM: 'NORMAL',
+  ENTRANCE: { width: 2, height: 2 },
+  BATHROOM: { width: 3, height: 2 },
+  GENERAL_ROOM: { width: 3, height: 3 },
+  KITCHEN: { width: 4, height: 3 },
+  BEDROOM: { width: 4, height: 3 },
+  LIVING_ROOM: { width: 5, height: 4 },
 };
 
-// 도면도 그리드에서 타일 너비 비율(%)로 쓰는 값. 합이 딱 100/50 등으로 안 떨어져도
-// flexWrap이 알아서 다음 줄로 넘겨주므로 상대적 크기감만 표현하면 된다.
-export const ROOM_SIZE_WIDTH_RATIO: Record<NonNullable<RoomSize>, number> = {
-  VERY_SMALL: 28,
-  SMALL: 40,
-  NORMAL: 48,
-  BIG: 64,
-  VERY_BIG: 100,
-};
+export interface RoomRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export function isRoomOverlapping(a: RoomRect, b: RoomRect): boolean {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  );
+}
+
+const GRID_COLUMNS = 10;
+
+function findNextRoomPlacement(
+  existing: RoomRect[],
+  width: number,
+  height: number,
+): { x: number; y: number } {
+  for (let y = 0; ; y++) {
+    for (let x = 0; x <= GRID_COLUMNS - width; x++) {
+      const candidate = { x, y, width, height };
+      if (!existing.some(room => isRoomOverlapping(candidate, room))) {
+        return { x, y };
+      }
+    }
+  }
+}
 
 export function roomDisplayName(room: RoomRow): string {
   if (room.label && room.label.trim()) {
@@ -158,7 +168,6 @@ interface RoomState {
   addRoom: (
     familyId: string,
     roomType: NonNullable<RoomType>,
-    size?: NonNullable<RoomSize>,
     label?: string,
   ) => Promise<void>;
   removeRoom: (roomId: string) => Promise<void>;
@@ -188,16 +197,20 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   addRoom: async (
     familyId: string,
     roomType: NonNullable<RoomType>,
-    size: NonNullable<RoomSize> = DEFAULT_ROOM_SIZE,
     label?: string,
   ) => {
     set({ error: null });
     try {
+      const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS[roomType];
+      const { x, y } = findNextRoomPlacement(get().rooms, width, height);
       const { data: room, errors } = await client.models.Room.create({
         familyId,
         roomType,
-        size,
         label,
+        x,
+        y,
+        width,
+        height,
       });
       throwIfErrors(errors, '방 생성에 실패했습니다.');
       if (!room) {

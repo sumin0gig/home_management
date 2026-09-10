@@ -1,19 +1,19 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import {
-  ROOM_TYPE_LABELS,
-  ROOM_SIZE_WIDTH_RATIO,
-  type RoomType,
-  type RoomSize,
-} from "../../store/useRoomStore";
+import { ROOM_TYPE_LABELS, type RoomType } from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
 import { getRoomColor } from "../../utils/commonUtils";
+
+// 평면도 편집 UI가 나오기 전까지, 그리드 칸 수(width)를 타일 너비 비율(%)로
+// 환산하는 임시 계수.
+const CELL_WIDTH_PERCENT = 20;
 
 export interface RoomBlock {
   key: string;
   roomType: NonNullable<RoomType>;
-  size: NonNullable<RoomSize>;
   label: string;
+  width: number;
+  height: number;
 }
 
 interface Props {
@@ -36,7 +36,7 @@ function RoomBlockTile( {
         styles.tile,
         {
           backgroundColor: getRoomColor( block.key ),
-          width: `${ROOM_SIZE_WIDTH_RATIO[block.size]}%`,
+          width: `${Math.min( block.width * CELL_WIDTH_PERCENT, 100 )}%`,
         },
       ] }
     >

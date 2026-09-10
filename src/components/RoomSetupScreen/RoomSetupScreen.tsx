@@ -13,10 +13,8 @@ import {
   useRoomStore,
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
-  ROOM_SIZES,
-  ROOM_TYPE_DEFAULT_SIZE,
+  ROOM_TYPE_DEFAULT_DIMENSIONS,
   type RoomType,
-  type RoomSize,
 } from "../../store/useRoomStore";
 import { signOutUser } from "../../api/auth";
 import RoomBlockTile, { type RoomBlock } from "./RoomBlockTile";
@@ -35,25 +33,29 @@ function RoomSetupScreen(): React.JSX.Element {
   const [isCustomModalVisible, setIsCustomModalVisible] = React.useState( false );
 
   const onAddBlock = (roomType: NonNullable<RoomType>) => {
+    const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS[roomType];
     setBlocks( prev => [
       ...prev,
       {
         key: `${roomType}-${Date.now()}-${prev.length}`,
         roomType,
-        size: ROOM_TYPE_DEFAULT_SIZE[roomType],
         label: "",
+        width,
+        height,
       },
     ] );
   };
 
-  const onAddCustomBlock = (name: string, size: NonNullable<RoomSize>) => {
+  const onAddCustomBlock = (name: string) => {
+    const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS.GENERAL_ROOM;
     setBlocks( prev => [
       ...prev,
       {
         key: `GENERAL_ROOM-${Date.now()}-${prev.length}`,
         roomType: "GENERAL_ROOM",
-        size,
         label: name,
+        width,
+        height,
       },
     ] );
     setIsCustomModalVisible( false );
@@ -70,16 +72,16 @@ function RoomSetupScreen(): React.JSX.Element {
     setIsSaving( true );
     setSubmitError( null );
     try {
-      await Promise.all(
-        blocks.map( block =>
-          addRoom(
-            family.id,
-            block.roomType,
-            block.size,
-            block.label.trim() || undefined,
-          ),
-        ),
-      );
+      // 아직 저장되지 않은 draft들이라, addRoom이 겹치지 않는 좌표를 매길 수 있도록
+      // 순서대로 하나씩 저장한다(Promise.all로 동시에 보내면 서로의 좌표를 모른 채
+      // 겹치는 위치를 계산하게 된다).
+      for (const block of blocks) {
+        await addRoom(
+          family.id,
+          block.roomType,
+          block.label.trim() || undefined,
+        );
+      }
     } catch (err) {
       setSubmitError( (err as Error).message );
     } finally {

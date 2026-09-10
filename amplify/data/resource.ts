@@ -90,7 +90,10 @@ const schema = a
           'BEDROOM',
           'GENERAL_ROOM',
         ]),
-        size: a.enum(['VERY_SMALL', 'SMALL', 'NORMAL', 'BIG', 'VERY_BIG']),
+        x: a.integer().required(),
+        y: a.integer().required(),
+        width: a.integer().required(),
+        height: a.integer().required(),
         label: a.string(),
         tasks: a.hasMany('Task', 'roomId'),
       })

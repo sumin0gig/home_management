@@ -1,19 +1,13 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import ModalView from "../common/ModalView";
-import {
-  ROOM_SIZES,
-  ROOM_SIZE_LABELS,
-  DEFAULT_ROOM_SIZE,
-  type RoomSize,
-} from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../common/DefaultButton";
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (name: string, size: NonNullable<RoomSize>) => void;
+  onSubmit: (name: string) => void;
 }
 
 function CustomRoomModal( {
@@ -22,12 +16,9 @@ function CustomRoomModal( {
   onSubmit: onSubmitProp,
 }: Props ): React.JSX.Element {
   const [name, setName] = React.useState( "" );
-  const [size, setSize] =
-    React.useState<NonNullable<RoomSize>>( DEFAULT_ROOM_SIZE );
 
   const resetForm = () => {
     setName( "" );
-    setSize( DEFAULT_ROOM_SIZE );
   };
 
   const onClose = () => {
@@ -39,7 +30,7 @@ function CustomRoomModal( {
     if (!name.trim()) {
       return;
     }
-    onSubmitProp( name.trim(), size );
+    onSubmitProp( name.trim() );
     resetForm();
   };
 
@@ -53,28 +44,6 @@ function CustomRoomModal( {
         onChangeText={ setName }
         autoFocus
       />
-      <View style={ styles.chipRow }>
-        { ROOM_SIZES.map( sizeOption => (
-          <Pressable
-            key={ sizeOption }
-            style={ [
-              styles.sizeChip,
-              size === sizeOption && styles.sizeChipSelected,
-            ] }
-            onPress={ () => setSize( sizeOption ) }
-          >
-            <Text
-              style={
-                size === sizeOption
-                  ? styles.sizeChipTextSelected
-                  : styles.sizeChipText
-              }
-            >
-              { ROOM_SIZE_LABELS[sizeOption] }
-            </Text>
-          </Pressable>
-        ) ) }
-      </View>
       <View style={ styles.modalButtonRow }>
         <DefaultButton
           text="취소"
@@ -108,30 +77,6 @@ const styles = StyleSheet.create( {
     paddingHorizontal: 12,
     fontSize: 16,
     marginBottom: 12,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 20,
-  },
-  sizeChip: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-  },
-  sizeChipSelected: {
-    backgroundColor: commonColor.touchable,
-    borderColor: commonColor.touchable,
-  },
-  sizeChipText: {
-    color: "#333",
-  },
-  sizeChipTextSelected: {
-    color: "#fff",
-    fontWeight: "600",
   },
   modalButtonRow: {
     flexDirection: "row",

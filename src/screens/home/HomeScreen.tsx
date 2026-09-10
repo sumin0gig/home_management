@@ -28,14 +28,9 @@ import {
 import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
-  ROOM_SIZES,
-  ROOM_SIZE_LABELS,
-  DEFAULT_ROOM_SIZE,
-  ROOM_TYPE_DEFAULT_SIZE,
   roomDisplayName,
   type RoomRow,
   type RoomType,
-  type RoomSize,
 } from "../../store/useRoomStore";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "HomeMain">;
@@ -43,11 +38,7 @@ type Props = NativeStackScreenProps<HomeStackParamList, "HomeMain">;
 type AddRoomModalProps = {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (
-    roomType: NonNullable<RoomType>,
-    size: NonNullable<RoomSize>,
-    label: string,
-  ) => Promise<void>;
+  onSubmit: (roomType: NonNullable<RoomType>, label: string) => Promise<void>;
 };
 
 function HomeScreen( { navigation }: Props ): React.JSX.Element {
@@ -114,28 +105,24 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const hasDueToday = (room: RoomRow): boolean =>
     tasks.some( t => t.roomId === room.id && t.nextDueDate <= today );
 
-  const onAddRoom = async (
-    roomType: NonNullable<RoomType>,
-    size: NonNullable<RoomSize>,
-    label: string,
-  ) => {
+  const onAddRoom = async (roomType: NonNullable<RoomType>, label: string) => {
     if (!family) {
       return;
     }
-    await addRoom( family.id, roomType, size, label.trim() || undefined );
+    await addRoom( family.id, roomType, label.trim() || undefined );
     setIsAddingRoom( false );
   };
 
   const mascotConfig = mascot
     ? {
-      earStyle:
-        EAR_OPTIONS.find( option => option.value === mascot.earStyle )
-          ?.variant ?? "round",
-      tailStyle:
-        TAIL_OPTIONS.find( option => option.value === mascot.tailStyle )
-          ?.variant ?? "straight",
-      fillColor: mascot.fillColor ?? undefined,
-    }
+        earStyle:
+          EAR_OPTIONS.find( option => option.value === mascot.earStyle )
+            ?.variant ?? "round",
+        tailStyle:
+          TAIL_OPTIONS.find( option => option.value === mascot.tailStyle )
+            ?.variant ?? "straight",
+        fillColor: mascot.fillColor ?? undefined,
+      }
     : null;
 
   return (
@@ -169,8 +156,9 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
                 block={ {
                   key: room.id,
                   roomType: room.roomType ?? "GENERAL_ROOM",
-                  size: room.size ?? DEFAULT_ROOM_SIZE,
                   label: room.label ?? "",
+                  width: room.width,
+                  height: room.height,
                 } }
                 onPress={ () =>
                   navigation.navigate( "RoomDetail", { roomId: room.id } )
@@ -208,20 +196,12 @@ const AddRoomModal = ( {
 }: AddRoomModalProps ): React.JSX.Element => {
   const [newRoomType, setNewRoomType] =
     React.useState<NonNullable<RoomType> | null>( null );
-  const [newRoomSize, setNewRoomSize] =
-    React.useState<NonNullable<RoomSize>>( DEFAULT_ROOM_SIZE );
   const [newRoomLabel, setNewRoomLabel] = React.useState( "" );
   const [isSaving, setIsSaving] = React.useState( false );
 
   const resetForm = () => {
     setNewRoomType( null );
-    setNewRoomSize( DEFAULT_ROOM_SIZE );
     setNewRoomLabel( "" );
-  };
-
-  const onSelectRoomType = (roomType: NonNullable<RoomType>) => {
-    setNewRoomType( roomType );
-    setNewRoomSize( ROOM_TYPE_DEFAULT_SIZE[roomType] );
   };
 
   const onClose = () => {
@@ -235,7 +215,7 @@ const AddRoomModal = ( {
     }
     setIsSaving( true );
     try {
-      await onSubmitRoom( newRoomType, newRoomSize, newRoomLabel );
+      await onSubmitRoom( newRoomType, newRoomLabel );
       resetForm();
     } catch {
       // 에러는 store의 error 상태로 표시됨
@@ -255,7 +235,7 @@ const AddRoomModal = ( {
               styles.chip,
               newRoomType === roomType && styles.chipSelected,
             ] }
-            onPress={ () => onSelectRoomType( roomType ) }
+            onPress={ () => setNewRoomType( roomType ) }
           >
             <Text
               style={
@@ -265,28 +245,6 @@ const AddRoomModal = ( {
               }
             >
               { ROOM_TYPE_LABELS[roomType] }
-            </Text>
-          </Pressable>
-        ) ) }
-      </View>
-      <View style={ styles.chipRow }>
-        { ROOM_SIZES.map( size => (
-          <Pressable
-            key={ size }
-            style={ [
-              styles.chip,
-              newRoomSize === size && styles.chipSelected,
-            ] }
-            onPress={ () => setNewRoomSize( size ) }
-          >
-            <Text
-              style={
-                newRoomSize === size
-                  ? styles.chipTextSelected
-                  : styles.chipText
-              }
-            >
-              { ROOM_SIZE_LABELS[size] }
             </Text>
           </Pressable>
         ) ) }
