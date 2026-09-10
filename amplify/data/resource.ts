@@ -95,6 +95,7 @@ const schema = a
         width: a.integer().required(),
         height: a.integer().required(),
         label: a.string(),
+        color: a.string(),
         tasks: a.hasMany('Task', 'roomId'),
       })
       .secondaryIndexes(index => [index('familyId')])

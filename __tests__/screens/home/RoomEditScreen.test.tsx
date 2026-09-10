@@ -72,6 +72,9 @@ describe( "RoomEditScreen", () => {
       expect( mockedUpdateRoomDetails ).toHaveBeenCalledWith( "r1", {
         roomType: "BEDROOM",
         label: "안방",
+        width: 4,
+        height: 3,
+        color: expect.any( String ),
       } ),
     );
   } );

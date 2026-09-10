@@ -13,8 +13,11 @@ import {
   roomDisplayName,
   type FloorPlanRoom,
 } from "../../store/useRoomStore";
-import { commonColor } from "../../styles/commonStyle";
-import { getRoomColor } from "../../utils/commonUtils";
+import { colors, commonColor } from "../../styles/commonStyle";
+
+// 색상을 아직 저장하지 못한(레거시) row를 만났을 때만 쓰는 방어적 기본값 —
+// 평소엔 room.color가 생성 시점에 항상 채워져서 쓸 일이 없다.
+const FALLBACK_ROOM_COLOR = colors.gray;
 
 interface Props {
   room: FloorPlanRoom;
@@ -108,7 +111,7 @@ function DraggableRoomBlock( {
     top: room.y * cellSize,
     width: room.width * cellSize,
     height: room.height * cellSize,
-    backgroundColor: getRoomColor( room.id ),
+    backgroundColor: room.color ?? FALLBACK_ROOM_COLOR,
   };
 
   const content = (

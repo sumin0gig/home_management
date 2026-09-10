@@ -13,13 +13,16 @@ import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   useRoomStore,
+  canResizeRoom,
   type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
+import { randomRoomColor } from "../../utils/commonUtils";
 import ModalView from "../../components/common/ModalView";
 import DefaultButton from "../../components/common/DefaultButton";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
+import RoomFormFields from "../../components/FloorPlan/RoomFormFields";
 
 function RoomEditScreen(): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
@@ -128,6 +131,7 @@ function RoomEditScreen(): React.JSX.Element {
         editingRoom
         ? <EditRoomModal
           room={ editingRoom }
+          rooms={ effectiveRooms }
           onClose={ () => setEditingRoom( null ) }
         />
         : null
@@ -233,11 +237,13 @@ const AddRoomModal = ( {
 
 interface EditRoomModalProps {
   room: FloorPlanRoom;
+  rooms: FloorPlanRoom[];
   onClose: () => void;
 }
 
 function EditRoomModal( {
   room,
+  rooms,
   onClose,
 }: EditRoomModalProps ): React.JSX.Element {
   const updateRoomDetails = useRoomStore( state => state.updateRoomDetails );
@@ -247,13 +253,30 @@ function EditRoomModal( {
     room.roomType ?? "GENERAL_ROOM",
   );
   const [label, setLabel] = React.useState( room.label ?? "" );
+  const [width, setWidth] = React.useState( room.width );
+  const [height, setHeight] = React.useState( room.height );
+  const [color, setColor] = React.useState( room.color ?? randomRoomColor() );
+  const [formError, setFormError] = React.useState<string | null>( null );
   const [isSaving, setIsSaving] = React.useState( false );
   const [isDeleting, setIsDeleting] = React.useState( false );
 
   const onSave = async () => {
+    const siblings = rooms.filter( r => r.id !== room.id );
+    const candidate = { x: room.x, y: room.y, width, height };
+    if (!canResizeRoom( candidate, siblings )) {
+      setFormError( "다른 방과 겹치거나 캔버스를 벗어나요." );
+      return;
+    }
+    setFormError( null );
     setIsSaving( true );
     try {
-      await updateRoomDetails( room.id, { roomType, label: label.trim() } );
+      await updateRoomDetails( room.id, {
+        roomType,
+        label: label.trim(),
+        width,
+        height,
+        color,
+      } );
       onClose();
     } catch {
       // 에러는 store의 error 상태로 표시됨
@@ -277,29 +300,23 @@ function EditRoomModal( {
   return (
     <ModalView visible onRequestClose={ onClose }>
       <Text style={ styles.modalTitle }> 방 수정 </Text>
-      <View style={ styles.chipRow }>
-        { ROOM_TYPES.map( type => (
-          <Pressable
-            key={ type }
-            style={ [styles.chip, roomType === type && styles.chipSelected] }
-            onPress={ () => setRoomType( type ) }
-          >
-            <Text
-              style={
-                roomType === type ? styles.chipTextSelected : styles.chipText
-              }
-            >
-              { ROOM_TYPE_LABELS[type] }
-            </Text>
-          </Pressable>
-        ) ) }
-      </View>
-      <TextInput
-        style={ styles.input }
-        placeholder="이름(선택)"
-        value={ label }
-        onChangeText={ setLabel }
+      <RoomFormFields
+        roomType={ roomType }
+        onRoomTypeChange={ setRoomType }
+        label={ label }
+        onLabelChange={ setLabel }
+        width={ width }
+        onWidthChange={ setWidth }
+        height={ height }
+        onHeightChange={ setHeight }
+        color={ color }
+        onColorChange={ setColor }
       />
+      {
+        formError
+        ? <Text style={ styles.error }> { formError } </Text>
+        : null
+      }
       <View style={ styles.modalButtonRow }>
         <DefaultButton
           text="삭제"

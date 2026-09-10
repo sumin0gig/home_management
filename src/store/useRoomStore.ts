@@ -3,6 +3,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { throwIfErrors } from '../api/shared';
 import { toDateString } from '../utils/date';
+import { randomRoomColor } from '../utils/commonUtils';
 
 const client = generateClient<Schema>();
 
@@ -56,6 +57,25 @@ export function isRoomOverlapping(a: RoomRect, b: RoomRect): boolean {
 // 경계 clamp에도 쓰이므로 export한다.
 export const GRID_COLUMNS = 10;
 
+// 수정 모달의 가로/세로 스테퍼가 허용하는 범위.
+export const MIN_ROOM_DIMENSION = 1;
+export const MAX_ROOM_DIMENSION = GRID_COLUMNS;
+
+// 위치는 그대로 두고 크기만 바꿀 때(수정 모달의 스테퍼) 쓰는 검사 — 드래그
+// 이동과 같은 겹침 규칙(isRoomOverlapping)에 가로 경계 clamp까지 더한 것.
+export function canResizeRoom(
+  candidate: RoomRect,
+  siblings: RoomRect[],
+): boolean {
+  if (candidate.x < 0 || candidate.x + candidate.width > GRID_COLUMNS) {
+    return false;
+  }
+  if (candidate.y < 0) {
+    return false;
+  }
+  return !siblings.some(sibling => isRoomOverlapping(candidate, sibling));
+}
+
 // 온보딩(RoomSetupScreen) 미리보기에서 아직 저장되지 않은 draft 방들의 배치를
 // 계산할 때도 재사용하므로 export한다 — addRoom이 서버에 저장할 때 쓰는 배치
 // 로직과 동일해야 미리보기와 실제 저장 결과가 어긋나지 않는다.
@@ -81,6 +101,7 @@ export interface FloorPlanRoom {
   id: string;
   roomType?: RoomType;
   label?: string | null;
+  color?: string | null;
   x: number;
   y: number;
   width: number;
@@ -190,13 +211,25 @@ interface RoomState {
     familyId: string,
     roomType: NonNullable<RoomType>,
     label?: string,
-    position?: { x: number; y: number },
+    overrides?: {
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      color?: string;
+    },
   ) => Promise<void>;
   removeRoom: (roomId: string) => Promise<void>;
   updateRoomPosition: (roomId: string, x: number, y: number) => Promise<void>;
   updateRoomDetails: (
     roomId: string,
-    updates: { roomType?: NonNullable<RoomType>; label?: string },
+    updates: {
+      roomType?: NonNullable<RoomType>;
+      label?: string;
+      width?: number;
+      height?: number;
+      color?: string;
+    },
   ) => Promise<void>;
   clearRoomsForFamily: (familyId: string) => Promise<void>;
   reset: () => void;
@@ -225,15 +258,26 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     familyId: string,
     roomType: NonNullable<RoomType>,
     label?: string,
-    position?: { x: number; y: number },
+    overrides?: {
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      color?: string;
+    },
   ) => {
     set({ error: null });
     try {
-      const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS[roomType];
+      const defaults = ROOM_TYPE_DEFAULT_DIMENSIONS[roomType];
+      const width = overrides?.width ?? defaults.width;
+      const height = overrides?.height ?? defaults.height;
       // 온보딩 미리보기에서 이미 위치를 정했다면(드래그로 옮긴 경우 포함)
       // 그 좌표를 그대로 쓰고, 없을 때만 자동 배치한다.
       const { x, y } =
-        position ?? findNextRoomPlacement(get().rooms, width, height);
+        overrides?.x !== undefined && overrides?.y !== undefined
+          ? { x: overrides.x, y: overrides.y }
+          : findNextRoomPlacement(get().rooms, width, height);
+      const color = overrides?.color ?? randomRoomColor();
       const { data: room, errors } = await client.models.Room.create({
         familyId,
         roomType,
@@ -242,6 +286,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         y,
         width,
         height,
+        color,
       });
       throwIfErrors(errors, '방 생성에 실패했습니다.');
       if (!room) {
@@ -308,7 +353,13 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
   updateRoomDetails: async (
     roomId: string,
-    updates: { roomType?: NonNullable<RoomType>; label?: string },
+    updates: {
+      roomType?: NonNullable<RoomType>;
+      label?: string;
+      width?: number;
+      height?: number;
+      color?: string;
+    },
   ) => {
     set({ error: null });
     try {

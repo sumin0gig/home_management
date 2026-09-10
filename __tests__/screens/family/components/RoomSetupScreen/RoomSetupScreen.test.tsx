@@ -39,10 +39,11 @@ describe( "RoomSetupScreen", () => {
     expect( getAllByText( "침실" ) ).toHaveLength( 1 );
   } );
 
-  test( "타일을 탭하면 사라진다", () => {
+  test( "빼기를 누르면 타일이 사라진다", () => {
     const { getByText, queryByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 침실" ) );
     fireEvent.press( getByText( "침실" ) );
+    fireEvent.press( getByText( "빼기" ) );
     expect( queryByText( "침실" ) ).toBeNull();
   } );
 
@@ -54,12 +55,13 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () =>
-      expect( mockedAddRoom ).toHaveBeenCalledWith(
-        "f1",
-        "BEDROOM",
-        undefined,
-        { x: 0, y: 0 },
-      ),
+      expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined, {
+        x: 0,
+        y: 0,
+        width: 4,
+        height: 3,
+        color: expect.any( String ),
+      } ),
     );
   } );
 
@@ -72,17 +74,18 @@ describe( "RoomSetupScreen", () => {
     fireEvent.press( getByText( "집 만들기" ) );
 
     await waitFor( () => expect( mockedAddRoom ).toHaveBeenCalledTimes( 2 ) );
-    expect( mockedAddRoom ).toHaveBeenCalledWith(
-      "f1",
-      "BEDROOM",
-      undefined,
-      { x: 0, y: 0 },
-    );
+    expect( mockedAddRoom ).toHaveBeenCalledWith( "f1", "BEDROOM", undefined, {
+      x: 0,
+      y: 0,
+      width: 4,
+      height: 3,
+      color: expect.any( String ),
+    } );
     expect( mockedAddRoom ).toHaveBeenCalledWith(
       "f1",
       "LIVING_ROOM",
       undefined,
-      { x: 4, y: 0 },
+      { x: 4, y: 0, width: 5, height: 4, color: expect.any( String ) },
     );
   } );
 
@@ -117,7 +120,7 @@ describe( "RoomSetupScreen", () => {
         "f1",
         "GENERAL_ROOM",
         "서재",
-        { x: 0, y: 0 },
+        { x: 0, y: 0, width: 3, height: 3, color: expect.any( String ) },
       ),
     );
   } );
