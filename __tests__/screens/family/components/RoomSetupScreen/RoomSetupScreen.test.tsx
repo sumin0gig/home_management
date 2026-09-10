@@ -39,10 +39,10 @@ describe( "RoomSetupScreen", () => {
     expect( getAllByText( "침실" ) ).toHaveLength( 1 );
   } );
 
-  test( "제거 버튼을 탭하면 타일이 사라진다", () => {
+  test( "타일을 탭하면 사라진다", () => {
     const { getByText, queryByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 침실" ) );
-    fireEvent.press( getByText( "✕" ) );
+    fireEvent.press( getByText( "침실" ) );
     expect( queryByText( "침실" ) ).toBeNull();
   } );
 

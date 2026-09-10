@@ -42,7 +42,9 @@ function RoomEditScreen(): React.JSX.Element {
   // 드래그로 옮긴 위치는 여기서 바로 DB에 반영하지 않고 로컬에만 들고 있다가,
   // "위치 저장"을 눌러야 한꺼번에 반영한다.
   const effectiveRooms = rooms.map( room =>
-    pendingPositions[room.id] ? { ...room, ...pendingPositions[room.id] } : room,
+    pendingPositions[room.id]
+    ? { ...room, ...pendingPositions[room.id] }
+    : room,
   );
 
   const onAddRoom = async (roomType: NonNullable<RoomType>, label: string) => {
@@ -230,7 +232,7 @@ const AddRoomModal = ( {
 };
 
 interface EditRoomModalProps {
-  room: RoomRow;
+  room: FloorPlanRoom;
   onClose: () => void;
 }
 
@@ -347,6 +349,21 @@ const styles = StyleSheet.create( {
   },
   floorPlanScroll: {
     flex: 1,
+  },
+  savePositionsButton: {
+    backgroundColor: commonColor.touchable,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  savePositionsButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  savePositionsButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   modalTitle: {
     fontSize: 17,

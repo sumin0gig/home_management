@@ -22,7 +22,7 @@ import {
   EAR_OPTIONS,
   TAIL_OPTIONS,
 } from "../../components/Mascot/optionMaps";
-import { type RoomRow } from "../../store/useRoomStore";
+import { type FloorPlanRoom } from "../../store/useRoomStore";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "HomeMain">;
 
@@ -76,7 +76,7 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
 
   const today = toDateString( new Date() );
 
-  const hasDueToday = (room: RoomRow): boolean =>
+  const hasDueToday = (room: FloorPlanRoom): boolean =>
     tasks.some( t => t.roomId === room.id && t.nextDueDate <= today );
 
   const mascotConfig = mascot

@@ -2,11 +2,11 @@ import React from "react";
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import {
@@ -14,12 +14,21 @@ import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   ROOM_TYPE_DEFAULT_DIMENSIONS,
+  findNextRoomPlacement,
+  type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
 import { signOutUser } from "../../api/auth";
-import RoomBlockTile, { type RoomBlock } from "./RoomBlockTile";
 import CustomRoomModal from "./CustomRoomModal";
+import FloorPlanCanvas from "../FloorPlan/FloorPlanCanvas";
 import { commonColor } from "../../styles/commonStyle";
+
+// 이 화면에서 만드는 draft는 항상 roomType/label을 직접 채워서 만들기 때문에,
+// EditRoomModal 등과 공유하는 느슨한 FloorPlanRoom보다 더 구체적으로 좁혀 쓴다.
+type DraftRoom = FloorPlanRoom & {
+  roomType: NonNullable<RoomType>;
+  label: string;
+};
 
 function RoomSetupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -27,42 +36,55 @@ function RoomSetupScreen(): React.JSX.Element {
   const error = useRoomStore( state => state.error );
   const addRoom = useRoomStore( state => state.addRoom );
 
-  const [blocks, setBlocks] = React.useState<RoomBlock[]>( [] );
+  const [blocks, setBlocks] = React.useState<DraftRoom[]>( [] );
   const [isSaving, setIsSaving] = React.useState( false );
   const [submitError, setSubmitError] = React.useState<string | null>( null );
   const [isCustomModalVisible, setIsCustomModalVisible] = React.useState( false );
 
+  // 아직 저장되지 않은 draft들을 온보딩 단계에서부터 실제 배치될 모양 그대로
+  // 미리보기로 보여준다 — Home 화면의 평면도와 같은 findNextRoomPlacement를
+  // 써서, 실제로 저장될 때(addRoom)와 같은 자리에 놓이도록 맞춘다.
   const onAddBlock = (roomType: NonNullable<RoomType>) => {
     const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS[roomType];
-    setBlocks( prev => [
-      ...prev,
-      {
-        key: `${roomType}-${Date.now()}-${prev.length}`,
-        roomType,
-        label: "",
-        width,
-        height,
-      },
-    ] );
+    setBlocks( prev => {
+      const { x, y } = findNextRoomPlacement( prev, width, height );
+      return [
+        ...prev,
+        {
+          id: `${roomType}-${Date.now()}-${prev.length}`,
+          roomType,
+          label: "",
+          x,
+          y,
+          width,
+          height,
+        },
+      ];
+    } );
   };
 
   const onAddCustomBlock = (name: string) => {
     const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS.GENERAL_ROOM;
-    setBlocks( prev => [
-      ...prev,
-      {
-        key: `GENERAL_ROOM-${Date.now()}-${prev.length}`,
-        roomType: "GENERAL_ROOM",
-        label: name,
-        width,
-        height,
-      },
-    ] );
+    setBlocks( prev => {
+      const { x, y } = findNextRoomPlacement( prev, width, height );
+      return [
+        ...prev,
+        {
+          id: `GENERAL_ROOM-${Date.now()}-${prev.length}`,
+          roomType: "GENERAL_ROOM",
+          label: name,
+          x,
+          y,
+          width,
+          height,
+        },
+      ];
+    } );
     setIsCustomModalVisible( false );
   };
 
-  const onRemoveBlock = (key: string) => {
-    setBlocks( prev => prev.filter( b => b.key !== key ) );
+  const onRemoveBlock = (id: string) => {
+    setBlocks( prev => prev.filter( b => b.id !== id ) );
   };
 
   const onSubmit = async () => {
@@ -130,22 +152,22 @@ function RoomSetupScreen(): React.JSX.Element {
         </Pressable>
       </View>
 
-      <ScrollView
-        style={ styles.floorPlanScroll }
-        contentContainerStyle={ styles.floorPlan }
-      >
-        {
-          blocks.length === 0
-          ? <Text style={ styles.emptyText }> 위에서 방을 탭해 추가해보세요. </Text>
-          : blocks.map( block => (
-            <RoomBlockTile
-              key={ block.key }
-              block={ block }
-              onRemove={ () => onRemoveBlock( block.key ) }
+      {
+        blocks.length === 0
+        ? <Text style={ styles.emptyText }> 위에서 방을 탭해 추가해보세요. </Text>
+        : <>
+          <Text style={ styles.hintText }> 방을 탭하면 뺄 수 있어요. </Text>
+          <ScrollView
+            style={ styles.floorPlanScroll }
+            showsVerticalScrollIndicator={ false }
+          >
+            <FloorPlanCanvas
+              rooms={ blocks }
+              onRoomPress={ block => onRemoveBlock( block.id ) }
             />
-          ) )
-        }
-      </ScrollView>
+          </ScrollView>
+        </>
+      }
 
       <Pressable
         style={ styles.submitButton }
@@ -233,18 +255,13 @@ const styles = StyleSheet.create( {
     color: "#555",
     fontWeight: "600",
   },
+  hintText: {
+    fontSize: 12,
+    color: "#999",
+    marginBottom: 8,
+  },
   floorPlanScroll: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 12,
-    backgroundColor: "#fafafa",
-  },
-  floorPlan: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    padding: 8,
   },
   emptyText: {
     fontSize: 14,
