@@ -57,9 +57,10 @@ export function isRoomOverlapping(a: RoomRect, b: RoomRect): boolean {
 // 경계 clamp에도 쓰이므로 export한다.
 export const GRID_COLUMNS = 10;
 
-// 수정 모달의 가로/세로 스테퍼가 허용하는 범위.
+// 수정 모달의 가로/세로 스테퍼가 허용하는 범위 — 캔버스 폭(GRID_COLUMNS)과는
+// 별개로, 방 하나가 너무 커지지 않도록 5칸으로 상한을 둔다.
 export const MIN_ROOM_DIMENSION = 1;
-export const MAX_ROOM_DIMENSION = GRID_COLUMNS;
+export const MAX_ROOM_DIMENSION = 5;
 
 // 위치는 그대로 두고 크기만 바꿀 때(수정 모달의 스테퍼) 쓰는 검사 — 드래그
 // 이동과 같은 겹침 규칙(isRoomOverlapping)에 가로 경계 clamp까지 더한 것.

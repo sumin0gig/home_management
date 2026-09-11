@@ -38,6 +38,11 @@ function RoomFormFields( {
   color,
   onColorChange,
 }: Props ): React.JSX.Element {
+  const isWidthAtMin = width <= MIN_ROOM_DIMENSION;
+  const isWidthAtMax = width >= MAX_ROOM_DIMENSION;
+  const isHeightAtMin = height <= MIN_ROOM_DIMENSION;
+  const isHeightAtMax = height >= MAX_ROOM_DIMENSION;
+
   return (
     <>
       <View style={ styles.chipRow }>
@@ -69,41 +74,85 @@ function RoomFormFields( {
         <View style={ styles.stepperRow }>
           <Text style={ styles.stepperLabel }> 가로 </Text>
           <Pressable
-            style={ styles.stepperButton }
+            style={ [
+              styles.stepperButton,
+              isWidthAtMin && styles.stepperButtonDisabled,
+            ] }
+            disabled={ isWidthAtMin }
             onPress={ () =>
               onWidthChange( Math.max( MIN_ROOM_DIMENSION, width - 1 ) )
             }
           >
-            <Text style={ styles.stepperButtonText }> - </Text>
+            <Text
+              style={ [
+                styles.stepperButtonText,
+                isWidthAtMin && styles.stepperButtonTextDisabled,
+              ] }
+            >
+              -
+            </Text>
           </Pressable>
           <Text style={ styles.stepperValue }> { width }칸 </Text>
           <Pressable
-            style={ styles.stepperButton }
+            style={ [
+              styles.stepperButton,
+              isWidthAtMax && styles.stepperButtonDisabled,
+            ] }
+            disabled={ isWidthAtMax }
             onPress={ () =>
               onWidthChange( Math.min( MAX_ROOM_DIMENSION, width + 1 ) )
             }
           >
-            <Text style={ styles.stepperButtonText }> + </Text>
+            <Text
+              style={ [
+                styles.stepperButtonText,
+                isWidthAtMax && styles.stepperButtonTextDisabled,
+              ] }
+            >
+              +
+            </Text>
           </Pressable>
         </View>
         <View style={ styles.stepperRow }>
           <Text style={ styles.stepperLabel }> 세로 </Text>
           <Pressable
-            style={ styles.stepperButton }
+            style={ [
+              styles.stepperButton,
+              isHeightAtMin && styles.stepperButtonDisabled,
+            ] }
+            disabled={ isHeightAtMin }
             onPress={ () =>
               onHeightChange( Math.max( MIN_ROOM_DIMENSION, height - 1 ) )
             }
           >
-            <Text style={ styles.stepperButtonText }> - </Text>
+            <Text
+              style={ [
+                styles.stepperButtonText,
+                isHeightAtMin && styles.stepperButtonTextDisabled,
+              ] }
+            >
+              -
+            </Text>
           </Pressable>
           <Text style={ styles.stepperValue }> { height }칸 </Text>
           <Pressable
-            style={ styles.stepperButton }
+            style={ [
+              styles.stepperButton,
+              isHeightAtMax && styles.stepperButtonDisabled,
+            ] }
+            disabled={ isHeightAtMax }
             onPress={ () =>
               onHeightChange( Math.min( MAX_ROOM_DIMENSION, height + 1 ) )
             }
           >
-            <Text style={ styles.stepperButtonText }> + </Text>
+            <Text
+              style={ [
+                styles.stepperButtonText,
+                isHeightAtMax && styles.stepperButtonTextDisabled,
+              ] }
+            >
+              +
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -186,6 +235,12 @@ const styles = StyleSheet.create( {
     color: commonColor.touchable,
     fontSize: 16,
     fontWeight: "700",
+  },
+  stepperButtonDisabled: {
+    borderColor: "#ddd",
+  },
+  stepperButtonTextDisabled: {
+    color: "#ccc",
   },
   stepperValue: {
     minWidth: 40,
