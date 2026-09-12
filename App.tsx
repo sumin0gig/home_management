@@ -13,6 +13,7 @@ import {
   NavigationContainer,
   type LinkingOptions,
 } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 import { Amplify } from 'aws-amplify';
 import outputs from './amplify_outputs.json';
@@ -59,6 +60,7 @@ function App(): React.JSX.Element {
         <NavigationContainer linking={linking}>
           <RootNavigator />
         </NavigationContainer>
+        <Toast />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

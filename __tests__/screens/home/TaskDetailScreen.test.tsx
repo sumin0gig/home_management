@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import Toast from "react-native-toast-message";
 import TaskDetailScreen from "../../../src/screens/home/TaskDetailScreen";
 import { useTaskStore, listTaskItems } from "../../../src/store/useTaskStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
@@ -11,8 +12,11 @@ jest.mock( "../../../src/store/useTaskStore", () => ( {
   listTaskItems: jest.fn(),
 } ) );
 
+jest.mock( "react-native-toast-message", () => ( { show: jest.fn() } ) );
+
 const mockedListTaskItems = listTaskItems as jest.Mock;
 const mockedCompleteTask = jest.fn();
+const mockedToastShow = Toast.show as jest.Mock;
 
 const task: TaskRow = {
   id: "c1",
@@ -90,15 +94,19 @@ describe( "TaskDetailScreen", () => {
     } );
   } );
 
-  test( "완료 버튼을 탭하면 completeTask를 호출한다", async () => {
+  test( "완료 버튼을 탭하면 completeTask 후 완료 토스트를 띄우고 뒤로 간다", async () => {
     mockedListTaskItems.mockResolvedValue( [] );
     mockedCompleteTask.mockResolvedValue( undefined );
-    const { getByText } = renderTaskDetailScreen();
+    const { getByText, navigation } = renderTaskDetailScreen();
     fireEvent.press( getByText( "완료" ) );
 
     await waitFor( () =>
       expect( mockedCompleteTask ).toHaveBeenCalledWith( task ),
     );
+    expect( mockedToastShow ).toHaveBeenCalledWith(
+      expect.objectContaining( { text1: "완료되었습니다" } ),
+    );
+    expect( navigation.goBack ).toHaveBeenCalled();
   } );
 
   test( "존재하지 않는 집안일이면 안내 문구를 보여준다", () => {

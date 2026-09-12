@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import Toast from "react-native-toast-message";
 import type { HomeStackParamList } from "../../navigation/types";
 import {
   listTaskItems,
@@ -16,7 +17,6 @@ import {
 } from "../../store/useTaskStore";
 import { formatDueLabel, toDateString } from "../../utils/date";
 import { commonColor } from "../../styles/commonStyle";
-import DefaultButton from "../../components/common/DefaultButton";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "TaskDetail">;
 
@@ -37,6 +37,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
 
   const [items, setItems] = React.useState<TaskItemRow[]>( [] );
   const [isLoading, setIsLoading] = React.useState( true );
+  const [isCompleting, setIsCompleting] = React.useState( false );
   const [error, setError] = React.useState<string | null>( null );
 
   React.useEffect( () => {
@@ -66,6 +67,19 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const today = toDateString( new Date() );
   const steps = items.filter( item => item.type === "DEFAULT" );
   const tips = items.filter( item => item.type === "TIP" );
+
+  const onComplete = async () => {
+    setIsCompleting( true );
+    try {
+      await completeTask( task );
+      Toast.show( { type: "success", text1: "완료되었습니다" } );
+      navigation.goBack();
+    } catch (err) {
+      setError( (err as Error).message );
+    } finally {
+      setIsCompleting( false );
+    }
+  };
 
   return (
     <ScrollView style={ styles.screen } contentContainerStyle={ styles.container }>
@@ -111,12 +125,17 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         : null
       }
 
-      <DefaultButton
-        text="완료"
-        onPress={ () => completeTask( task ) }
+      <Pressable
         style={ styles.completeButton }
-        textStyle={ styles.completeButtonText }
-      />
+        onPress={ onComplete }
+        disabled={ isCompleting }
+      >
+        {
+          isCompleting
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={ styles.completeButtonText }> 완료 </Text>
+        }
+      </Pressable>
     </ScrollView>
   );
 }
