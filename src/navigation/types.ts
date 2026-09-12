@@ -8,6 +8,7 @@ export type HomeStackParamList = {
   HomeMain: undefined;
   RoomDetail: { roomId: string };
   RoomEdit: undefined;
+  TaskDetail: { taskId: string };
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
 };

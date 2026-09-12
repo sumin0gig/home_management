@@ -4,3 +4,13 @@ export function toDateString(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+export function formatDueLabel(nextDueDate: string, today: string): string {
+  if (nextDueDate < today) {
+    return '기한 지남';
+  }
+  if (nextDueDate === today) {
+    return '오늘';
+  }
+  return `예정 (${nextDueDate})`;
+}

@@ -11,23 +11,13 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { HomeStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
-import { toDateString } from "../../utils/date";
+import { formatDueLabel, toDateString } from "../../utils/date";
 import { type TaskRow } from "../../store/useTaskStore";
 import { roomDisplayName } from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "RoomDetail">;
-
-function formatDueLabel(nextDueDate: string, today: string): string {
-  if (nextDueDate < today) {
-    return "기한 지남";
-  }
-  if (nextDueDate === today) {
-    return "오늘";
-  }
-  return `예정 (${nextDueDate})`;
-}
 
 function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const { roomId } = route.params;
@@ -38,7 +28,6 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const tasks = useTaskStore( state => state.tasks );
   const taskStatus = useTaskStore( state => state.status );
   const taskError = useTaskStore( state => state.error );
-  const completeTask = useTaskStore( state => state.completeTask );
 
   React.useEffect( () => {
     navigation.setOptions( { title: room ? roomDisplayName( room ) : "방" } );
@@ -50,23 +39,16 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
     .sort( (a, b) => a.nextDueDate.localeCompare( b.nextDueDate ) );
 
   const renderTask = (item: TaskRow) => (
-    <View style={ styles.taskRow } key={ item.id }>
-      <Pressable
-        style={ styles.taskInfo }
-        onPress={ () => navigation.navigate( "TaskForm", { taskId: item.id } ) }
-      >
-        <Text style={ styles.taskTitle }> { item.title } </Text>
-        <Text style={ styles.taskDue }>
-          { formatDueLabel( item.nextDueDate, today ) }
-        </Text>
-      </Pressable>
-      <DefaultButton
-        text="완료"
-        onPress={ () => completeTask( item ) }
-        style={ styles.completeButton }
-        textStyle={ styles.completeButtonText }
-      />
-    </View>
+    <Pressable
+      style={ styles.taskRow }
+      key={ item.id }
+      onPress={ () => navigation.navigate( "TaskDetail", { taskId: item.id } ) }
+    >
+      <Text style={ styles.taskTitle }> { item.title } </Text>
+      <Text style={ styles.taskDue }>
+        { formatDueLabel( item.nextDueDate, today ) }
+      </Text>
+    </Pressable>
   );
 
   if (taskStatus === "loading") {
@@ -139,16 +121,9 @@ const styles = StyleSheet.create( {
     fontWeight: "600",
   },
   taskRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-  },
-  taskInfo: {
-    flex: 1,
-    marginRight: 12,
   },
   taskTitle: {
     fontSize: 16,
@@ -158,16 +133,6 @@ const styles = StyleSheet.create( {
     fontSize: 12,
     color: "#2f6fed",
     marginTop: 4,
-    fontWeight: "600",
-  },
-  completeButton: {
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  completeButtonText: {
-    color: "#fff",
     fontWeight: "600",
   },
 } );

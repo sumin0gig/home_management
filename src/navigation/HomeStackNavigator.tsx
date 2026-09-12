@@ -4,6 +4,7 @@ import type { HomeStackParamList } from './types';
 import HomeScreen from '../screens/home/HomeScreen';
 import RoomDetailScreen from '../screens/home/RoomDetailScreen';
 import RoomEditScreen from '../screens/home/RoomEditScreen';
+import TaskDetailScreen from '../screens/home/TaskDetailScreen';
 import TaskFormScreen from '../screens/home/TaskFormScreen';
 import MascotDetailScreen from '../screens/home/MascotDetailScreen';
 import { renderDrawerMenuButton } from './DrawerMenuButton';
@@ -24,6 +25,7 @@ function HomeStackNavigator(): React.JSX.Element {
         component={RoomEditScreen}
         options={{ title: '방 편집' }}
       />
+      <Stack.Screen name="TaskDetail" component={TaskDetailScreen} />
       <Stack.Screen name="TaskForm" component={TaskFormScreen} />
       <Stack.Screen name="MascotDetail" component={MascotDetailScreen} />
     </Stack.Navigator>

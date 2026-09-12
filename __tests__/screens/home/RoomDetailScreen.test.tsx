@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import RoomDetailScreen from "../../../src/screens/home/RoomDetailScreen";
 import { useRoomStore } from "../../../src/store/useRoomStore";
 import { useTaskStore } from "../../../src/store/useTaskStore";
@@ -7,8 +7,6 @@ import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 import type { TaskRow } from "../../../src/store/useTaskStore";
-
-const mockedCompleteTask = jest.fn();
 
 const bedroom: RoomRow = {
   id: "r1",
@@ -50,7 +48,6 @@ describe( "RoomDetailScreen", () => {
     useTaskStore.setState( {
       tasks: [task],
       status: "loaded",
-      completeTask: mockedCompleteTask,
     } );
   } );
 
@@ -59,22 +56,21 @@ describe( "RoomDetailScreen", () => {
     expect( getByText( "침구 햇빛살균" ) ).toBeTruthy();
   } );
 
-  test( "완료 버튼을 탭하면 completeTask를 호출한다", async () => {
-    mockedCompleteTask.mockResolvedValue( undefined );
-    const { getByText } = renderRoomDetailScreen();
-    fireEvent.press( getByText( "완료" ) );
-
-    await waitFor( () =>
-      expect( mockedCompleteTask ).toHaveBeenCalledWith( task ),
-    );
-  } );
-
   test( "집안일 추가를 탭하면 TaskForm으로 이동한다", () => {
     const { getByText, navigation } = renderRoomDetailScreen();
     fireEvent.press( getByText( "+ 집안일 추가" ) );
 
     expect( navigation.navigate ).toHaveBeenCalledWith( "TaskForm", {
       roomId: "r1",
+    } );
+  } );
+
+  test( "집안일 항목을 탭하면 TaskDetail로 이동한다", () => {
+    const { getByText, navigation } = renderRoomDetailScreen();
+    fireEvent.press( getByText( "침구 햇빛살균" ) );
+
+    expect( navigation.navigate ).toHaveBeenCalledWith( "TaskDetail", {
+      taskId: "c1",
     } );
   } );
 } );

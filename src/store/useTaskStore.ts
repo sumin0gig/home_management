@@ -12,6 +12,7 @@ const client = generateClient<Schema>();
 
 export type TaskRow = Schema['Task']['type'];
 export type TaskLogRow = Schema['TaskLog']['type'];
+export type TaskItemRow = Schema['TaskItem']['type'];
 export type RecurrenceType = TaskRow['recurrenceType'];
 export type IntervalUnit = TaskRow['intervalUnit'];
 
@@ -113,6 +114,15 @@ export async function listTaskLogs(
   return [...logs]
     .sort((a, b) => b.completedAt.localeCompare(a.completedAt))
     .slice(0, limit);
+}
+
+export async function listTaskItems(taskId: string): Promise<TaskItemRow[]> {
+  // listTaskItemByTaskId has no sort key, so sortDirection isn't supported
+  // server-side — fetch and sort client-side by ord instead.
+  const { data: items, errors } =
+    await client.models.TaskItem.listTaskItemByTaskId({ taskId });
+  throwIfErrors(errors, '집안일 안내 항목을 불러오지 못했습니다.');
+  return [...items].sort((a, b) => a.ord - b.ord);
 }
 
 type TaskStatus = 'idle' | 'loading' | 'loaded';
