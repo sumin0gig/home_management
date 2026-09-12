@@ -201,6 +201,17 @@ async function listTaskTemplatesForRoomType(
   return templates;
 }
 
+async function listTaskTemplateItemsForTemplate(
+  templateId: string,
+): Promise<Schema['TaskTemplateItem']['type'][]> {
+  const { data: items, errors } =
+    await client.models.TaskTemplateItem.listTaskTemplateItemByTemplateId({
+      templateId,
+    });
+  throwIfErrors(errors, '집안일 템플릿 항목을 불러오지 못했습니다.');
+  return items;
+}
+
 type RoomStatus = 'idle' | 'loading' | 'loaded';
 
 interface RoomState {
@@ -298,17 +309,39 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       const today = toDateString(new Date());
       await Promise.all(
         templates.map(async template => {
-          const { errors: taskErrors } = await client.models.Task.create({
-            roomId: room.id,
-            title: template.title,
-            description: template.description,
-            recurrenceType: template.recurrenceType,
-            intervalValue: template.intervalValue,
-            intervalUnit: template.intervalUnit,
-            months: template.months,
-            nextDueDate: today,
-          });
+          const { data: task, errors: taskErrors } =
+            await client.models.Task.create({
+              roomId: room.id,
+              title: template.title,
+              recurrenceType: template.recurrenceType,
+              intervalValue: template.intervalValue,
+              intervalUnit: template.intervalUnit,
+              months: template.months,
+              nextDueDate: today,
+            });
           throwIfErrors(taskErrors, '집안일 시딩에 실패했습니다.');
+          if (!task) {
+            return;
+          }
+
+          const templateItems = await listTaskTemplateItemsForTemplate(
+            template.id,
+          );
+          await Promise.all(
+            templateItems.map(async item => {
+              const { errors: itemErrors } =
+                await client.models.TaskItem.create({
+                  taskId: task.id,
+                  type: item.type,
+                  content: item.content,
+                  ord: item.ord,
+                });
+              throwIfErrors(
+                itemErrors,
+                '집안일 안내 항목 시딩에 실패했습니다.',
+              );
+            }),
+          );
         }),
       );
 

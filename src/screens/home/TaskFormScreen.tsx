@@ -53,9 +53,6 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
     existingTask?.roomId ?? route.params?.roomId ?? null,
   );
   const [title, setTitle] = React.useState( existingTask?.title ?? "" );
-  const [description, setDescription] = React.useState(
-    existingTask?.description ?? "",
-  );
   const [recurrenceType, setRecurrenceType] = React.useState<
     "INTERVAL" | "YEARLY_MONTHS"
   >( existingTask?.recurrenceType ?? "INTERVAL" );
@@ -82,7 +79,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
     if (taskId) {
       listTaskLogs( taskId )
         .then( setLogs )
-        .catch(err => setError( (err as Error).message ));
+        .catch( err => setError( (err as Error).message ) );
     }
   }, [taskId] );
 
@@ -117,7 +114,6 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
     }
     const input: TaskInput = {
       title: title.trim(),
-      description: description.trim() || undefined,
       recurrenceType,
       intervalValue:
         recurrenceType === "INTERVAL" ? parsedIntervalValue : undefined,
@@ -167,7 +163,10 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   };
 
   return (
-    <ScrollView style={ styles.screen } contentContainerStyle={ styles.container }>
+    <ScrollView
+      style={ styles.screen }
+      contentContainerStyle={ styles.container }
+    >
       {
         error
         ? <Text style={ styles.error }> { error } </Text>
@@ -194,14 +193,10 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       </View>
 
       <Text style={ styles.label }> 제목 </Text>
-      <TextInput style={ styles.input } value={ title } onChangeText={ setTitle } />
-
-      <Text style={ styles.label }> 설명 </Text>
       <TextInput
-        style={ [styles.input, styles.multilineInput] }
-        value={ description }
-        onChangeText={ setDescription }
-        multiline
+        style={ styles.input }
+        value={ title }
+        onChangeText={ setTitle }
       />
 
       <Text style={ styles.label }> 반복 방식 </Text>
@@ -245,65 +240,65 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       {
         recurrenceType === "INTERVAL"
         ? <View>
-          <Text style={ styles.label }> 간격 </Text>
-          <TextInput
-            style={ styles.input }
-            value={ intervalValue }
-            onChangeText={ setIntervalValue }
-            keyboardType="number-pad"
-          />
-          <View style={ styles.chipRow }>
-            { (
-              Object.keys( INTERVAL_UNIT_LABELS ) as Array<
-                "DAY" | "WEEK" | "MONTH"
-              >
-            ).map( unit => (
-              <Pressable
-                key={ unit }
-                style={ [
-                  styles.chip,
-                  intervalUnit === unit && styles.chipSelected,
-                ] }
-                onPress={ () => setIntervalUnit( unit ) }
-              >
-                <Text
-                  style={
-                    intervalUnit === unit
-                      ? styles.chipTextSelected
-                      : styles.chipText
-                  }
+            <Text style={ styles.label }> 간격 </Text>
+            <TextInput
+              style={ styles.input }
+              value={ intervalValue }
+              onChangeText={ setIntervalValue }
+              keyboardType="number-pad"
+            />
+            <View style={ styles.chipRow }>
+              { (
+                Object.keys( INTERVAL_UNIT_LABELS ) as Array<
+                  "DAY" | "WEEK" | "MONTH"
                 >
-                  { INTERVAL_UNIT_LABELS[unit] }
-                </Text>
-              </Pressable>
-            ) ) }
+              ).map( unit => (
+                <Pressable
+                  key={ unit }
+                  style={ [
+                    styles.chip,
+                    intervalUnit === unit && styles.chipSelected,
+                  ] }
+                  onPress={ () => setIntervalUnit( unit ) }
+                >
+                  <Text
+                    style={
+                      intervalUnit === unit
+                        ? styles.chipTextSelected
+                        : styles.chipText
+                    }
+                  >
+                    { INTERVAL_UNIT_LABELS[unit] }
+                  </Text>
+                </Pressable>
+              ) ) }
+            </View>
           </View>
-        </View>
         : <View>
-          <Text style={ styles.label }> 해당 달 선택 </Text>
-          <View style={ styles.chipRow }>
-            { MONTHS.map( month => (
-              <Pressable
-                key={ month }
-                style={ [
-                  styles.monthChip,
-                  months.includes( month ) && styles.chipSelected,
-                ] }
-                onPress={ () => toggleMonth( month ) }
-              >
-                <Text
-                  style={
-                    months.includes( month )
-                      ? styles.chipTextSelected
-                      : styles.chipText
-                  }
+            <Text style={ styles.label }> 해당 달 선택 </Text>
+            <View style={ styles.chipRow }>
+              { MONTHS.map( month => (
+                <Pressable
+                  key={ month }
+                  style={ [
+                    styles.monthChip,
+                    months.includes( month ) && styles.chipSelected,
+                  ] }
+                  onPress={ () => toggleMonth( month ) }
                 >
-                  { month }월
-                </Text>
-              </Pressable>
-            ) ) }
+                  <Text
+                    style={
+                      months.includes( month )
+                        ? styles.chipTextSelected
+                        : styles.chipText
+                    }
+                  >
+                    { month }월
+                  </Text>
+                </Pressable>
+              ) ) }
+            </View>
           </View>
-        </View>
       }
 
       <Pressable
@@ -321,29 +316,29 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       {
         isEditMode
         ? <DefaultButton
-          text="삭제"
-          onPress={ onDelete }
-          style={ styles.deleteButton }
-          textStyle={ styles.deleteButtonText }
-        />
+            text="삭제"
+            onPress={ onDelete }
+            style={ styles.deleteButton }
+            textStyle={ styles.deleteButtonText }
+          />
         : null
       }
 
       {
         isEditMode
         ? <View style={ styles.logsSection }>
-          <Text style={ styles.label }> 최근 완료 기록 </Text>
-          {
-            logs.length === 0
-            ? <Text style={ styles.emptyLogs }> 완료 기록이 없습니다. </Text>
-            : logs.map( log => (
-              <Text key={ log.id } style={ styles.logItem }>
-                { toDateString( new Date( log.completedAt ) ) } ·{" "}
-                { log.completedByName }
-              </Text>
-            ) )
-          }
-        </View>
+            <Text style={ styles.label }> 최근 완료 기록 </Text>
+            {logs.length === 0 ? (
+              <Text style={ styles.emptyLogs }> 완료 기록이 없습니다. </Text>
+            ) : (
+              logs.map( log => (
+                <Text key={ log.id } style={ styles.logItem }>
+                  { toDateString( new Date( log.completedAt ) ) } ·{ " " }
+                  { log.completedByName }
+                </Text>
+              ) )
+            )}
+          </View>
         : null
       }
     </ScrollView>
@@ -371,10 +366,6 @@ const styles = StyleSheet.create( {
     paddingVertical: 10,
     paddingHorizontal: 12,
     fontSize: 16,
-  },
-  multilineInput: {
-    minHeight: 80,
-    textAlignVertical: "top",
   },
   chipRow: {
     flexDirection: "row",

@@ -19,7 +19,7 @@ import DefaultButton from "../../components/common/DefaultButton";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "RoomDetail">;
 
-function formatDueLabel( nextDueDate: string, today: string ): string {
+function formatDueLabel(nextDueDate: string, today: string): string {
   if (nextDueDate < today) {
     return "기한 지남";
   }
@@ -32,7 +32,9 @@ function formatDueLabel( nextDueDate: string, today: string ): string {
 function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const { roomId } = route.params;
 
-  const room = useRoomStore( state => state.rooms.find( r => r.id === roomId ) );
+  const room = useRoomStore( state =>
+    state.rooms.find( r => r.id === roomId ),
+  );
   const tasks = useTaskStore( state => state.tasks );
   const taskStatus = useTaskStore( state => state.status );
   const taskError = useTaskStore( state => state.error );
@@ -54,11 +56,6 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         onPress={ () => navigation.navigate( "TaskForm", { taskId: item.id } ) }
       >
         <Text style={ styles.taskTitle }> { item.title } </Text>
-        {
-          item.description
-          ? <Text style={ styles.taskDescription }> { item.description } </Text>
-          : null
-        }
         <Text style={ styles.taskDue }>
           { formatDueLabel( item.nextDueDate, today ) }
         </Text>
@@ -96,11 +93,11 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
       />
 
       <ScrollView>
-        {
-          roomTasks.length === 0
-          ? <Text style={ styles.emptySection }> 집안일이 없습니다. </Text>
-          : roomTasks.map( renderTask )
-        }
+        {roomTasks.length === 0 ? (
+          <Text style={ styles.emptySection }> 집안일이 없습니다. </Text>
+        ) : (
+          roomTasks.map( renderTask )
+        )}
       </ScrollView>
     </View>
   );
@@ -156,11 +153,6 @@ const styles = StyleSheet.create( {
   taskTitle: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  taskDescription: {
-    fontSize: 13,
-    color: "#666",
-    marginTop: 2,
   },
   taskDue: {
     fontSize: 12,

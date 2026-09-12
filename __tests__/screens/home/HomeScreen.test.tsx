@@ -32,7 +32,6 @@ const task: TaskRow = {
   id: "c1",
   roomId: "r1",
   title: "침구 햇빛살균",
-  description: null,
   recurrenceType: "INTERVAL",
   intervalValue: 1,
   intervalUnit: "WEEK",

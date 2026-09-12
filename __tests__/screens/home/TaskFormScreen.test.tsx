@@ -30,7 +30,6 @@ const existingTask: TaskRow = {
   id: "c1",
   roomId: "r1",
   title: "침구 햇빛살균",
-  description: "침구, 베개 등 햇빛살균",
   recurrenceType: "INTERVAL",
   intervalValue: 1,
   intervalUnit: "WEEK",
@@ -93,7 +92,9 @@ describe( "TaskFormScreen", () => {
       fireEvent.changeText( getAllByDisplayValue( "" )[0], "새 집안일" );
       fireEvent.changeText( getByDisplayValue( "1" ), "0" );
       fireEvent.press( getByText( "저장" ) );
-      expect( getByText( "간격은 1 이상의 정수로 입력해주세요." ) ).toBeTruthy();
+      expect(
+        getByText( "간격은 1 이상의 정수로 입력해주세요." ),
+      ).toBeTruthy();
       expect( mockedCreateTask ).not.toHaveBeenCalled();
     } );
 
@@ -131,7 +132,6 @@ describe( "TaskFormScreen", () => {
     test( "기존 값을 미리 채워서 보여준다", () => {
       const { getByDisplayValue } = renderEdit();
       expect( getByDisplayValue( "침구 햇빛살균" ) ).toBeTruthy();
-      expect( getByDisplayValue( "침구, 베개 등 햇빛살균" ) ).toBeTruthy();
     } );
 
     test( "완료 기록을 불러와서 보여준다", async () => {
@@ -166,7 +166,9 @@ describe( "TaskFormScreen", () => {
     } );
 
     test( "삭제 버튼을 탭하면 완료 기록도 함께 삭제된다는 안내와 함께 확인을 요청한다", () => {
-      const alertSpy = jest.spyOn( Alert, "alert" ).mockImplementation( () => {} );
+      const alertSpy = jest
+        .spyOn( Alert, "alert" )
+        .mockImplementation( () => {} );
       const navigation = createMockNavigation<"TaskForm">();
       const { getByText } = render(
         <TaskFormScreen

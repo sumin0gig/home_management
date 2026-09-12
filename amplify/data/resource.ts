@@ -115,13 +115,27 @@ const schema = a
           'GENERAL_ROOM',
         ]),
         title: a.string().required(),
-        description: a.string(),
         recurrenceType: a.enum(['INTERVAL', 'YEARLY_MONTHS']),
         intervalValue: a.integer(),
         intervalUnit: a.enum(['DAY', 'WEEK', 'MONTH']),
         months: a.integer().array(),
+        items: a.hasMany('TaskTemplateItem', 'templateId'),
       })
       .secondaryIndexes(index => [index('roomType')])
+      .authorization(allow => [
+        allow.authenticated().to(['read']),
+        allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+      ]),
+
+    TaskTemplateItem: a
+      .model({
+        templateId: a.id().required(),
+        template: a.belongsTo('TaskTemplate', 'templateId'),
+        type: a.enum(['DEFAULT', 'TIP']),
+        content: a.string().required(),
+        ord: a.integer().required(),
+      })
+      .secondaryIndexes(index => [index('templateId')])
       .authorization(allow => [
         allow.authenticated().to(['read']),
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
@@ -132,15 +146,29 @@ const schema = a
         roomId: a.id().required(),
         room: a.belongsTo('Room', 'roomId'),
         title: a.string().required(),
-        description: a.string(),
         recurrenceType: a.enum(['INTERVAL', 'YEARLY_MONTHS']),
         intervalValue: a.integer(),
         intervalUnit: a.enum(['DAY', 'WEEK', 'MONTH']),
         months: a.integer().array(),
         nextDueDate: a.date().required(),
         logs: a.hasMany('TaskLog', 'taskId'),
+        items: a.hasMany('TaskItem', 'taskId'),
       })
       .secondaryIndexes(index => [index('roomId'), index('nextDueDate')])
+      .authorization(allow => [
+        allow.authenticated().to(['create', 'read', 'update', 'delete']),
+        allow.group('Admin').to(['create', 'read', 'update', 'delete']),
+      ]),
+
+    TaskItem: a
+      .model({
+        taskId: a.id().required(),
+        task: a.belongsTo('Task', 'taskId'),
+        type: a.enum(['DEFAULT', 'TIP']),
+        content: a.string().required(),
+        ord: a.integer().required(),
+      })
+      .secondaryIndexes(index => [index('taskId')])
       .authorization(allow => [
         allow.authenticated().to(['create', 'read', 'update', 'delete']),
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),

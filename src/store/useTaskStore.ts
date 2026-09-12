@@ -17,7 +17,6 @@ export type IntervalUnit = TaskRow['intervalUnit'];
 
 export interface TaskInput {
   title: string;
-  description?: string;
   recurrenceType: 'INTERVAL' | 'YEARLY_MONTHS';
   intervalValue?: number;
   intervalUnit?: 'DAY' | 'WEEK' | 'MONTH';
@@ -164,7 +163,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       const { data: task, errors } = await client.models.Task.create({
         roomId,
         title: input.title,
-        description: input.description,
         recurrenceType: input.recurrenceType,
         intervalValue: input.intervalValue,
         intervalUnit: input.intervalUnit,
@@ -189,7 +187,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         id: taskId,
         roomId,
         title: input.title,
-        description: input.description ?? null,
         recurrenceType: input.recurrenceType,
         intervalValue: input.intervalValue ?? null,
         intervalUnit: input.intervalUnit ?? null,
