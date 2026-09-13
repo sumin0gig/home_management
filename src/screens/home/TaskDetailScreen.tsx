@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import Toast from "react-native-toast-message";
+import Toast from "react-native-root-toast";
 import type { HomeStackParamList } from "../../navigation/types";
 import {
   listTaskItems,
@@ -72,7 +72,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
     setIsCompleting( true );
     try {
       await completeTask( task );
-      Toast.show( { type: "success", text1: "완료되었습니다" } );
+      Toast.show( "완료되었습니다", { duration: Toast.durations.SHORT } );
       navigation.goBack();
     } catch (err) {
       setError( (err as Error).message );

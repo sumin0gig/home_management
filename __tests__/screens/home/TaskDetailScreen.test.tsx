@@ -1,6 +1,6 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import Toast from "react-native-toast-message";
+import Toast from "react-native-root-toast";
 import TaskDetailScreen from "../../../src/screens/home/TaskDetailScreen";
 import { useTaskStore, listTaskItems } from "../../../src/store/useTaskStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
@@ -12,7 +12,10 @@ jest.mock( "../../../src/store/useTaskStore", () => ( {
   listTaskItems: jest.fn(),
 } ) );
 
-jest.mock( "react-native-toast-message", () => ( { show: jest.fn() } ) );
+jest.mock( "react-native-root-toast", () => ( {
+  show: jest.fn(),
+  durations: { SHORT: 0, LONG: 1 },
+} ) );
 
 const mockedListTaskItems = listTaskItems as jest.Mock;
 const mockedCompleteTask = jest.fn();
@@ -104,7 +107,8 @@ describe( "TaskDetailScreen", () => {
       expect( mockedCompleteTask ).toHaveBeenCalledWith( task ),
     );
     expect( mockedToastShow ).toHaveBeenCalledWith(
-      expect.objectContaining( { text1: "완료되었습니다" } ),
+      "완료되었습니다",
+      expect.objectContaining( { duration: Toast.durations.SHORT } ),
     );
     expect( navigation.goBack ).toHaveBeenCalled();
   } );
