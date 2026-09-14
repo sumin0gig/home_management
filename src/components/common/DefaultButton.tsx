@@ -7,7 +7,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 interface Props {
   text: string;
@@ -37,7 +37,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   text: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

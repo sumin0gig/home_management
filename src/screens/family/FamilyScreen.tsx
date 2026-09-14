@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import type { FamilyMemberRow } from "../../store/useFamilyStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 function FamilyScreen(): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
@@ -180,7 +180,7 @@ const styles = StyleSheet.create( {
   nameInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create( {
     borderRadius: 8,
   },
   saveButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "600",
   },
   membersTitle: {
@@ -208,7 +208,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: commonColor.divider,
   },
   memberName: {
     fontSize: 16,

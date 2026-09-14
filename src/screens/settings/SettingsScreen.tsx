@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { signOutUser, getAuthErrorMessage } from "../../api/auth";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 
 function SettingsScreen(): React.JSX.Element {
@@ -41,7 +41,7 @@ const styles = StyleSheet.create( {
     backgroundColor: commonColor.backgroundColor,
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 12,
   },
   button: {
@@ -51,7 +51,7 @@ const styles = StyleSheet.create( {
     borderRadius: 8,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

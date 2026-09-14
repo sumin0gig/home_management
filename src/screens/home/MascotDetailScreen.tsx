@@ -106,7 +106,7 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
       >
         {
           isSaving
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={ colors.white } />
           : <Text style={ styles.saveButtonText }> 저장 </Text>
         }
       </Pressable>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create( {
     width: "100%",
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#eee",
+    backgroundColor: commonColor.divider,
     overflow: "hidden",
   },
   gaugeFill: {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create( {
     marginTop: 6,
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
   },
@@ -173,7 +173,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   saveButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

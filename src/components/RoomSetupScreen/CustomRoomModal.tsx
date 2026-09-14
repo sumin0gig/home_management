@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import ModalView from "../common/ModalView";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../common/DefaultButton";
 
 interface Props {
@@ -71,7 +71,7 @@ const styles = StyleSheet.create( {
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -89,10 +89,10 @@ const styles = StyleSheet.create( {
     borderRadius: 8,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
   },
   modalCancelButtonText: {
-    color: "#555",
+    color: colors.darkGray,
     fontWeight: "600",
   },
   modalAddButton: {
@@ -103,7 +103,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   modalAddButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "600",
   },
 } );

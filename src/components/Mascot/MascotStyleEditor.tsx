@@ -151,7 +151,7 @@ const styles = StyleSheet.create( {
     paddingVertical: 10,
     alignItems: "center",
     borderBottomWidth: 2,
-    borderBottomColor: "#eee",
+    borderBottomColor: commonColor.divider,
   },
   tabActive: {
     borderBottomColor: commonColor.touchable,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create( {
   },
   optionChip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -184,11 +184,11 @@ const styles = StyleSheet.create( {
     backgroundColor: commonColor.touchable,
   },
   optionChipText: {
-    color: "#555",
+    color: colors.darkGray,
     fontWeight: "600",
   },
   optionChipTextSelected: {
-    color: "#fff",
+    color: colors.white,
   },
   colorSwatch: {
     width: 40,

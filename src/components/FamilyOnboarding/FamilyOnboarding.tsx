@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { signOutUser } from "../../api/auth";
 import { ensureUserExists } from "../../api/user";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 function FamilyOnboarding(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -126,7 +126,7 @@ function FamilyOnboarding(): React.JSX.Element {
         >
           {
             isCreating
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={ colors.white } />
             : <Text style={ styles.buttonText }> 만들기 </Text>
           }
         </Pressable>
@@ -144,7 +144,7 @@ function FamilyOnboarding(): React.JSX.Element {
         <Pressable style={ styles.button } onPress={ onJoin } disabled={ isJoining }>
           {
             isJoining
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={ colors.white } />
             : <Text style={ styles.buttonText }> 참여하기 </Text>
           }
         </Pressable>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create( {
     right: 16,
   },
   logoutLinkText: {
-    color: "#555",
+    color: colors.darkGray,
     fontSize: 13,
   },
   stepIndicator: {
@@ -185,7 +185,7 @@ const styles = StyleSheet.create( {
   },
   description: {
     fontSize: 13,
-    color: "#666",
+    color: commonColor.textMuted,
     marginBottom: 20,
   },
   section: {
@@ -198,7 +198,7 @@ const styles = StyleSheet.create( {
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create( {
     marginBottom: 12,
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 16,
     textAlign: "center",
   },
@@ -217,7 +217,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

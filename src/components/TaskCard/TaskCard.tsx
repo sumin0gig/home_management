@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import type { TaskRow } from "../../store/useTaskStore";
 import { formatDueLabel } from "../../utils/date";
-import { colors } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 interface Props {
   task: TaskRow;
@@ -35,7 +35,7 @@ const styles = StyleSheet.create( {
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 3,
-    borderColor: "#eee",
+    borderColor: commonColor.divider,
     marginBottom: 8,
   },
   dueCard: {
@@ -50,7 +50,7 @@ const styles = StyleSheet.create( {
   },
   due: {
     fontSize: 12,
-    color: "#2f6fed",
+    color: commonColor.info,
     marginTop: 4,
     fontWeight: "600",
   },

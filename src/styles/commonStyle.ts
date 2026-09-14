@@ -11,14 +11,25 @@ export const colors = {
   gray: '#9A9A9A',
   darkGray: '#555555',
   black: '#333333',
+  pureBlack: '#000000',
+  tipBackground: '#fff6e5',
+  tipLabel: '#b8860b',
+  tipContent: '#7a5c00',
 } as const;
 
 export const commonColor = {
   overlay: 'rgba(0, 0, 0, 0.4)',
+  overlayStrong: 'rgba(0, 0, 0, 0.7)',
   negative: '#D9705B',
+  error: '#d32f2f',
   touchable: '#a36044',
   backgroundColor: colors.white,
   textSecondary: colors.gray,
+  textMuted: '#666666',
+  border: '#cccccc',
+  subtleBorder: 'rgba(0, 0, 0, 0.08)',
+  divider: '#eeeeee',
+  info: '#2f6fed',
 } as const;
 
 export const commonStyle = {} as const;

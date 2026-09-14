@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { GRID_COLUMNS, type FloorPlanRoom } from "../../store/useRoomStore";
+import { colors, commonColor } from "../../styles/commonStyle";
 import DraggableRoomBlock from "./DraggableRoomBlock";
 
 const HORIZONTAL_PADDING = 16;
@@ -68,9 +69,9 @@ function FloorPlanCanvas( {
 const styles = StyleSheet.create( {
   canvas: {
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: commonColor.divider,
     borderRadius: 12,
-    backgroundColor: "#fafafa",
+    backgroundColor: colors.white,
     overflow: "hidden",
   },
   columnLine: {
@@ -78,14 +79,14 @@ const styles = StyleSheet.create( {
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: "#eee",
+    backgroundColor: commonColor.divider,
   },
   rowLine: {
     position: "absolute",
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: "#eee",
+    backgroundColor: commonColor.divider,
   },
 } );
 

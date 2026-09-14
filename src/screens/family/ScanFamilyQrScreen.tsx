@@ -12,7 +12,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Camera } from "react-native-camera-kit";
 import type { FamilyStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 type Props = NativeStackScreenProps<FamilyStackParamList, "ScanFamilyQr">;
 
@@ -90,13 +90,13 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
         scanBarcode
         onReadCode={ onReadCode }
         showFrame
-        laserColor="#a36044"
-        frameColor="#fff"
+        laserColor={ commonColor.touchable }
+        frameColor={ colors.white }
       />
       {
         scanStatus === "joining"
         ? <View style={ [styles.overlay, styles.centered] }>
-          <ActivityIndicator size="large" color="#fff" />
+          <ActivityIndicator size="large" color={ colors.white } />
         </View>
         : null
       }
@@ -122,7 +122,7 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
 const styles = StyleSheet.create( {
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: colors.pureBlack,
   },
   centered: {
     justifyContent: "center",
@@ -134,11 +134,11 @@ const styles = StyleSheet.create( {
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: commonColor.overlayStrong,
     padding: 24,
   },
   overlayText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     textAlign: "center",
     marginBottom: 16,
@@ -148,11 +148,11 @@ const styles = StyleSheet.create( {
     fontWeight: "700",
     marginBottom: 8,
     textAlign: "center",
-    color: "#fff",
+    color: colors.white,
   },
   description: {
     fontSize: 14,
-    color: "#ccc",
+    color: commonColor.border,
     textAlign: "center",
     marginBottom: 24,
   },
@@ -163,7 +163,7 @@ const styles = StyleSheet.create( {
     borderRadius: 8,
   },
   retryButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

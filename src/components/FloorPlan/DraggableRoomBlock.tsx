@@ -150,7 +150,7 @@ const styles = StyleSheet.create( {
     borderRadius: 8,
     padding: 8,
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.08)",
+    borderColor: commonColor.subtleBorder,
   },
   dueBadge: {
     position: "absolute",

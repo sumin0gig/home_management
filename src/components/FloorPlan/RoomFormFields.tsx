@@ -187,7 +187,7 @@ const styles = StyleSheet.create( {
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -200,12 +200,12 @@ const styles = StyleSheet.create( {
     color: colors.darkGray,
   },
   chipTextSelected: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "600",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -224,7 +224,7 @@ const styles = StyleSheet.create( {
   stepperLabel: {
     width: 36,
     fontSize: 14,
-    color: "#555",
+    color: colors.darkGray,
   },
   stepperButton: {
     width: 32,
@@ -241,10 +241,10 @@ const styles = StyleSheet.create( {
     fontWeight: "700",
   },
   stepperButtonDisabled: {
-    borderColor: "#ddd",
+    borderColor: commonColor.border,
   },
   stepperButtonTextDisabled: {
-    color: "#ccc",
+    color: commonColor.border,
   },
   stepperValue: {
     minWidth: 40,

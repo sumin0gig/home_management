@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { signOutUser } from "../../api/auth";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 function RoomWaitingScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
@@ -52,7 +52,7 @@ function RoomWaitingScreen(): React.JSX.Element {
       >
         {
           isRefreshing
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={ colors.white } />
           : <Text style={ styles.buttonText }> 새로고침 </Text>
         }
       </Pressable>
@@ -73,7 +73,7 @@ const styles = StyleSheet.create( {
     right: 16,
   },
   logoutLinkText: {
-    color: "#555",
+    color: colors.darkGray,
     fontSize: 13,
   },
   title: {
@@ -84,7 +84,7 @@ const styles = StyleSheet.create( {
   },
   description: {
     fontSize: 14,
-    color: "#666",
+    color: commonColor.textMuted,
     textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

@@ -116,7 +116,7 @@ function RoomEditScreen(): React.JSX.Element {
       >
         {
           isSavingPositions
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={ colors.white } />
           : <Text style={ styles.savePositionsButtonText }> 위치 저장 </Text>
         }
       </Pressable>
@@ -226,7 +226,7 @@ const AddRoomModal = ( {
         >
           {
             isSaving
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={ colors.white } />
             : <Text style={ styles.saveButtonText }> 추가 </Text>
           }
         </Pressable>
@@ -331,7 +331,7 @@ function EditRoomModal( {
         >
           {
             isSaving
-            ? <ActivityIndicator color="#fff" />
+            ? <ActivityIndicator color={ colors.white } />
             : <Text style={ styles.saveButtonText }> 저장 </Text>
           }
         </Pressable>
@@ -347,13 +347,13 @@ const styles = StyleSheet.create( {
     backgroundColor: commonColor.backgroundColor,
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
   },
   description: {
     fontSize: 13,
-    color: "#666",
+    color: commonColor.textMuted,
     marginBottom: 16,
   },
   addRoomLink: {
@@ -375,10 +375,10 @@ const styles = StyleSheet.create( {
     marginTop: 16,
   },
   savePositionsButtonDisabled: {
-    backgroundColor: "#ccc",
+    backgroundColor: commonColor.border,
   },
   savePositionsButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -389,7 +389,7 @@ const styles = StyleSheet.create( {
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create( {
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create( {
     color: colors.darkGray,
   },
   chipTextSelected: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "600",
   },
   modalButtonRow: {
@@ -431,10 +431,10 @@ const styles = StyleSheet.create( {
     borderRadius: 8,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
   },
   cancelButtonText: {
-    color: "#555",
+    color: colors.darkGray,
     fontWeight: "600",
   },
   deleteButton: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   saveButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "600",
   },
 } );

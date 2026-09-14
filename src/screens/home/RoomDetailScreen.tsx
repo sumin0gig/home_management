@@ -99,7 +99,7 @@ const styles = StyleSheet.create( {
     marginBottom: 16,
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
   },
@@ -111,7 +111,7 @@ const styles = StyleSheet.create( {
     marginBottom: 16,
   },
   addButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

@@ -135,7 +135,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
       >
         {
           isCompleting
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={ colors.white } />
           : <Text style={ styles.completeButtonText }> 완료 </Text>
         }
       </Pressable>
@@ -161,11 +161,11 @@ const styles = StyleSheet.create( {
   dueLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#2f6fed",
+    color: commonColor.info,
     marginBottom: 16,
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
   },
@@ -196,18 +196,18 @@ const styles = StyleSheet.create( {
     marginTop: 12,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#fff6e5",
+    backgroundColor: colors.tipBackground,
   },
   tipLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#b8860b",
+    color: colors.tipLabel,
     marginBottom: 6,
   },
   tipContent: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#7a5c00",
+    color: colors.tipContent,
   },
   editButtonText: {
     fontSize: 15,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create( {
     marginTop: 24,
   },
   completeButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

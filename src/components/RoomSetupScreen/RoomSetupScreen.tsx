@@ -212,7 +212,7 @@ function RoomSetupScreen(): React.JSX.Element {
       >
         {
           isSaving
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={ colors.white } />
           : <Text style={ styles.submitButtonText }> 집 만들기 </Text>
         }
       </Pressable>
@@ -324,7 +324,7 @@ const styles = StyleSheet.create( {
     right: 16,
   },
   logoutLinkText: {
-    color: "#555",
+    color: colors.darkGray,
     fontSize: 13,
   },
   stepIndicator: {
@@ -341,11 +341,11 @@ const styles = StyleSheet.create( {
   },
   description: {
     fontSize: 13,
-    color: "#666",
+    color: commonColor.textMuted,
     marginBottom: 20,
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
   },
@@ -375,7 +375,7 @@ const styles = StyleSheet.create( {
     paddingHorizontal: 14,
   },
   customChipText: {
-    color: "#555",
+    color: colors.darkGray,
     fontWeight: "600",
   },
   hintText: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create( {
     marginTop: 16,
   },
   submitButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -433,7 +433,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   saveButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "600",
   },
 } );

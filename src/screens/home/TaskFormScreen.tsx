@@ -308,7 +308,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       >
         {
           isSaving
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={ colors.white } />
           : <Text style={ styles.saveButtonText }> 저장 </Text>
         }
       </Pressable>
@@ -361,7 +361,7 @@ const styles = StyleSheet.create( {
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -374,14 +374,14 @@ const styles = StyleSheet.create( {
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   monthChip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -396,11 +396,11 @@ const styles = StyleSheet.create( {
     color: colors.darkGray,
   },
   chipTextSelected: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "600",
   },
   error: {
-    color: "#d32f2f",
+    color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
   },
@@ -412,7 +412,7 @@ const styles = StyleSheet.create( {
     marginTop: 28,
   },
   saveButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create( {
   },
   logItem: {
     fontSize: 14,
-    color: "#555",
+    color: colors.darkGray,
     paddingVertical: 4,
   },
 } );

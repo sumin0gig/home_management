@@ -10,7 +10,7 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { FamilyStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 type Props = NativeStackScreenProps<FamilyStackParamList, "EnterFamilyCode">;
 
@@ -62,7 +62,7 @@ function EnterFamilyCodeScreen( { navigation }: Props ): React.JSX.Element {
       <Pressable style={ styles.button } onPress={ onJoin } disabled={ isJoining }>
         {
           isJoining
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={ colors.white } />
           : <Text style={ styles.buttonText }> 참여하기 </Text>
         }
       </Pressable>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create( {
   },
   description: {
     fontSize: 13,
-    color: "#666",
+    color: commonColor.textMuted,
     marginBottom: 24,
   },
   error: {
@@ -93,7 +93,7 @@ const styles = StyleSheet.create( {
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
   },
   buttonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },

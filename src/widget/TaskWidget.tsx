@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles -- widget style objects aren't RN StyleSheet styles */
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
-import { colors } from '../styles/commonStyle';
+import { colors, commonColor } from '../styles/commonStyle';
 import type { WidgetTaskItem } from './taskWidgetSync';
 
 const TASK_LIST_DEEP_LINK = 'homemanagement://tasks';
@@ -19,22 +19,22 @@ export function TaskWidget({ tasks }: TaskWidgetProps): React.JSX.Element {
         height: 'match_parent',
         width: 'match_parent',
         flexDirection: 'column',
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 16,
         padding: 16,
       }}
     >
       <TextWidget
         text="할 일"
-        style={{ fontSize: 13, color: '#888888', marginBottom: 8 }}
+        style={{ fontSize: 13, color: colors.gray, marginBottom: 8 }}
       />
-      {
-        tasks.length === 0
-        ? <TextWidget
+      {tasks.length === 0 ? (
+        <TextWidget
           text="모든 집안일을 완료했어요"
           style={{ fontSize: 14, color: colors.darkGray }}
         />
-        : tasks.map(task => (
+      ) : (
+        tasks.map(task => (
           <FlexWidget
             key={task.id}
             style={{
@@ -47,15 +47,23 @@ export function TaskWidget({ tasks }: TaskWidgetProps): React.JSX.Element {
               text={task.title}
               maxLines={1}
               truncate="END"
-              style={{ fontSize: 15, fontWeight: '600', color: '#111111' }}
+              style={{
+                fontSize: 15,
+                fontWeight: '600',
+                color: colors.pureBlack,
+              }}
             />
             <TextWidget
               text={task.dueLabel}
-              style={{ fontSize: 12, color: '#2f6fed', fontWeight: '600' }}
+              style={{
+                fontSize: 12,
+                color: commonColor.info,
+                fontWeight: '600',
+              }}
             />
           </FlexWidget>
         ))
-      }
+      )}
     </FlexWidget>
   );
 }

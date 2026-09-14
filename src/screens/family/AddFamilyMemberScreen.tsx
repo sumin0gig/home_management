@@ -123,7 +123,7 @@ const styles = StyleSheet.create( {
   },
   codeLabel: {
     fontSize: 14,
-    color: "#555",
+    color: colors.darkGray,
   },
   codeActions: {
     flexDirection: "row",
@@ -150,7 +150,7 @@ const styles = StyleSheet.create( {
   },
   addFamilySection: {
     borderTopWidth: 1,
-    borderTopColor: "#eee",
+    borderTopColor: commonColor.divider,
     paddingTop: 24,
   },
   sectionTitle: {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create( {
   },
   optionButton: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: commonColor.border,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: "center",
