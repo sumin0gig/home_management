@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { throwIfErrors } from '../api/shared';
-import { toDateString } from '../utils/date';
+import { computeNextDueDate } from '../utils/date';
 import { randomRoomColor } from '../utils/commonUtils';
 
 const client = generateClient<Schema>();
@@ -306,9 +306,21 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       }
 
       const templates = await listTaskTemplatesForRoomType(roomType);
-      const today = toDateString(new Date());
+      const now = new Date();
       await Promise.all(
         templates.map(async template => {
+          const nextDueDate = computeNextDueDate(
+            {
+              title: template.title,
+              recurrenceType: template.recurrenceType ?? 'INTERVAL',
+              intervalValue: template.intervalValue ?? undefined,
+              intervalUnit: template.intervalUnit ?? undefined,
+              months:
+                template.months?.filter((m): m is number => m !== null) ??
+                undefined,
+            },
+            now,
+          );
           const { data: task, errors: taskErrors } =
             await client.models.Task.create({
               roomId: room.id,
@@ -317,7 +329,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
               intervalValue: template.intervalValue,
               intervalUnit: template.intervalUnit,
               months: template.months,
-              nextDueDate: today,
+              nextDueDate,
             });
           throwIfErrors(taskErrors, '집안일 시딩에 실패했습니다.');
           if (!task) {

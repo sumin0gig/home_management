@@ -7,7 +7,7 @@ export const colors = {
   teal: '#b2efed',
   blue: '#A9DDF2',
   gray: '#9A9A9A',
-  white: '#FAFAFA',
+  white: '#FFFFFF',
   black: '#333333',
 } as const;
 

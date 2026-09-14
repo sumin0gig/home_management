@@ -1,7 +1,6 @@
 import React from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,11 +10,11 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { HomeStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
-import { formatDueLabel, toDateString } from "../../utils/date";
-import { type TaskRow } from "../../store/useTaskStore";
+import { toDateString } from "../../utils/date";
 import { roomDisplayName } from "../../store/useRoomStore";
 import { commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
+import TaskCard from "../../components/TaskCard/TaskCard";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "RoomDetail">;
 
@@ -37,19 +36,6 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const roomTasks = tasks
     .filter( t => t.roomId === roomId )
     .sort( (a, b) => a.nextDueDate.localeCompare( b.nextDueDate ) );
-
-  const renderTask = (item: TaskRow) => (
-    <Pressable
-      style={ styles.taskRow }
-      key={ item.id }
-      onPress={ () => navigation.navigate( "TaskDetail", { taskId: item.id } ) }
-    >
-      <Text style={ styles.taskTitle }> { item.title } </Text>
-      <Text style={ styles.taskDue }>
-        { formatDueLabel( item.nextDueDate, today ) }
-      </Text>
-    </Pressable>
-  );
 
   if (taskStatus === "loading") {
     return (
@@ -78,7 +64,16 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         {roomTasks.length === 0 ? (
           <Text style={ styles.emptySection }> 집안일이 없습니다. </Text>
         ) : (
-          roomTasks.map( renderTask )
+          roomTasks.map( task => (
+            <TaskCard
+              key={ task.id }
+              task={ task }
+              today={ today }
+              onPress={ () =>
+                navigation.navigate( "TaskDetail", { taskId: task.id } )
+              }
+            />
+          ) )
         )}
       </ScrollView>
     </View>
@@ -118,21 +113,6 @@ const styles = StyleSheet.create( {
   addButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
-  },
-  taskRow: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  taskTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  taskDue: {
-    fontSize: 12,
-    color: "#2f6fed",
-    marginTop: 4,
     fontWeight: "600",
   },
 } );

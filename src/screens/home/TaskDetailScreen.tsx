@@ -65,6 +65,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   }
 
   const today = toDateString( new Date() );
+  const dueLabel = formatDueLabel( task.nextDueDate, today );
   const steps = items.filter( item => item.type === "DEFAULT" );
   const tips = items.filter( item => item.type === "TIP" );
 
@@ -83,9 +84,11 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
 
   return (
     <ScrollView style={ styles.screen } contentContainerStyle={ styles.container }>
-      <Text style={ styles.dueLabel }>
-        { formatDueLabel( task.nextDueDate, today ) }
-      </Text>
+      {
+        dueLabel
+        ? <Text style={ styles.dueLabel }> { dueLabel } </Text>
+        : null
+      }
 
       {
         error

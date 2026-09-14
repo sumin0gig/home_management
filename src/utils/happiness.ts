@@ -3,7 +3,7 @@ import type { TaskRow } from '../store/useTaskStore';
 const BASE_LEVEL_CAP = 100;
 const LEVEL_CAP_GROWTH = 1.2;
 
-// Mirrors the day-count approximation computeNextDueDate (src/store/useTaskStore.ts)
+// Mirrors the day-count approximation computeNextDueDate (src/utils/date.ts)
 // already uses for interval math: DAY=1, WEEK=7, MONTH=30 days.
 export function computeHappinessGain(task: TaskRow): number {
   if (task.recurrenceType === 'YEARLY_MONTHS') {

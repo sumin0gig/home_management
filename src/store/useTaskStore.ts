@@ -3,7 +3,11 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentAuthUser, fetchDisplayName } from '../api/auth';
 import { throwIfErrors } from '../api/shared';
-import { toDateString } from '../utils/date';
+import {
+  toDateString,
+  computeNextDueDate,
+  type TaskInput,
+} from '../utils/date';
 import { computeHappinessGain } from '../utils/happiness';
 import { listRoomsForFamily } from './useRoomStore';
 import { useMascotStore } from './useMascotStore';
@@ -16,61 +20,8 @@ export type TaskItemRow = Schema['TaskItem']['type'];
 export type RecurrenceType = TaskRow['recurrenceType'];
 export type IntervalUnit = TaskRow['intervalUnit'];
 
-export interface TaskInput {
-  title: string;
-  recurrenceType: 'INTERVAL' | 'YEARLY_MONTHS';
-  intervalValue?: number;
-  intervalUnit?: 'DAY' | 'WEEK' | 'MONTH';
-  months?: number[];
-}
-
-function addMonthsClamped(date: Date, months: number): Date {
-  const day = date.getDate();
-  const firstOfTargetMonth = new Date(
-    date.getFullYear(),
-    date.getMonth() + months,
-    1,
-  );
-  const lastDayOfTargetMonth = new Date(
-    firstOfTargetMonth.getFullYear(),
-    firstOfTargetMonth.getMonth() + 1,
-    0,
-  ).getDate();
-  firstOfTargetMonth.setDate(Math.min(day, lastDayOfTargetMonth));
-  return firstOfTargetMonth;
-}
-
-export function computeNextDueDate(task: TaskInput, from: Date): string {
-  if (task.recurrenceType === 'INTERVAL') {
-    const value = task.intervalValue ?? 1;
-    let next = new Date(from);
-    switch (task.intervalUnit) {
-      case 'DAY':
-        next.setDate(next.getDate() + value);
-        break;
-      case 'WEEK':
-        next.setDate(next.getDate() + value * 7);
-        break;
-      case 'MONTH':
-      default:
-        next = addMonthsClamped(next, value);
-        break;
-    }
-    return toDateString(next);
-  }
-
-  const months = [...(task.months ?? [])].sort((a, b) => a - b);
-  if (months.length === 0) {
-    return toDateString(from);
-  }
-  const fromMonth = from.getMonth() + 1;
-  const fromYear = from.getFullYear();
-  const nextMonthInSameYear = months.find(m => m > fromMonth);
-  if (nextMonthInSameYear) {
-    return toDateString(new Date(fromYear, nextMonthInSameYear - 1, 1));
-  }
-  return toDateString(new Date(fromYear + 1, months[0] - 1, 1));
-}
+export type { TaskInput };
+export { computeNextDueDate };
 
 async function listTasksForRoom(roomId: string): Promise<TaskRow[]> {
   const { data: tasks, errors } = await client.models.Task.listTaskByRoomId({
