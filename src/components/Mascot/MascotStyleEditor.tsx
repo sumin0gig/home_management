@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { MascotInput } from "../../store/useMascotStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 import { COLOR_OPTIONS, EAR_OPTIONS, TAIL_OPTIONS } from "./optionMaps";
 
 type Tab = "ear" | "tail" | "color";
@@ -158,7 +158,7 @@ const styles = StyleSheet.create( {
   },
   tabText: {
     fontSize: 14,
-    color: "#999",
+    color: colors.gray,
     fontWeight: "600",
   },
   tabTextActive: {

@@ -7,7 +7,7 @@ import MascotStyleEditor from "../../components/Mascot/MascotStyleEditor";
 import { EAR_OPTIONS, TAIL_OPTIONS } from "../../components/Mascot/optionMaps";
 import { useMascotStore, type MascotInput } from "../../store/useMascotStore";
 import { computeHappinessLevel } from "../../utils/happiness";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "MascotDetail">;
 
@@ -155,7 +155,7 @@ const styles = StyleSheet.create( {
   },
   gaugeLabel: {
     fontSize: 12,
-    color: "#999",
+    color: colors.gray,
     marginTop: 6,
   },
   error: {

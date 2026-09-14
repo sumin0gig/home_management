@@ -16,7 +16,7 @@ import {
   type TaskItemRow,
 } from "../../store/useTaskStore";
 import { formatDueLabel, toDateString } from "../../utils/date";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "TaskDetail">;
 
@@ -174,7 +174,7 @@ const styles = StyleSheet.create( {
   },
   emptyText: {
     fontSize: 14,
-    color: "#999",
+    color: colors.gray,
   },
   stepRow: {
     flexDirection: "row",
@@ -190,7 +190,7 @@ const styles = StyleSheet.create( {
     flex: 1,
     fontSize: 15,
     lineHeight: 22,
-    color: "#333",
+    color: colors.darkGray,
   },
   tipBox: {
     marginTop: 12,

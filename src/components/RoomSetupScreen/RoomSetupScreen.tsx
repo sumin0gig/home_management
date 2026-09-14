@@ -26,7 +26,7 @@ import FloorPlanCanvas from "../FloorPlan/FloorPlanCanvas";
 import RoomFormFields from "../FloorPlan/RoomFormFields";
 import ModalView from "../common/ModalView";
 import DefaultButton from "../common/DefaultButton";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 // 이 화면에서 만드는 draft는 항상 roomType/label/color를 직접 채워서 만들기
 // 때문에, EditRoomModal 등과 공유하는 느슨한 FloorPlanRoom보다 더 구체적으로
@@ -368,7 +368,7 @@ const styles = StyleSheet.create( {
   },
   customChip: {
     borderWidth: 1,
-    borderColor: "#999",
+    borderColor: colors.gray,
     borderStyle: "dashed",
     borderRadius: 20,
     paddingVertical: 6,
@@ -380,7 +380,7 @@ const styles = StyleSheet.create( {
   },
   hintText: {
     fontSize: 12,
-    color: "#999",
+    color: colors.gray,
     marginBottom: 8,
   },
   floorPlanScroll: {
@@ -388,7 +388,7 @@ const styles = StyleSheet.create( {
   },
   emptyText: {
     fontSize: 14,
-    color: "#999",
+    color: colors.gray,
     padding: 16,
   },
   submitButton: {

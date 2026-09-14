@@ -1,6 +1,7 @@
 /* eslint-disable react-native/no-inline-styles -- widget style objects aren't RN StyleSheet styles */
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
+import { colors } from '../styles/commonStyle';
 import type { WidgetTaskItem } from './taskWidgetSync';
 
 const TASK_LIST_DEEP_LINK = 'homemanagement://tasks';
@@ -31,7 +32,7 @@ export function TaskWidget({ tasks }: TaskWidgetProps): React.JSX.Element {
         tasks.length === 0
         ? <TextWidget
           text="모든 집안일을 완료했어요"
-          style={{ fontSize: 14, color: '#333333' }}
+          style={{ fontSize: 14, color: colors.darkGray }}
         />
         : tasks.map(task => (
           <FlexWidget

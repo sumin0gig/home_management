@@ -17,7 +17,7 @@ import {
   type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 import { randomRoomColor } from "../../utils/commonUtils";
 import ModalView from "../../components/common/ModalView";
 import DefaultButton from "../../components/common/DefaultButton";
@@ -414,7 +414,7 @@ const styles = StyleSheet.create( {
     borderColor: commonColor.touchable,
   },
   chipText: {
-    color: "#333",
+    color: colors.darkGray,
   },
   chipTextSelected: {
     color: "#fff",

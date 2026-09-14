@@ -12,7 +12,7 @@ import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../utils/date";
 import { roomDisplayName } from "../../store/useRoomStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 import TaskCard from "../../components/TaskCard/TaskCard";
 
@@ -95,7 +95,7 @@ const styles = StyleSheet.create( {
   },
   emptySection: {
     fontSize: 14,
-    color: "#999",
+    color: colors.gray,
     marginBottom: 16,
   },
   error: {

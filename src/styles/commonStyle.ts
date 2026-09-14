@@ -6,8 +6,10 @@ export const colors = {
   green: '#8ee0a1',
   teal: '#b2efed',
   blue: '#A9DDF2',
-  gray: '#9A9A9A',
   white: '#FFFFFF',
+  lightGray: '#F2F2F2',
+  gray: '#9A9A9A',
+  darkGray: '#555555',
   black: '#333333',
 } as const;
 

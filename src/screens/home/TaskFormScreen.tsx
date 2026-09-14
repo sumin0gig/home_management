@@ -21,7 +21,7 @@ import {
   type IntervalUnit,
 } from "../../store/useTaskStore";
 import { roomDisplayName } from "../../store/useRoomStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 
 type Props = NativeStackScreenProps<HomeStackParamList, "TaskForm">;
@@ -393,7 +393,7 @@ const styles = StyleSheet.create( {
     borderColor: commonColor.touchable,
   },
   chipText: {
-    color: "#333",
+    color: colors.darkGray,
   },
   chipTextSelected: {
     color: "#fff",
@@ -435,7 +435,7 @@ const styles = StyleSheet.create( {
   },
   emptyLogs: {
     fontSize: 14,
-    color: "#999",
+    color: colors.gray,
   },
   logItem: {
     fontSize: 14,

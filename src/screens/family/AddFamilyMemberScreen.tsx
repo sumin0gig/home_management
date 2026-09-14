@@ -12,7 +12,7 @@ import Clipboard from "@react-native-clipboard/clipboard";
 import QRCode from "react-native-qrcode-svg";
 import type { FamilyStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 
 type Props = NativeStackScreenProps<FamilyStackParamList, "AddFamilyMember">;
 
@@ -169,7 +169,7 @@ const styles = StyleSheet.create( {
   optionButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: colors.darkGray,
   },
 } );
 

@@ -15,7 +15,7 @@ import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { useMascotStore } from "../../store/useMascotStore";
 import { toDateString } from "../../utils/date";
-import { commonColor } from "../../styles/commonStyle";
+import { colors, commonColor } from "../../styles/commonStyle";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
 import WanderingMascot from "../../components/Mascot/WanderingMascot";
 import {
@@ -164,7 +164,7 @@ const styles = StyleSheet.create( {
   },
   emptySection: {
     fontSize: 14,
-    color: "#999",
+    color: colors.gray,
     marginBottom: 16,
   },
   error: {

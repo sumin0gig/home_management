@@ -7,7 +7,11 @@ import {
   ROOM_TYPE_LABELS,
   type RoomType,
 } from "../../store/useRoomStore";
-import { ROOM_COLOR_PALETTE, commonColor } from "../../styles/commonStyle";
+import {
+  ROOM_COLOR_PALETTE,
+  colors,
+  commonColor,
+} from "../../styles/commonStyle";
 
 interface Props {
   roomType: NonNullable<RoomType>;
@@ -193,7 +197,7 @@ const styles = StyleSheet.create( {
     borderColor: commonColor.touchable,
   },
   chipText: {
-    color: "#333",
+    color: colors.darkGray,
   },
   chipTextSelected: {
     color: "#fff",

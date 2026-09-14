@@ -42,7 +42,7 @@ const styles = StyleSheet.create( {
     backgroundColor: colors.white,
   },
   notDueCard: {
-    backgroundColor: "#f2f2f2",
+    backgroundColor: colors.lightGray,
   },
   title: {
     fontSize: 16,
