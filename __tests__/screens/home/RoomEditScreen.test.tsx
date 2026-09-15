@@ -8,7 +8,6 @@ import type { FamilyRow } from "../../../src/store/useFamilyStore";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 
 const mockedAddRoom = jest.fn();
-const mockedRemoveRoom = jest.fn();
 const mockedUpdateRoomDetails = jest.fn();
 
 const family: FamilyRow = {
@@ -38,7 +37,6 @@ describe( "RoomEditScreen", () => {
       status: "loaded",
       rooms: [bedroom],
       addRoom: mockedAddRoom,
-      removeRoom: mockedRemoveRoom,
       updateRoomDetails: mockedUpdateRoomDetails,
     } );
   } );
@@ -79,15 +77,14 @@ describe( "RoomEditScreen", () => {
     );
   } );
 
-  test( "수정 모달에서 삭제를 탭하면 removeRoom이 호출된다", async () => {
-    mockedRemoveRoom.mockResolvedValue( undefined );
-
-    const { getByText } = render( <RoomEditScreen /> );
+  test( "수정 모달에서 취소를 탭하면 updateRoomDetails가 호출되지 않는다", () => {
+    const { getByText, getByPlaceholderText, queryByPlaceholderText } =
+      render( <RoomEditScreen /> );
     fireEvent.press( getByText( "침실" ) );
-    fireEvent.press( getByText( "삭제" ) );
+    fireEvent.changeText( getByPlaceholderText( "이름(선택)" ), "안방" );
+    fireEvent.press( getByText( "취소" ) );
 
-    await waitFor( () =>
-      expect( mockedRemoveRoom ).toHaveBeenCalledWith( "r1" ),
-    );
+    expect( mockedUpdateRoomDetails ).not.toHaveBeenCalled();
+    expect( queryByPlaceholderText( "이름(선택)" ) ).toBeNull();
   } );
 } );

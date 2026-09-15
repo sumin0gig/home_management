@@ -13,16 +13,14 @@ import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   useRoomStore,
-  canResizeRoom,
   type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
-import { randomRoomColor } from "../../utils/commonUtils";
 import ModalView from "../../components/common/ModalView";
 import DefaultButton from "../../components/common/DefaultButton";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
-import RoomFormFields from "../../components/FloorPlan/RoomFormFields";
+import RoomEditModal from "../../components/FloorPlan/RoomEditModal";
 
 function RoomEditScreen(): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
@@ -30,6 +28,7 @@ function RoomEditScreen(): React.JSX.Element {
   const roomError = useRoomStore( state => state.error );
   const addRoom = useRoomStore( state => state.addRoom );
   const updateRoomPosition = useRoomStore( state => state.updateRoomPosition );
+  const updateRoomDetails = useRoomStore( state => state.updateRoomDetails );
 
   const [isAddingRoom, setIsAddingRoom] = React.useState( false );
   const [editingRoom, setEditingRoom] = React.useState<FloorPlanRoom | null>(
@@ -83,8 +82,8 @@ function RoomEditScreen(): React.JSX.Element {
       { roomError ? <Text style={ styles.error }> { roomError } </Text> : null }
 
       <Text style={ styles.description }>
-        방을 눌러 이름이나 종류를 바꾸거나 삭제할 수 있어요. 방을 끌어서
-        위치를 옮긴 뒤 "위치 저장"을 누르면 반영돼요.
+        방을 눌러 이름이나 종류를 바꿀 수 있어요. 방을 끌어서 위치를 옮긴 뒤
+        "위치 저장"을 누르면 반영돼요.
       </Text>
 
       <Pressable
@@ -129,9 +128,10 @@ function RoomEditScreen(): React.JSX.Element {
 
       {
         editingRoom
-        ? <EditRoomModal
+        ? <RoomEditModal
           room={ editingRoom }
           rooms={ effectiveRooms }
+          onSave={ updates => updateRoomDetails( editingRoom.id, updates ) }
           onClose={ () => setEditingRoom( null ) }
         />
         : null
@@ -235,111 +235,6 @@ const AddRoomModal = ( {
   );
 };
 
-interface EditRoomModalProps {
-  room: FloorPlanRoom;
-  rooms: FloorPlanRoom[];
-  onClose: () => void;
-}
-
-function EditRoomModal( {
-  room,
-  rooms,
-  onClose,
-}: EditRoomModalProps ): React.JSX.Element {
-  const updateRoomDetails = useRoomStore( state => state.updateRoomDetails );
-  const removeRoom = useRoomStore( state => state.removeRoom );
-
-  const [roomType, setRoomType] = React.useState<NonNullable<RoomType>>(
-    room.roomType ?? "GENERAL_ROOM",
-  );
-  const [label, setLabel] = React.useState( room.label ?? "" );
-  const [width, setWidth] = React.useState( room.width );
-  const [height, setHeight] = React.useState( room.height );
-  const [color, setColor] = React.useState( room.color ?? randomRoomColor() );
-  const [formError, setFormError] = React.useState<string | null>( null );
-  const [isSaving, setIsSaving] = React.useState( false );
-  const [isDeleting, setIsDeleting] = React.useState( false );
-
-  const onSave = async () => {
-    const siblings = rooms.filter( r => r.id !== room.id );
-    const candidate = { x: room.x, y: room.y, width, height };
-    if (!canResizeRoom( candidate, siblings )) {
-      setFormError( "다른 방과 겹치거나 캔버스를 벗어나요." );
-      return;
-    }
-    setFormError( null );
-    setIsSaving( true );
-    try {
-      await updateRoomDetails( room.id, {
-        roomType,
-        label: label.trim(),
-        width,
-        height,
-        color,
-      } );
-      onClose();
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsSaving( false );
-    }
-  };
-
-  const onDelete = async () => {
-    setIsDeleting( true );
-    try {
-      await removeRoom( room.id );
-      onClose();
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsDeleting( false );
-    }
-  };
-
-  return (
-    <ModalView visible onRequestClose={ onClose }>
-      <Text style={ styles.modalTitle }> 방 수정 </Text>
-      <RoomFormFields
-        roomType={ roomType }
-        onRoomTypeChange={ setRoomType }
-        label={ label }
-        onLabelChange={ setLabel }
-        width={ width }
-        onWidthChange={ setWidth }
-        height={ height }
-        onHeightChange={ setHeight }
-        color={ color }
-        onColorChange={ setColor }
-      />
-      {
-        formError
-        ? <Text style={ styles.error }> { formError } </Text>
-        : null
-      }
-      <View style={ styles.modalButtonRow }>
-        <DefaultButton
-          text="삭제"
-          onPress={ onDelete }
-          style={ styles.deleteButton }
-          textStyle={ styles.deleteButtonText }
-        />
-        <Pressable
-          style={ styles.saveButton }
-          onPress={ onSave }
-          disabled={ isSaving || isDeleting }
-        >
-          {
-            isSaving
-            ? <ActivityIndicator color={ colors.white } />
-            : <Text style={ styles.saveButtonText }> 저장 </Text>
-          }
-        </Pressable>
-      </View>
-    </ModalView>
-  );
-}
-
 const styles = StyleSheet.create( {
   container: {
     flex: 1,
@@ -435,19 +330,6 @@ const styles = StyleSheet.create( {
   },
   cancelButtonText: {
     color: colors.darkGray,
-    fontWeight: "600",
-  },
-  deleteButton: {
-    flex: 1,
-    backgroundColor: "transparent",
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: commonColor.negative,
-  },
-  deleteButtonText: {
-    color: commonColor.negative,
     fontWeight: "600",
   },
   saveButton: {

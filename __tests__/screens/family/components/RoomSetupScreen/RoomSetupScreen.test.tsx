@@ -39,14 +39,6 @@ describe( "RoomSetupScreen", () => {
     expect( getAllByText( "침실" ) ).toHaveLength( 1 );
   } );
 
-  test( "빼기를 누르면 타일이 사라진다", () => {
-    const { getByText, queryByText } = render( <RoomSetupScreen /> );
-    fireEvent.press( getByText( "+ 침실" ) );
-    fireEvent.press( getByText( "침실" ) );
-    fireEvent.press( getByText( "빼기" ) );
-    expect( queryByText( "침실" ) ).toBeNull();
-  } );
-
   test( "타일을 추가하고 집 만들기를 누르면 addRoom이 호출된다", async () => {
     mockedAddRoom.mockResolvedValue( undefined );
 

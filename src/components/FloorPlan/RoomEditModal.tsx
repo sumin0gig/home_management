@@ -1,10 +1,19 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import {
   MAX_ROOM_DIMENSION,
   MIN_ROOM_DIMENSION,
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
+  canResizeRoom,
+  type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
 import {
@@ -12,49 +21,94 @@ import {
   colors,
   commonColor,
 } from "../../styles/commonStyle";
+import { randomRoomColor } from "../../utils/commonUtils";
+import ModalView from "../common/ModalView";
+import DefaultButton from "../common/DefaultButton";
 
-interface Props {
+export interface RoomEditModalSaveValues {
   roomType: NonNullable<RoomType>;
-  onRoomTypeChange: (roomType: NonNullable<RoomType>) => void;
   label: string;
-  onLabelChange: (label: string) => void;
   width: number;
   height: number;
-  onWidthChange: (width: number) => void;
-  onHeightChange: (height: number) => void;
   color: string;
-  onColorChange: (color: string) => void;
 }
 
-// EditRoomModal(RoomEditScreen)과 온보딩 draft 수정 모달(RoomSetupScreen)이
-// 완전히 같은 입력 UI(방 종류/이름/크기/색상)를 쓰기 때문에 공용으로 뺀 것 —
-// 저장/삭제는 각 화면 사정이 달라서(비동기 DB 호출 vs 로컬 state) 여기서
-// 다루지 않고 호출부에서 처리한다.
-function RoomFormFields( {
-  roomType,
-  onRoomTypeChange,
-  label,
-  onLabelChange,
-  width,
-  height,
-  onWidthChange,
-  onHeightChange,
-  color,
-  onColorChange,
+interface Props {
+  room: FloorPlanRoom;
+  rooms: FloorPlanRoom[];
+  onSave: (updates: RoomEditModalSaveValues) => void | Promise<void>;
+  onClose: () => void;
+}
+
+// RoomEditScreen(서버에 저장된 방을 DB에서 수정)과 RoomSetupScreen(온보딩 중
+// 아직 저장되지 않은 draft를 로컬 state로만 수정)이 완전히 같은 입력
+// UI(방 종류/이름/크기/색상)를 쓰기 때문에 하나로 합쳤다 — 저장이 비동기 DB
+// 호출이냐 동기 로컬 state 변경이냐는 onSave로 호출부에 맡기고, 여기서는 두
+// 경우 모두 같은 로딩/에러 처리로 감싼다.
+function RoomEditModal( {
+  room,
+  rooms,
+  onSave,
+  onClose,
 }: Props ): React.JSX.Element {
+  const [roomType, setRoomType] = React.useState<NonNullable<RoomType>>(
+    room.roomType ?? "GENERAL_ROOM",
+  );
+  const [label, setLabel] = React.useState( room.label ?? "" );
+  const [width, setWidth] = React.useState( room.width );
+  const [height, setHeight] = React.useState( room.height );
+  const [color, setColor] = React.useState( room.color ?? randomRoomColor() );
+  const [formError, setFormError] = React.useState<string | null>( null );
+  const [isSaving, setIsSaving] = React.useState( false );
+
   const isWidthAtMin = width <= MIN_ROOM_DIMENSION;
   const isWidthAtMax = width >= MAX_ROOM_DIMENSION;
   const isHeightAtMin = height <= MIN_ROOM_DIMENSION;
   const isHeightAtMax = height >= MAX_ROOM_DIMENSION;
 
+  const onSubmit = () => {
+    const siblings = rooms.filter( r => r.id !== room.id );
+    const candidate = { x: room.x, y: room.y, width, height };
+    if (!canResizeRoom( candidate, siblings )) {
+      setFormError( "다른 방과 겹치거나 캔버스를 벗어나요." );
+      return;
+    }
+    setFormError( null );
+    const result = onSave( {
+      roomType,
+      label: label.trim(),
+      width,
+      height,
+      color,
+    } );
+    // onSave는 RoomEditScreen(비동기 DB 호출)과 RoomSetupScreen(동기 로컬
+    // state 변경) 양쪽에서 쓰인다 — 실제로 Promise를 반환할 때만 로딩 표시를
+    // 띄우고 기다린다. 동기 호출을 억지로 await하면 로컬 draft 수정에도
+    // 불필요한 한 틱의 지연이 생겨, 그 직후 상태를 확인하는 테스트가 act()
+    // 밖에서 불안정하게 타이밍을 맞춰야 하는 문제가 있었다.
+    if (!result) {
+      onClose();
+      return;
+    }
+    setIsSaving( true );
+    result
+      .then( onClose )
+      .catch( () => {
+        // 에러는 store의 error 상태로 표시됨
+      } )
+      .finally( () => setIsSaving( false ) );
+  };
+
   return (
-    <>
+    <ModalView visible onRequestClose={ onClose }>
+      <Text style={ styles.modalTitle }> 방 수정 </Text>
+
       <View style={ styles.chipRow }>
         { ROOM_TYPES.map( type => (
           <Pressable
             key={ type }
             style={ [styles.chip, roomType === type && styles.chipSelected] }
-            onPress={ () => onRoomTypeChange( type ) }
+            onPress={ () => setRoomType( type ) }
           >
             <Text
               style={
@@ -71,7 +125,7 @@ function RoomFormFields( {
         style={ styles.input }
         placeholder="이름(선택)"
         value={ label }
-        onChangeText={ onLabelChange }
+        onChangeText={ setLabel }
       />
 
       <View style={ styles.stepperGroup }>
@@ -84,7 +138,7 @@ function RoomFormFields( {
             ] }
             disabled={ isWidthAtMin }
             onPress={ () =>
-              onWidthChange( Math.max( MIN_ROOM_DIMENSION, width - 1 ) )
+              setWidth( Math.max( MIN_ROOM_DIMENSION, width - 1 ) )
             }
           >
             <Text
@@ -104,7 +158,7 @@ function RoomFormFields( {
             ] }
             disabled={ isWidthAtMax }
             onPress={ () =>
-              onWidthChange( Math.min( MAX_ROOM_DIMENSION, width + 1 ) )
+              setWidth( Math.min( MAX_ROOM_DIMENSION, width + 1 ) )
             }
           >
             <Text
@@ -126,7 +180,7 @@ function RoomFormFields( {
             ] }
             disabled={ isHeightAtMin }
             onPress={ () =>
-              onHeightChange( Math.max( MIN_ROOM_DIMENSION, height - 1 ) )
+              setHeight( Math.max( MIN_ROOM_DIMENSION, height - 1 ) )
             }
           >
             <Text
@@ -146,7 +200,7 @@ function RoomFormFields( {
             ] }
             disabled={ isHeightAtMax }
             onPress={ () =>
-              onHeightChange( Math.min( MAX_ROOM_DIMENSION, height + 1 ) )
+              setHeight( Math.min( MAX_ROOM_DIMENSION, height + 1 ) )
             }
           >
             <Text
@@ -170,15 +224,46 @@ function RoomFormFields( {
               { backgroundColor: swatch },
               color === swatch && styles.swatchSelected,
             ] }
-            onPress={ () => onColorChange( swatch ) }
+            onPress={ () => setColor( swatch ) }
           />
         ) ) }
       </View>
-    </>
+
+      {
+        formError
+        ? <Text style={ styles.error }> { formError } </Text>
+        : null
+      }
+
+      <View style={ styles.modalButtonRow }>
+        <DefaultButton
+          text="취소"
+          onPress={ onClose }
+          style={ styles.cancelButton }
+          textStyle={ styles.cancelButtonText }
+        />
+        <Pressable
+          style={ styles.saveButton }
+          onPress={ onSubmit }
+          disabled={ isSaving }
+        >
+          {
+            isSaving
+            ? <ActivityIndicator color={ colors.white } />
+            : <Text style={ styles.saveButtonText }> 저장 </Text>
+          }
+        </Pressable>
+      </View>
+    </ModalView>
   );
 }
 
 const styles = StyleSheet.create( {
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -268,6 +353,39 @@ const styles = StyleSheet.create( {
   swatchSelected: {
     borderColor: commonColor.touchable,
   },
+  error: {
+    color: commonColor.error,
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "transparent",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: commonColor.border,
+  },
+  cancelButtonText: {
+    color: colors.darkGray,
+    fontWeight: "600",
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: commonColor.touchable,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveButtonText: {
+    color: colors.white,
+    fontWeight: "600",
+  },
 } );
 
-export default RoomFormFields;
+export default RoomEditModal;

@@ -15,7 +15,6 @@ import {
   ROOM_TYPE_LABELS,
   ROOM_TYPE_DEFAULT_DIMENSIONS,
   findNextRoomPlacement,
-  canResizeRoom,
   type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
@@ -23,13 +22,11 @@ import { signOutUser } from "../../api/auth";
 import { randomRoomColor } from "../../utils/commonUtils";
 import CustomRoomModal from "./CustomRoomModal";
 import FloorPlanCanvas from "../FloorPlan/FloorPlanCanvas";
-import RoomFormFields from "../FloorPlan/RoomFormFields";
-import ModalView from "../common/ModalView";
-import DefaultButton from "../common/DefaultButton";
+import RoomEditModal from "../FloorPlan/RoomEditModal";
 import { colors, commonColor } from "../../styles/commonStyle";
 
 // 이 화면에서 만드는 draft는 항상 roomType/label/color를 직접 채워서 만들기
-// 때문에, EditRoomModal 등과 공유하는 느슨한 FloorPlanRoom보다 더 구체적으로
+// 때문에, RoomEditModal 등과 공유하는 느슨한 FloorPlanRoom보다 더 구체적으로
 // 좁혀 쓴다.
 type DraftRoom = FloorPlanRoom & {
   roomType: NonNullable<RoomType>;
@@ -49,7 +46,8 @@ function RoomSetupScreen(): React.JSX.Element {
   );
   const [isSaving, setIsSaving] = React.useState( false );
   const [submitError, setSubmitError] = React.useState<string | null>( null );
-  const [isCustomModalVisible, setIsCustomModalVisible] = React.useState( false );
+  const [isCustomModalVisible, setIsCustomModalVisible] =
+    React.useState( false );
 
   // 아직 저장되지 않은 draft들을 온보딩 단계에서부터 실제 배치될 모양 그대로
   // 미리보기로 보여준다 — Home 화면의 평면도와 같은 findNextRoomPlacement를
@@ -93,10 +91,6 @@ function RoomSetupScreen(): React.JSX.Element {
       ];
     } );
     setIsCustomModalVisible( false );
-  };
-
-  const onRemoveBlock = (id: string) => {
-    setBlocks( prev => prev.filter( b => b.id !== id ) );
   };
 
   const onMoveBlock = (id: string, x: number, y: number) => {
@@ -155,7 +149,8 @@ function RoomSetupScreen(): React.JSX.Element {
       <Text style={ styles.stepIndicator }> 2 / 3 단계 · 집 만들기 </Text>
       <Text style={ styles.title }> 집의 형태는 어떻게 생겼나요? </Text>
       <Text style={ styles.description }>
-        방을 추가해서 우리 집 도면을 만들어보세요. 나중에 언제든 바꿀 수 있어요.
+        방을 추가해서 우리 집 도면을 만들어보세요. 나중에 언제든 바꿀 수
+        있어요.
       </Text>
 
       {
@@ -225,91 +220,15 @@ function RoomSetupScreen(): React.JSX.Element {
 
       {
         editingBlock
-        ? <EditDraftModal
-          block={ editingBlock }
-          blocks={ blocks }
-          onSave={ onUpdateBlock }
-          onRemove={ onRemoveBlock }
+        ? <RoomEditModal
+          room={ editingBlock }
+          rooms={ blocks }
+          onSave={ updates => onUpdateBlock( editingBlock.id, updates ) }
           onClose={ () => setEditingBlock( null ) }
         />
         : null
       }
     </View>
-  );
-}
-
-interface EditDraftModalProps {
-  block: DraftRoom;
-  blocks: DraftRoom[];
-  onSave: (id: string, updates: Omit<DraftRoom, "id" | "x" | "y">) => void;
-  onRemove: (id: string) => void;
-  onClose: () => void;
-}
-
-// RoomEditScreen의 EditRoomModal과 거의 같은 입력 UI지만, 아직 서버에 없는
-// draft라 저장/삭제가 전부 로컬 state 변경으로 끝난다(비동기 호출 없음).
-function EditDraftModal( {
-  block,
-  blocks,
-  onSave,
-  onRemove,
-  onClose,
-}: EditDraftModalProps ): React.JSX.Element {
-  const [roomType, setRoomType] = React.useState( block.roomType );
-  const [label, setLabel] = React.useState( block.label );
-  const [width, setWidth] = React.useState( block.width );
-  const [height, setHeight] = React.useState( block.height );
-  const [color, setColor] = React.useState( block.color );
-  const [formError, setFormError] = React.useState<string | null>( null );
-
-  const onSubmit = () => {
-    const siblings = blocks.filter( b => b.id !== block.id );
-    const candidate = { x: block.x, y: block.y, width, height };
-    if (!canResizeRoom( candidate, siblings )) {
-      setFormError( "다른 방과 겹치거나 캔버스를 벗어나요." );
-      return;
-    }
-    onSave( block.id, { roomType, label, width, height, color } );
-    onClose();
-  };
-
-  const onDelete = () => {
-    onRemove( block.id );
-    onClose();
-  };
-
-  return (
-    <ModalView visible onRequestClose={ onClose }>
-      <Text style={ styles.modalTitle }> 방 수정 </Text>
-      <RoomFormFields
-        roomType={ roomType }
-        onRoomTypeChange={ setRoomType }
-        label={ label }
-        onLabelChange={ setLabel }
-        width={ width }
-        onWidthChange={ setWidth }
-        height={ height }
-        onHeightChange={ setHeight }
-        color={ color }
-        onColorChange={ setColor }
-      />
-      {
-        formError
-        ? <Text style={ styles.error }> { formError } </Text>
-        : null
-      }
-      <View style={ styles.modalButtonRow }>
-        <DefaultButton
-          text="빼기"
-          onPress={ onDelete }
-          style={ styles.deleteButton }
-          textStyle={ styles.deleteButtonText }
-        />
-        <Pressable style={ styles.saveButton } onPress={ onSubmit }>
-          <Text style={ styles.saveButtonText }> 저장 </Text>
-        </Pressable>
-      </View>
-    </ModalView>
   );
 }
 
@@ -401,39 +320,6 @@ const styles = StyleSheet.create( {
   submitButtonText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: "600",
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
-  modalButtonRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  deleteButton: {
-    flex: 1,
-    backgroundColor: "transparent",
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: commonColor.negative,
-  },
-  deleteButtonText: {
-    color: commonColor.negative,
-    fontWeight: "600",
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    color: colors.white,
     fontWeight: "600",
   },
 } );
