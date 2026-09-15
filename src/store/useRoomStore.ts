@@ -11,12 +11,12 @@ export type RoomRow = Schema['Room']['type'];
 export type RoomType = RoomRow['roomType'];
 
 export const ROOM_TYPE_LABELS: Record<NonNullable<RoomType>, string> = {
+  GENERAL_ROOM: '방',
   LIVING_ROOM: '거실',
   BATHROOM: '화장실',
   KITCHEN: '부엌',
   ENTRANCE: '현관',
   BEDROOM: '침실',
-  GENERAL_ROOM: '방',
 };
 
 export const ROOM_TYPES = Object.keys(ROOM_TYPE_LABELS) as Array<

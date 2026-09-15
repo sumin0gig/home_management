@@ -27,13 +27,14 @@ function AddRoomModal( {
   onClose: onCloseModal,
   onSubmit: onSubmitRoom,
 }: Props ): React.JSX.Element {
-  const [newRoomType, setNewRoomType] =
-    React.useState<NonNullable<RoomType> | null>( null );
+  const [newRoomType, setNewRoomType] = React.useState<NonNullable<RoomType>>(
+    "GENERAL_ROOM",
+  );
   const [newRoomLabel, setNewRoomLabel] = React.useState( "" );
   const [isSaving, setIsSaving] = React.useState( false );
 
   const resetForm = () => {
-    setNewRoomType( null );
+    setNewRoomType( "GENERAL_ROOM" );
     setNewRoomLabel( "" );
   };
 
@@ -43,9 +44,6 @@ function AddRoomModal( {
   };
 
   const onSubmit = async () => {
-    if (!newRoomType) {
-      return;
-    }
     setIsSaving( true );
     try {
       await onSubmitRoom( newRoomType, newRoomLabel );
@@ -98,7 +96,7 @@ function AddRoomModal( {
         <Pressable
           style={ styles.saveButton }
           onPress={ onSubmit }
-          disabled={ isSaving || !newRoomType }
+          disabled={ isSaving }
         >
           {
             isSaving
