@@ -96,6 +96,7 @@ function RoomEditScreen(): React.JSX.Element {
         <FloorPlanCanvas
           rooms={ effectiveRooms }
           editable
+          removable
           onRoomPress={ room => setEditingRoom( room ) }
           onRoomMove={ onRoomMove }
         />

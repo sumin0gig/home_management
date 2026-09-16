@@ -11,6 +11,7 @@ const CANVAS_BOTTOM_PADDING_ROWS = 1;
 interface Props {
   rooms: FloorPlanRoom[];
   editable?: boolean;
+  removable?: boolean;
   onRoomPress?: (room: FloorPlanRoom) => void;
   onRoomMove?: (roomId: string, x: number, y: number) => void;
   hasDueToday?: (room: FloorPlanRoom) => boolean;
@@ -19,6 +20,7 @@ interface Props {
 function FloorPlanCanvas( {
   rooms,
   editable = false,
+  removable = false,
   onRoomPress,
   onRoomMove,
   hasDueToday,
@@ -60,6 +62,7 @@ function FloorPlanCanvas( {
             onRoomMove ? (x, y) => onRoomMove( room.id, x, y ) : undefined
           }
           hasDueToday={ hasDueToday ? hasDueToday( room ) : false }
+          isRemovable={ removable }
         />
       ) ) }
     </View>

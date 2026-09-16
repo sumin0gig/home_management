@@ -1,5 +1,12 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -11,6 +18,7 @@ import {
   GRID_COLUMNS,
   isRoomOverlapping,
   roomDisplayName,
+  useRoomStore,
   type FloorPlanRoom,
 } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
@@ -27,6 +35,7 @@ interface Props {
   onPress?: () => void;
   onMove?: (x: number, y: number) => void;
   hasDueToday?: boolean;
+  isRemovable?: boolean;
 }
 
 function DraggableRoomBlock( {
@@ -37,9 +46,12 @@ function DraggableRoomBlock( {
   onPress,
   onMove,
   hasDueToday,
+  isRemovable,
 }: Props ): React.JSX.Element {
+  const removeRoom = useRoomStore( state => state.removeRoom );
   const translateX = useSharedValue( 0 );
   const translateY = useSharedValue( 0 );
+  const [isDeleting, setIsDeleting] = React.useState( false );
 
   // room.x/y가 서버 반영 후 갱신되는 시점에 맞춰 오프셋을 0으로 되돌린다 —
   // 그 전에 미리 0으로 리셋하면 새 좌표가 반영되기 전까지 한 프레임 동안
@@ -82,16 +94,48 @@ function DraggableRoomBlock( {
     onMove?.( nextX, nextY );
   };
 
-  const panGesture = Gesture.Pan()
-    .onUpdate( event => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
-    } )
-    .onEnd( event => {
-      runOnJS( handleDragEnd )( event.translationX, event.translationY );
-    } );
+  const confirmDelete = async () => {
+    setIsDeleting( true );
+    try {
+      await removeRoom( room.id );
+    } catch {
+      // 에러는 store의 error 상태로 표시됨
+    } finally {
+      setIsDeleting( false );
+    }
+  };
 
-  const tapGesture = Gesture.Tap().onEnd( () => {
+  const onDelete = () => {
+    if (isDeleting) {
+      return;
+    }
+    Alert.alert( "방 삭제",
+      `정말 ${roomDisplayName( room )}을(를) 삭제할까요? 등록된 집안일도 모두 삭제됩니다.`, [
+      { text: "취소", style: "cancel" },
+      { text: "삭제", style: "destructive", onPress: confirmDelete },
+    ] );
+  };
+
+  const deleteGesture = Gesture.Tap()
+  .hitSlop( 8 )
+  .onEnd( () => {
+    runOnJS( onDelete )();
+  } );
+
+
+  const panGesture = Gesture.Pan()
+  .requireExternalGestureToFail( deleteGesture )
+  .onUpdate( event => {
+    translateX.value = event.translationX;
+    translateY.value = event.translationY;
+  } )
+  .onEnd( event => {
+    runOnJS( handleDragEnd )( event.translationX, event.translationY );
+  } );
+
+  const tapGesture = Gesture.Tap()
+  .requireExternalGestureToFail( deleteGesture )
+  .onEnd( () => {
     if (onPress) {
       runOnJS( onPress )();
     }
@@ -131,6 +175,23 @@ function DraggableRoomBlock( {
     return (
       <Pressable style={ [styles.block, boxStyle] } onPress={ onPress }>
         { content }
+        {
+          isRemovable
+          ? <Pressable
+            style={ styles.deleteButton }
+            hitSlop={ 8 }
+            onPress={ onDelete }
+            disabled={ isDeleting }
+            testID={ `delete-button-${room.id}` }
+          >
+            {
+              isDeleting
+              ? <ActivityIndicator size="small" color={ colors.white } />
+              : <Text style={ styles.deleteButtonText }>-</Text>
+            }
+          </Pressable>
+          : null
+        }
       </Pressable>
     );
   }
@@ -139,6 +200,22 @@ function DraggableRoomBlock( {
     <GestureDetector gesture={ gesture }>
       <Animated.View style={ [styles.block, boxStyle, animatedStyle] }>
         { content }
+        {
+          isRemovable
+          ? <GestureDetector gesture={ deleteGesture }>
+            <View
+              style={ styles.deleteButton }
+              testID={ `delete-button-${room.id}` }
+            >
+              {
+                isDeleting
+                ? <ActivityIndicator size="small" color={ colors.white } />
+                : <Text style={ styles.deleteButtonText }>-</Text>
+              }
+            </View>
+          </GestureDetector>
+          : null
+        }
       </Animated.View>
     </GestureDetector>
   );
@@ -164,6 +241,23 @@ const styles = StyleSheet.create( {
   label: {
     fontSize: 13,
     fontWeight: "700",
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: commonColor.error,
+  },
+  deleteButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 16,
   },
 } );
 
