@@ -29,12 +29,12 @@ export const ROOM_TYPE_DEFAULT_DIMENSIONS: Record<
   NonNullable<RoomType>,
   { width: number; height: number }
 > = {
-  ENTRANCE: { width: 2, height: 2 },
-  BATHROOM: { width: 3, height: 2 },
-  GENERAL_ROOM: { width: 3, height: 3 },
-  KITCHEN: { width: 4, height: 3 },
-  BEDROOM: { width: 4, height: 3 },
-  LIVING_ROOM: { width: 5, height: 4 },
+  ENTRANCE: { width: 1, height: 1 },
+  BATHROOM: { width: 2, height: 1 },
+  GENERAL_ROOM: { width: 2, height: 2 },
+  KITCHEN: { width: 2, height: 2 },
+  BEDROOM: { width: 1, height: 2 },
+  LIVING_ROOM: { width: 3, height: 2 },
 };
 
 export interface RoomRect {
