@@ -1,10 +1,9 @@
 import React from "react";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import { GRID_COLUMNS, type FloorPlanRoom } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DraggableRoomBlock from "./DraggableRoomBlock";
 
-const HORIZONTAL_PADDING = 16;
 const MIN_GRID_ROWS = 6;
 const CANVAS_BOTTOM_PADDING_ROWS = 1;
 
@@ -25,8 +24,12 @@ function FloorPlanCanvas( {
   onRoomMove,
   hasDueToday,
 }: Props ): React.JSX.Element {
-  const { width: windowWidth } = useWindowDimensions();
-  const cellSize = (windowWidth - HORIZONTAL_PADDING * 2) / GRID_COLUMNS;
+  const [containerWidth, setContainerWidth] = React.useState( 0 );
+  const cellSize = containerWidth / GRID_COLUMNS;
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    setContainerWidth( e.nativeEvent.layout.width );
+  };
 
   const usedRows =
     rooms.length === 0
@@ -36,8 +39,20 @@ function FloorPlanCanvas( {
     Math.max( usedRows, MIN_GRID_ROWS ) + CANVAS_BOTTOM_PADDING_ROWS;
   const canvasHeight = gridRows * cellSize;
 
+  if( containerWidth === 0 ) {
+    return (
+      <View
+        onLayout={ onLayout }
+        style={ [styles.canvas, { height: canvasHeight }] }
+      />
+    );
+  }
+
   return (
-    <View style={ [styles.canvas, { height: canvasHeight }] }>
+    <View
+      onLayout={ onLayout }
+      style={ [styles.canvas, { height: canvasHeight }] }
+    >
       { Array.from( { length: GRID_COLUMNS + 1 } ).map( (_, index) => (
         <View
           key={ `col-${index}` }
@@ -50,21 +65,23 @@ function FloorPlanCanvas( {
           style={ [styles.rowLine, { top: index * cellSize }] }
         />
       ) ) }
-      { rooms.map( room => (
-        <DraggableRoomBlock
-          key={ room.id }
-          room={ room }
-          rooms={ rooms }
-          cellSize={ cellSize }
-          editable={ editable }
-          onPress={ onRoomPress ? () => onRoomPress( room ) : undefined }
-          onMove={
-            onRoomMove ? (x, y) => onRoomMove( room.id, x, y ) : undefined
-          }
-          hasDueToday={ hasDueToday ? hasDueToday( room ) : false }
-          isRemovable={ removable }
-        />
-      ) ) }
+      {
+        rooms.map( room => (
+          <DraggableRoomBlock
+            key={ room.id }
+            room={ room }
+            rooms={ rooms }
+            cellSize={ cellSize }
+            editable={ editable }
+            onPress={ onRoomPress ? () => onRoomPress( room ) : undefined }
+            onMove={
+              onRoomMove ? (x, y) => onRoomMove( room.id, x, y ) : undefined
+            }
+            hasDueToday={ hasDueToday ? hasDueToday( room ) : false }
+            isRemovable={ removable }
+          />
+        ) )
+      }
     </View>
   );
 }
