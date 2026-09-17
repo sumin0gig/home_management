@@ -23,7 +23,7 @@ function ModalView( {
       onRequestClose={ onRequestClose }
     >
       <View style={ styles.overlay }>
-        <View style={ styles.content }> { children } </View>
+        <View style={ styles.content }>{ children }</View>
       </View>
     </Modal>
   );
