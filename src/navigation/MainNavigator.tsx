@@ -11,7 +11,7 @@ function MainNavigator(): React.JSX.Element {
   return (
     <Drawer.Navigator
       initialRouteName="HomeTab"
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, swipeEnabled: false }}
     >
       <Drawer.Screen
         name="HomeTab"
