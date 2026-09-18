@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import type { MainDrawerParamList } from './types';
 import { colors, commonColor } from '../styles/commonStyle';
 import ChevronDownIcon from 'bootstrap-icons/icons/chevron-down.svg';
@@ -38,7 +39,7 @@ export function createTabHeaderLabel(
   };
 }
 
-function SettingsShortcutButton(): React.JSX.Element {
+export function SettingsShortcutButton(): React.JSX.Element {
   const navigation = useNavigation();
 
   const goToSettings = () => {
@@ -56,6 +57,29 @@ function SettingsShortcutButton(): React.JSX.Element {
 
 export function renderSettingsShortcutButton(): React.JSX.Element {
   return <SettingsShortcutButton />;
+}
+
+type MainScreenHeaderConfig = {
+  icon: React.ReactNode;
+  title: string;
+  headerRight?: () => React.JSX.Element;
+};
+
+// Returning {} for non-main routes leaves native-stack's default back button + title untouched.
+export function createMainScreenOptions(
+  mainRouteName: string,
+  { icon, title, headerRight }: MainScreenHeaderConfig,
+): (props: { route: { name: string } }) => NativeStackNavigationOptions {
+  return ({ route }) => {
+    if (route.name !== mainRouteName) {
+      return {};
+    }
+    return {
+      headerTitle: () => null,
+      headerLeft: createTabHeaderLabel(icon, title),
+      headerRight,
+    };
+  };
 }
 
 const styles = StyleSheet.create({
