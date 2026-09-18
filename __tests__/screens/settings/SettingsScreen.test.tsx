@@ -2,11 +2,21 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import SettingsScreen from "../../../src/screens/settings/SettingsScreen";
 import { signOutUser, getAuthErrorMessage } from "../../../src/api/auth";
+import { createMockSettingsNavigation } from "../../../src/test-utils/navigation";
 
 jest.mock( "../../../src/api/auth" );
 
 const mockedSignOutUser = signOutUser as jest.Mock;
 const mockedGetAuthErrorMessage = getAuthErrorMessage as jest.Mock;
+
+function renderSettingsScreen(
+  navigation = createMockSettingsNavigation<"SettingsMain">(),
+) {
+  return {
+    ...render( <SettingsScreen navigation={ navigation } route={ {} as never } /> ),
+    navigation,
+  };
+}
 
 describe( "SettingsScreen", () => {
   beforeEach( () => {
@@ -15,13 +25,13 @@ describe( "SettingsScreen", () => {
   } );
 
   test( "로그아웃 버튼을 표시한다", () => {
-    const { getByText } = render( <SettingsScreen /> );
+    const { getByText } = renderSettingsScreen();
     expect( getByText( "로그아웃" ) ).toBeTruthy();
   } );
 
   test( "버튼을 탭하면 signOutUser를 호출한다", () => {
     mockedSignOutUser.mockResolvedValueOnce( undefined );
-    const { getByText } = render( <SettingsScreen /> );
+    const { getByText } = renderSettingsScreen();
     fireEvent.press( getByText( "로그아웃" ) );
     expect( mockedSignOutUser ).toHaveBeenCalledTimes( 1 );
   } );
@@ -30,10 +40,19 @@ describe( "SettingsScreen", () => {
     mockedSignOutUser.mockRejectedValueOnce(
       new Error( "로그아웃에 실패했습니다." ),
     );
-    const { getByText } = render( <SettingsScreen /> );
+    const { getByText } = renderSettingsScreen();
     fireEvent.press( getByText( "로그아웃" ) );
     await waitFor( () =>
       expect( getByText( "로그아웃에 실패했습니다." ) ).toBeTruthy(),
+    );
+  } );
+
+  test( "가족 관리 버튼을 탭하면 가족 탭으로 이동한다", () => {
+    const { getByText, navigation } = renderSettingsScreen();
+    fireEvent.press( getByText( "가족 관리" ) );
+    expect( navigation.getParent()!.navigate ).toHaveBeenCalledWith(
+      "FamilyTab",
+      { screen: "FamilyMain" },
     );
   } );
 } );
