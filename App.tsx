@@ -17,24 +17,20 @@ import {
 import { Amplify } from 'aws-amplify';
 import outputs from './amplify_outputs.json';
 import RootNavigator from './src/navigation/RootNavigator';
-import type { MainDrawerParamList } from './src/navigation/types';
+import type { MainStackParamList } from './src/navigation/types';
 import { useTaskStore } from './src/store/useTaskStore';
 import { syncTaskWidget } from './src/widget/taskWidgetSync';
 
 Amplify.configure(outputs);
 
 // Tapping the home-screen widget opens the app via `homemanagement://tasks`,
-// which should always land on the actual task list (HomeTab > HomeMain),
+// which should always land on the actual task list (HomeMain),
 // even if the app was already running on a different screen.
-const linking: LinkingOptions<MainDrawerParamList> = {
+const linking: LinkingOptions<MainStackParamList> = {
   prefixes: ['homemanagement://'],
   config: {
     screens: {
-      HomeTab: {
-        screens: {
-          HomeMain: 'tasks',
-        },
-      },
+      HomeMain: 'tasks',
     },
   },
 };
