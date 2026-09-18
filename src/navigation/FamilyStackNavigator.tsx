@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,8 +9,7 @@ import AddFamilyMemberScreen from '../screens/family/AddFamilyMemberScreen';
 import ScanFamilyQrScreen from '../screens/family/ScanFamilyQrScreen';
 import EnterFamilyCodeScreen from '../screens/family/EnterFamilyCodeScreen';
 import { createMainScreenOptions, SettingsShortcutButton } from './TabHeader';
-import PeopleIcon from 'bootstrap-icons/icons/people.svg';
-import { colors } from '../styles/commonStyle';
+import Icon from '../components/common/Icon';
 
 const Stack = createNativeStackNavigator<FamilyStackParamList>();
 
@@ -19,13 +18,11 @@ function AddFamilyMemberButton(): React.JSX.Element {
     useNavigation<NativeStackNavigationProp<FamilyStackParamList>>();
 
   return (
-    <Pressable
+    <Icon
+      name="PersonPlus"
       onPress={() => navigation.navigate('AddFamilyMember')}
       style={styles.button}
-      hitSlop={12}
-    >
-      <Text style={styles.icon}>👤＋</Text>
-    </Pressable>
+    />
   );
 }
 
@@ -35,9 +32,6 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingHorizontal: 12,
-  },
-  icon: {
-    fontSize: 18,
   },
 });
 
@@ -51,7 +45,7 @@ function renderFamilyHeaderRight(): React.JSX.Element {
 }
 
 const screenOptions = createMainScreenOptions('FamilyMain', {
-  icon: <PeopleIcon width={20} height={20} color={colors.black} />,
+  icon: 'Family',
   title: '가족',
   headerRight: renderFamilyHeaderRight,
 });

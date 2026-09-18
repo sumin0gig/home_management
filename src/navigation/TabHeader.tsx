@@ -1,41 +1,36 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import type { MainDrawerParamList } from './types';
 import { colors, commonColor } from '../styles/commonStyle';
-import ChevronDownIcon from 'bootstrap-icons/icons/chevron-down.svg';
-import GearIcon from 'bootstrap-icons/icons/gear.svg';
+import Icon, { type IconName } from '../components/common/Icon';
 
 type MainDrawerNavigation = DrawerNavigationProp<MainDrawerParamList>;
 
 function TabHeaderLabel({
-  icon,
+  iconName,
   title,
 }: {
-  icon: React.ReactNode;
+  iconName: IconName;
   title: string;
 }): React.JSX.Element {
   return (
     <View style={styles.labelContainer}>
-      {icon}
+      <Icon name={iconName} size={20} color={colors.black} />
       <Text style={styles.title}>{title}</Text>
-      <ChevronDownIcon
-        width={14}
-        height={14}
-        color={commonColor.textSecondary}
-      />
+      <Icon name="ChevronDown" size={14} color={commonColor.textSecondary} />
     </View>
   );
 }
 
 export function createTabHeaderLabel(
-  icon: React.ReactNode,
+  iconName: IconName,
   title: string,
 ): () => React.JSX.Element {
   return function renderTabHeaderLabel(): React.JSX.Element {
-    return <TabHeaderLabel icon={icon} title={title} />;
+    return <TabHeaderLabel iconName={iconName} title={title} />;
   };
 }
 
@@ -49,9 +44,13 @@ export function SettingsShortcutButton(): React.JSX.Element {
   };
 
   return (
-    <Pressable onPress={goToSettings} style={styles.button} hitSlop={12}>
-      <GearIcon width={22} height={22} color={colors.black} />
-    </Pressable>
+    <Icon
+      name="Settings"
+      size={22}
+      color={colors.black}
+      onPress={goToSettings}
+      style={styles.button}
+    />
   );
 }
 
@@ -60,7 +59,7 @@ export function renderSettingsShortcutButton(): React.JSX.Element {
 }
 
 type MainScreenHeaderConfig = {
-  icon: React.ReactNode;
+  icon: IconName;
   title: string;
   headerRight?: () => React.JSX.Element;
 };

@@ -11,13 +11,11 @@ import {
   createMainScreenOptions,
   renderSettingsShortcutButton,
 } from './TabHeader';
-import HouseIcon from 'bootstrap-icons/icons/house.svg';
-import { colors } from '../styles/commonStyle';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
 const screenOptions = createMainScreenOptions('HomeMain', {
-  icon: <HouseIcon width={20} height={20} color={colors.black} />,
+  icon: 'Home',
   title: '우리집',
   headerRight: renderSettingsShortcutButton,
 });
