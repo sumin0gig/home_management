@@ -1,10 +1,18 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { DrawerNavigationProp } from "@react-navigation/drawer";
 import { signOutUser, getAuthErrorMessage } from "../../api/auth";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
+import type {
+  MainDrawerParamList,
+  SettingsStackParamList,
+} from "../../navigation/types";
 
-function SettingsScreen(): React.JSX.Element {
+type Props = NativeStackScreenProps<SettingsStackParamList, "SettingsMain">;
+
+function SettingsScreen( { navigation }: Props ): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
 
   const onSignOut = async () => {
@@ -15,6 +23,12 @@ function SettingsScreen(): React.JSX.Element {
     }
   };
 
+  const goToFamily = () => {
+    navigation
+      .getParent<DrawerNavigationProp<MainDrawerParamList>>()
+      ?.navigate( "FamilyTab", { screen: "FamilyMain" } );
+  };
+
   return (
     <View style={ styles.container }>
       {
@@ -22,6 +36,12 @@ function SettingsScreen(): React.JSX.Element {
         ? <Text style={ styles.error }> { error } </Text>
         : null
       }
+      <DefaultButton
+        text="가족 관리"
+        onPress={ goToFamily }
+        style={ styles.button }
+        textStyle={ styles.buttonText }
+      />
       <DefaultButton
         text="로그아웃"
         onPress={ onSignOut }
@@ -39,6 +59,7 @@ const styles = StyleSheet.create( {
     alignItems: "center",
     padding: 24,
     backgroundColor: commonColor.backgroundColor,
+    gap: 12,
   },
   error: {
     color: commonColor.error,

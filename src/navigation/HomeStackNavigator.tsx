@@ -7,18 +7,23 @@ import RoomEditScreen from '../screens/home/RoomEditScreen';
 import TaskDetailScreen from '../screens/home/TaskDetailScreen';
 import TaskFormScreen from '../screens/home/TaskFormScreen';
 import MascotDetailScreen from '../screens/home/MascotDetailScreen';
-import { renderDrawerMenuButton } from './DrawerMenuButton';
+import {
+  createMainScreenOptions,
+  renderSettingsShortcutButton,
+} from './TabHeader';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
+const screenOptions = createMainScreenOptions('HomeMain', {
+  icon: 'Home',
+  title: '우리집',
+  headerRight: renderSettingsShortcutButton,
+});
+
 function HomeStackNavigator(): React.JSX.Element {
   return (
-    <Stack.Navigator initialRouteName="HomeMain">
-      <Stack.Screen
-        name="HomeMain"
-        component={HomeScreen}
-        options={{ title: '홈', headerLeft: renderDrawerMenuButton }}
-      />
+    <Stack.Navigator initialRouteName="HomeMain" screenOptions={screenOptions}>
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
       <Stack.Screen
         name="RoomEdit"
