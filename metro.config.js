@@ -17,8 +17,16 @@ const projectAmplifyDir = path.resolve(__dirname, 'amplify').replace(/\\/g, '/')
  *
  * @type {import('@react-native/metro-config').MetroConfig}
  */
+const defaultConfig = getDefaultConfig(__dirname);
+const {assetExts, sourceExts} = defaultConfig.resolver;
+
 const config = {
+  transformer: {
+    babelTransformerPath: require.resolve('react-native-svg-transformer'),
+  },
   resolver: {
+    assetExts: assetExts.filter(ext => ext !== 'svg'),
+    sourceExts: [...sourceExts, 'svg'],
     blockList: exclusionList([
       new RegExp(`^${projectAmplifyDir}/.*`),
       /node_modules\/@aws-sdk\/.*/,
@@ -30,4 +38,4 @@ const config = {
   },
 };
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = mergeConfig(defaultConfig, config);
