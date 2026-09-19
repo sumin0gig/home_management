@@ -1,23 +1,48 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
-import type { MainDrawerParamList } from './types';
+import type {
+  NativeStackNavigationOptions,
+  NativeStackNavigationProp,
+} from '@react-navigation/native-stack';
+import type { MainStackParamList } from './types';
 import { colors, commonColor } from '../styles/commonStyle';
 import Icon, { type IconName } from '../components/common/Icon';
 
-type MainDrawerNavigation = DrawerNavigationProp<MainDrawerParamList>;
+function BackButton(): React.JSX.Element {
+  const navigation = useNavigation();
+
+  return (
+    <Pressable
+      onPress={() => navigation.goBack()}
+      hitSlop={12}
+      style={styles.backButton}
+    >
+      <Icon name="ChevronLeft" size={20} color={colors.black} />
+    </Pressable>
+  );
+}
+
+export function renderBackButton({
+  canGoBack,
+}: {
+  canGoBack?: boolean;
+}): React.JSX.Element | null {
+  return canGoBack ? <BackButton /> : null;
+}
 
 function TabHeaderLabel({
   iconName,
   title,
+  canGoBack,
 }: {
   iconName: IconName;
   title: string;
+  canGoBack?: boolean;
 }): React.JSX.Element {
   return (
     <View style={styles.labelContainer}>
+      {canGoBack ? <BackButton /> : null}
       <Icon name={iconName} size={20} color={colors.black} />
       <Text style={styles.title}>{title}</Text>
       <Icon name="ChevronDown" size={14} color={commonColor.textSecondary} />
@@ -28,27 +53,24 @@ function TabHeaderLabel({
 export function createTabHeaderLabel(
   iconName: IconName,
   title: string,
-): () => React.JSX.Element {
-  return function renderTabHeaderLabel(): React.JSX.Element {
-    return <TabHeaderLabel iconName={iconName} title={title} />;
+): (props: { canGoBack?: boolean }) => React.JSX.Element {
+  return function renderTabHeaderLabel({ canGoBack }): React.JSX.Element {
+    return (
+      <TabHeaderLabel iconName={iconName} title={title} canGoBack={canGoBack} />
+    );
   };
 }
 
 export function SettingsShortcutButton(): React.JSX.Element {
-  const navigation = useNavigation();
-
-  const goToSettings = () => {
-    navigation
-      .getParent<MainDrawerNavigation>()
-      ?.navigate('SettingsTab', { screen: 'SettingsMain' });
-  };
+  const navigation =
+    useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   return (
     <Icon
       name="Settings"
       size={22}
       color={colors.black}
-      onPress={goToSettings}
+      onPress={() => navigation.navigate('SettingsMain')}
       style={styles.button}
     />
   );
@@ -58,25 +80,28 @@ export function renderSettingsShortcutButton(): React.JSX.Element {
   return <SettingsShortcutButton />;
 }
 
-type MainScreenHeaderConfig = {
+type IdentityScreenConfig = {
   icon: IconName;
   title: string;
   headerRight?: () => React.JSX.Element;
 };
 
-// Returning {} for non-main routes leaves native-stack's default back button + title untouched.
-export function createMainScreenOptions(
-  mainRouteName: string,
-  { icon, title, headerRight }: MainScreenHeaderConfig,
+type IdentityScreensConfig = Record<string, IdentityScreenConfig>;
+
+// Routes not listed in `screens` keep their own title but still get the shared
+// back button, so every screen's back arrow looks the same.
+export function createIdentityScreenOptions(
+  screens: IdentityScreensConfig,
 ): (props: { route: { name: string } }) => NativeStackNavigationOptions {
   return ({ route }) => {
-    if (route.name !== mainRouteName) {
-      return {};
+    const config = screens[route.name];
+    if (!config) {
+      return { headerLeft: renderBackButton };
     }
     return {
       headerTitle: () => null,
-      headerLeft: createTabHeaderLabel(icon, title),
-      headerRight,
+      headerLeft: createTabHeaderLabel(config.icon, config.title),
+      headerRight: config.headerRight,
     };
   };
 }
@@ -87,6 +112,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     gap: 6,
+  },
+  backButton: {
+    marginRight: 2,
   },
   title: {
     fontSize: 17,

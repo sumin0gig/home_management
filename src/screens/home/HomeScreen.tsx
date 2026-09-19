@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { HomeStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
@@ -24,7 +24,7 @@ import {
 } from "../../components/Mascot/optionMaps";
 import { type FloorPlanRoom } from "../../store/useRoomStore";
 
-type Props = NativeStackScreenProps<HomeStackParamList, "HomeMain">;
+type Props = NativeStackScreenProps<MainStackParamList, "HomeMain">;
 
 function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const family = useFamilyStore( state => state.family );

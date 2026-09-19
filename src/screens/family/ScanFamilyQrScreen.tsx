@@ -10,11 +10,11 @@ import {
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Camera } from "react-native-camera-kit";
-import type { FamilyStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-type Props = NativeStackScreenProps<FamilyStackParamList, "ScanFamilyQr">;
+type Props = NativeStackScreenProps<MainStackParamList, "ScanFamilyQr">;
 
 type PermissionStatus = "checking" | "granted" | "denied";
 type ScanStatus = "scanning" | "joining" | "error";

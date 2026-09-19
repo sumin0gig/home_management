@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { HomeStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../utils/date";
@@ -24,7 +24,7 @@ import { roomDisplayName } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 
-type Props = NativeStackScreenProps<HomeStackParamList, "TaskForm">;
+type Props = NativeStackScreenProps<MainStackParamList, "TaskForm">;
 
 const INTERVAL_UNIT_LABELS: Record<"DAY" | "WEEK" | "MONTH", string> = {
   DAY: "일",

@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { HomeStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import Mascot from "../../components/Mascot/Mascot";
 import MascotStyleEditor from "../../components/Mascot/MascotStyleEditor";
 import { EAR_OPTIONS, TAIL_OPTIONS } from "../../components/Mascot/optionMaps";
@@ -9,7 +9,7 @@ import { useMascotStore, type MascotInput } from "../../store/useMascotStore";
 import { computeHappinessLevel } from "../../utils/happiness";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-type Props = NativeStackScreenProps<HomeStackParamList, "MascotDetail">;
+type Props = NativeStackScreenProps<MainStackParamList, "MascotDetail">;
 
 function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
   const mascot = useMascotStore( state => state.mascot );
