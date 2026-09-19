@@ -24,19 +24,6 @@ const screenOptions: NativeStackNavigationOptions = {
   header: props => <ScreenHeader {...props} />,
 };
 
-const homeOptions = ({
-  navigation,
-}: {
-  navigation: NativeStackNavigationProp<MainStackParamList, 'HomeMain'>;
-}): NativeStackNavigationOptions => ({
-  title: '우리집',
-  headerRight: () => (
-    <SettingsShortcutButton
-      onPress={() => navigation.navigate('SettingsMain')}
-    />
-  ),
-});
-
 function MainNavigator(): React.JSX.Element {
   return (
     <Stack.Navigator initialRouteName="HomeMain" screenOptions={screenOptions}>
@@ -72,3 +59,16 @@ function MainNavigator(): React.JSX.Element {
 }
 
 export default MainNavigator;
+
+const homeOptions = ({
+  navigation,
+}: {
+  navigation: NativeStackNavigationProp<MainStackParamList, 'HomeMain'>;
+}): NativeStackNavigationOptions => ({
+  title: '우리집',
+  headerRight: () => (
+    <SettingsShortcutButton
+      onPress={() => navigation.navigate('SettingsMain')}
+    />
+  ),
+});
