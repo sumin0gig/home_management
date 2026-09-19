@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { HomeStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../utils/date";
@@ -16,7 +16,7 @@ import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 import TaskCard from "../../components/TaskCard/TaskCard";
 
-type Props = NativeStackScreenProps<HomeStackParamList, "RoomDetail">;
+type Props = NativeStackScreenProps<MainStackParamList, "RoomDetail">;
 
 function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const { roomId } = route.params;

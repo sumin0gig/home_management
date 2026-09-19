@@ -8,11 +8,11 @@ import {
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { FamilyStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-type Props = NativeStackScreenProps<FamilyStackParamList, "EnterFamilyCode">;
+type Props = NativeStackScreenProps<MainStackParamList, "EnterFamilyCode">;
 
 function EnterFamilyCodeScreen( { navigation }: Props ): React.JSX.Element {
   const error = useFamilyStore( state => state.error );

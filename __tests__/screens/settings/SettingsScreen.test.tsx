@@ -2,7 +2,7 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import SettingsScreen from "../../../src/screens/settings/SettingsScreen";
 import { signOutUser, getAuthErrorMessage } from "../../../src/api/auth";
-import { createMockSettingsNavigation } from "../../../src/test-utils/navigation";
+import { createMockNavigation } from "../../../src/test-utils/navigation";
 
 jest.mock( "../../../src/api/auth" );
 
@@ -10,7 +10,7 @@ const mockedSignOutUser = signOutUser as jest.Mock;
 const mockedGetAuthErrorMessage = getAuthErrorMessage as jest.Mock;
 
 function renderSettingsScreen(
-  navigation = createMockSettingsNavigation<"SettingsMain">(),
+  navigation = createMockNavigation<"SettingsMain">(),
 ) {
   return {
     ...render( <SettingsScreen navigation={ navigation } route={ {} as never } /> ),
@@ -50,9 +50,6 @@ describe( "SettingsScreen", () => {
   test( "가족 관리 버튼을 탭하면 가족 탭으로 이동한다", () => {
     const { getByText, navigation } = renderSettingsScreen();
     fireEvent.press( getByText( "가족 관리" ) );
-    expect( navigation.getParent()!.navigate ).toHaveBeenCalledWith(
-      "FamilyTab",
-      { screen: "FamilyMain" },
-    );
+    expect( navigation.navigate ).toHaveBeenCalledWith( "FamilyMain" );
   } );
 } );

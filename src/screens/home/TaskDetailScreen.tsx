@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Toast from "react-native-root-toast";
-import type { HomeStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import {
   listTaskItems,
   useTaskStore,
@@ -18,7 +18,7 @@ import {
 import { formatDueLabel, toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-type Props = NativeStackScreenProps<HomeStackParamList, "TaskDetail">;
+type Props = NativeStackScreenProps<MainStackParamList, "TaskDetail">;
 
 function renderEditButton(onPress: () => void): React.JSX.Element {
   return (

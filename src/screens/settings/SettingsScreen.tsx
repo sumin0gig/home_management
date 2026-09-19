@@ -1,16 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { DrawerNavigationProp } from "@react-navigation/drawer";
 import { signOutUser, getAuthErrorMessage } from "../../api/auth";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
-import type {
-  MainDrawerParamList,
-  SettingsStackParamList,
-} from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 
-type Props = NativeStackScreenProps<SettingsStackParamList, "SettingsMain">;
+type Props = NativeStackScreenProps<MainStackParamList, "SettingsMain">;
 
 function SettingsScreen( { navigation }: Props ): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
@@ -24,9 +20,7 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
   };
 
   const goToFamily = () => {
-    navigation
-      .getParent<DrawerNavigationProp<MainDrawerParamList>>()
-      ?.navigate( "FamilyTab", { screen: "FamilyMain" } );
+    navigation.navigate( "FamilyMain" );
   };
 
   return (

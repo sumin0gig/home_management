@@ -10,11 +10,11 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Clipboard from "@react-native-clipboard/clipboard";
 import QRCode from "react-native-qrcode-svg";
-import type { FamilyStackParamList } from "../../navigation/types";
+import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-type Props = NativeStackScreenProps<FamilyStackParamList, "AddFamilyMember">;
+type Props = NativeStackScreenProps<MainStackParamList, "AddFamilyMember">;
 
 function AddFamilyMemberScreen( { navigation }: Props ): React.JSX.Element {
   const family = useFamilyStore( state => state.family );

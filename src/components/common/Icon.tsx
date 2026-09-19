@@ -4,6 +4,7 @@ import HouseIcon from "bootstrap-icons/icons/house.svg";
 import PeopleIcon from "bootstrap-icons/icons/people.svg";
 import GearIcon from "bootstrap-icons/icons/gear.svg";
 import ChevronDownIcon from "bootstrap-icons/icons/chevron-down.svg";
+import ChevronLeftIcon from "bootstrap-icons/icons/chevron-left.svg";
 import PersonPlusIcon from "bootstrap-icons/icons/person-plus.svg";
 import { colors } from "../../styles/commonStyle";
 
@@ -12,6 +13,7 @@ const IconSet = {
   Family: PeopleIcon,
   Settings: GearIcon,
   ChevronDown: ChevronDownIcon,
+  ChevronLeft: ChevronLeftIcon,
   PersonPlus: PersonPlusIcon,
 } as const;
 

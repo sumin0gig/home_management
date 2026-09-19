@@ -1,31 +1,17 @@
-import type { NavigatorScreenParams } from '@react-navigation/native';
-
 export type AuthStackParamList = {
   Login: undefined;
 };
 
-export type HomeStackParamList = {
+export type MainStackParamList = {
   HomeMain: undefined;
   RoomDetail: { roomId: string };
   RoomEdit: undefined;
   TaskDetail: { taskId: string };
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
-};
-
-export type FamilyStackParamList = {
   FamilyMain: undefined;
   AddFamilyMember: undefined;
   ScanFamilyQr: undefined;
   EnterFamilyCode: undefined;
-};
-
-export type SettingsStackParamList = {
   SettingsMain: undefined;
-};
-
-export type MainDrawerParamList = {
-  HomeTab: NavigatorScreenParams<HomeStackParamList>;
-  FamilyTab: NavigatorScreenParams<FamilyStackParamList>;
-  SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
 };
