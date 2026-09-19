@@ -1,7 +1,4 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { MainStackParamList } from './types';
 import HomeScreen from '../screens/home/HomeScreen';
@@ -18,33 +15,9 @@ import SettingsScreen from '../screens/settings/SettingsScreen';
 import {
   createIdentityScreenOptions,
   renderSettingsShortcutButton,
-  SettingsShortcutButton,
 } from './TabHeader';
-import Icon from '../components/common/Icon';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
-
-function AddFamilyMemberButton(): React.JSX.Element {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-
-  return (
-    <Icon
-      name="PersonPlus"
-      onPress={() => navigation.navigate('AddFamilyMember')}
-      style={styles.button}
-    />
-  );
-}
-
-function renderFamilyHeaderRight(): React.JSX.Element {
-  return (
-    <View style={styles.headerRightRow}>
-      <AddFamilyMemberButton />
-      <SettingsShortcutButton />
-    </View>
-  );
-}
 
 const screenOptions = createIdentityScreenOptions({
   HomeMain: {
@@ -53,12 +26,9 @@ const screenOptions = createIdentityScreenOptions({
     headerRight: renderSettingsShortcutButton,
   },
   FamilyMain: {
-    icon: 'Family',
     title: '가족',
-    headerRight: renderFamilyHeaderRight,
   },
   SettingsMain: {
-    icon: 'Settings',
     title: '설정',
   },
 });
@@ -84,14 +54,5 @@ function MainNavigator(): React.JSX.Element {
     </Stack.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  headerRightRow: {
-    flexDirection: 'row',
-  },
-  button: {
-    paddingHorizontal: 12,
-  },
-});
 
 export default MainNavigator;

@@ -4,7 +4,15 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import FamilyScreen from "../../../src/screens/family/FamilyScreen";
 import { useFamilyStore } from "../../../src/store/useFamilyStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
+import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { FamilyRow, FamilyMemberRow } from "../../../src/store/useFamilyStore";
+
+function renderFamilyScreen( navigation = createMockNavigation<"FamilyMain">() ) {
+  return {
+    ...render( <FamilyScreen navigation={ navigation } route={ {} as never } /> ),
+    navigation,
+  };
+}
 
 const mockedRemoveMember = jest.fn();
 const mockedLeaveFamily = jest.fn();
@@ -59,10 +67,22 @@ describe( "FamilyScreen", () => {
       membership: ownerMembership,
       members: [ownerMembership, otherMember],
     } );
-    const { getByText } = render( <FamilyScreen /> );
+    const { getByText } = renderFamilyScreen();
     expect( getByText( /TestFamily/ ) ).toBeTruthy();
     expect( getByText( "me" ) ).toBeTruthy();
     expect( getByText( "partner" ) ).toBeTruthy();
+  } );
+
+  test( "가족 구성원 추가 버튼을 탭하면 AddFamilyMember 화면으로 이동한다", () => {
+    useFamilyStore.setState( {
+      status: "joined",
+      family,
+      membership: ownerMembership,
+      members: [ownerMembership, otherMember],
+    } );
+    const { getByText, navigation } = renderFamilyScreen();
+    fireEvent.press( getByText( "가족 구성원 추가" ) );
+    expect( navigation.navigate ).toHaveBeenCalledWith( "AddFamilyMember" );
   } );
 
   test( "소유자에게는 다른 멤버의 제거 버튼이 보인다", () => {
@@ -72,7 +92,7 @@ describe( "FamilyScreen", () => {
       membership: ownerMembership,
       members: [ownerMembership, otherMember],
     } );
-    const { getByText, queryAllByText } = render( <FamilyScreen /> );
+    const { getByText, queryAllByText } = renderFamilyScreen();
     expect( getByText( "제거" ) ).toBeTruthy();
     // 본인 행에는 제거 버튼이 없어야 함(제거 버튼은 1개만 존재)
     expect( queryAllByText( "제거" ) ).toHaveLength( 1 );
@@ -86,7 +106,7 @@ describe( "FamilyScreen", () => {
       members: [ownerMembership, otherMember],
     } );
     mockedRemoveMember.mockResolvedValue( undefined );
-    const { getByText } = render( <FamilyScreen /> );
+    const { getByText } = renderFamilyScreen();
     fireEvent.press( getByText( "제거" ) );
     await waitFor( () =>
       expect( mockedRemoveMember ).toHaveBeenCalledWith( "m2" ),
@@ -101,7 +121,7 @@ describe( "FamilyScreen", () => {
       members: [ownerMembership, otherMember],
     } );
     mockedLeaveFamily.mockResolvedValue( undefined );
-    const { getByText } = render( <FamilyScreen /> );
+    const { getByText } = renderFamilyScreen();
     fireEvent.press( getByText( "가족 떠나기" ) );
     await waitFor( () => expect( mockedLeaveFamily ).toHaveBeenCalled() );
   } );

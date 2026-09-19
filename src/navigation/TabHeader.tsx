@@ -6,18 +6,14 @@ import type {
   NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
 import type { MainStackParamList } from './types';
-import { colors, commonColor } from '../styles/commonStyle';
+import { colors } from '../styles/commonStyle';
 import Icon, { type IconName } from '../components/common/Icon';
 
 function BackButton(): React.JSX.Element {
   const navigation = useNavigation();
 
   return (
-    <Pressable
-      onPress={() => navigation.goBack()}
-      hitSlop={12}
-      style={styles.backButton}
-    >
+    <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
       <Icon name="ChevronLeft" size={20} color={colors.black} />
     </Pressable>
   );
@@ -31,34 +27,24 @@ export function renderBackButton({
   return canGoBack ? <BackButton /> : null;
 }
 
-function TabHeaderLabel({
+export function TabHeaderLabel({
   iconName,
   title,
   canGoBack,
 }: {
-  iconName: IconName;
+  iconName?: IconName;
   title: string;
   canGoBack?: boolean;
 }): React.JSX.Element {
   return (
     <View style={styles.labelContainer}>
       {canGoBack ? <BackButton /> : null}
-      <Icon name={iconName} size={20} color={colors.black} />
+      {iconName ? (
+        <Icon name={iconName} size={20} color={colors.black} />
+      ) : null}
       <Text style={styles.title}>{title}</Text>
-      <Icon name="ChevronDown" size={14} color={commonColor.textSecondary} />
     </View>
   );
-}
-
-export function createTabHeaderLabel(
-  iconName: IconName,
-  title: string,
-): (props: { canGoBack?: boolean }) => React.JSX.Element {
-  return function renderTabHeaderLabel({ canGoBack }): React.JSX.Element {
-    return (
-      <TabHeaderLabel iconName={iconName} title={title} canGoBack={canGoBack} />
-    );
-  };
 }
 
 export function SettingsShortcutButton(): React.JSX.Element {
@@ -81,7 +67,7 @@ export function renderSettingsShortcutButton(): React.JSX.Element {
 }
 
 type IdentityScreenConfig = {
-  icon: IconName;
+  icon?: IconName;
   title: string;
   headerRight?: () => React.JSX.Element;
 };
@@ -100,7 +86,13 @@ export function createIdentityScreenOptions(
     }
     return {
       headerTitle: () => null,
-      headerLeft: createTabHeaderLabel(config.icon, config.title),
+      headerLeft: ({ canGoBack }) => (
+        <TabHeaderLabel
+          iconName={config.icon}
+          title={config.title}
+          canGoBack={canGoBack}
+        />
+      ),
       headerRight: config.headerRight,
     };
   };
@@ -114,7 +106,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   backButton: {
-    marginRight: 2,
+    paddingEnd: 4,
   },
   title: {
     fontSize: 17,

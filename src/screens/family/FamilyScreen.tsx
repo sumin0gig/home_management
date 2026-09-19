@@ -9,11 +9,15 @@ import {
   TextInput,
   View,
 } from "react-native";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import type { FamilyMemberRow } from "../../store/useFamilyStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-function FamilyScreen(): React.JSX.Element {
+type Props = NativeStackScreenProps<MainStackParamList, "FamilyMain">;
+
+function FamilyScreen( { navigation }: Props ): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
   const membership = useFamilyStore( state => state.membership );
   const members = useFamilyStore( state => state.members );
@@ -122,7 +126,7 @@ function FamilyScreen(): React.JSX.Element {
         }
       </View>
 
-      <Text style={ styles.membersTitle }> 멤버 ( { members.length } ) </Text>
+      <Text style={ styles.membersTitle }> 가족 구성원 ( { members.length }명 ) </Text>
       <FlatList
         data={ members }
         keyExtractor={ item => item.id }
@@ -143,6 +147,14 @@ function FamilyScreen(): React.JSX.Element {
             }
           </View>
         ) }
+        ListFooterComponent={
+          <Pressable
+            style={ styles.addMemberButton }
+            onPress={ () => navigation.navigate( "AddFamilyMember" ) }
+          >
+            <Text style={ styles.addMemberButtonText }> 가족 구성원 추가 </Text>
+          </Pressable>
+        }
       />
 
       <Pressable
@@ -197,6 +209,18 @@ const styles = StyleSheet.create( {
     color: colors.white,
     fontWeight: "600",
   },
+  addMemberButton: {
+    backgroundColor: commonColor.touchable,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  addMemberButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "600",
+  },
   membersTitle: {
     fontSize: 16,
     fontWeight: "600",
@@ -206,9 +230,12 @@ const styles = StyleSheet.create( {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: commonColor.border,
+    borderRadius: 8,
+    marginBottom: 8,
+    paddingHorizontal: 8,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: commonColor.divider,
   },
   memberName: {
     fontSize: 16,
