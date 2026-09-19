@@ -25,6 +25,7 @@ export const commonColor = {
   touchable: '#a36044',
   backgroundColor: colors.white,
   textSecondary: colors.gray,
+  textDefault: colors.black,
   textMuted: '#666666',
   border: '#cccccc',
   subtleBorder: 'rgba(0, 0, 0, 0.08)',

@@ -24,12 +24,12 @@ describe( "SettingsScreen", () => {
     mockedGetAuthErrorMessage.mockImplementation( (err: Error) => err.message );
   } );
 
-  test( "로그아웃 버튼을 표시한다", () => {
+  test( "로그아웃 메뉴를 표시한다", () => {
     const { getByText } = renderSettingsScreen();
     expect( getByText( "로그아웃" ) ).toBeTruthy();
   } );
 
-  test( "버튼을 탭하면 signOutUser를 호출한다", () => {
+  test( "로그아웃 메뉴를 탭하면 signOutUser를 호출한다", () => {
     mockedSignOutUser.mockResolvedValueOnce( undefined );
     const { getByText } = renderSettingsScreen();
     fireEvent.press( getByText( "로그아웃" ) );
@@ -47,7 +47,7 @@ describe( "SettingsScreen", () => {
     );
   } );
 
-  test( "가족 관리 버튼을 탭하면 가족 탭으로 이동한다", () => {
+  test( "가족 관리 메뉴를 탭하면 가족 탭으로 이동한다", () => {
     const { getByText, navigation } = renderSettingsScreen();
     fireEvent.press( getByText( "가족 관리" ) );
     expect( navigation.navigate ).toHaveBeenCalledWith( "FamilyMain" );

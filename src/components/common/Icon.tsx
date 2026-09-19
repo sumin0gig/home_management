@@ -5,6 +5,7 @@ import PeopleIcon from "bootstrap-icons/icons/people.svg";
 import GearIcon from "bootstrap-icons/icons/gear.svg";
 import ChevronDownIcon from "bootstrap-icons/icons/chevron-down.svg";
 import ChevronLeftIcon from "bootstrap-icons/icons/chevron-left.svg";
+import ChevronRightIcon from "bootstrap-icons/icons/chevron-right.svg";
 import PersonPlusIcon from "bootstrap-icons/icons/person-plus.svg";
 import { colors } from "../../styles/commonStyle";
 
@@ -14,6 +15,7 @@ const IconSet = {
   Settings: GearIcon,
   ChevronDown: ChevronDownIcon,
   ChevronLeft: ChevronLeftIcon,
+  ChevronRight: ChevronRightIcon,
   PersonPlus: PersonPlusIcon,
 } as const;
 
