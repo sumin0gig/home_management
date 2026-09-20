@@ -14,13 +14,16 @@ import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
 import { toDateString } from "../../utils/date";
 import {
+  listTaskItems,
   listTaskLogs,
   type TaskInput,
+  type TaskItemInput,
   type TaskLogRow,
   type IntervalUnit,
 } from "../../store/useTaskStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
+import TaskItemListEditor from "../../components/TaskItemListEditor/TaskItemListEditor";
 
 type Props = NativeStackScreenProps<MainStackParamList, "TaskForm">;
 
@@ -31,6 +34,17 @@ const INTERVAL_UNIT_LABELS: Record<"DAY" | "WEEK" | "MONTH", string> = {
 };
 
 const MONTHS = Array.from( { length: 12 }, (_, i) => i + 1 );
+
+// 빈 칸으로 남겨둔 항목은 저장하지 않는다.
+function toTaskItemInputs(
+  contents: string[],
+  type: TaskItemInput["type"],
+): TaskItemInput[] {
+  return contents
+    .map( content => content.trim() )
+    .filter( content => content.length > 0 )
+    .map( content => ( { type, content } ) );
+}
 
 function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   const taskId = route.params?.taskId;
@@ -63,6 +77,11 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   const [isSaving, setIsSaving] = React.useState( false );
   const [error, setError] = React.useState<string | null>( null );
   const [logs, setLogs] = React.useState<TaskLogRow[]>( [] );
+  const [steps, setSteps] = React.useState<string[]>( [] );
+  const [tips, setTips] = React.useState<string[]>( [] );
+  // 수정 모드에서 기존 안내 항목을 다 불러오기 전에 저장하면 빈 목록으로 덮어쓰게 되므로,
+  // 불러오기 전에는 items를 보내지 않는다(= 기존 항목 유지).
+  const [itemsLoaded, setItemsLoaded] = React.useState( !taskId );
 
   React.useEffect( () => {
     navigation.setOptions( {
@@ -74,6 +93,20 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
     if (taskId) {
       listTaskLogs( taskId )
         .then( setLogs )
+        .catch( err => setError( (err as Error).message ) );
+    }
+  }, [taskId] );
+
+  React.useEffect( () => {
+    if (taskId) {
+      listTaskItems( taskId )
+        .then( loaded => {
+          setSteps(
+            loaded.filter( i => i.type === "DEFAULT" ).map( i => i.content ),
+          );
+          setTips( loaded.filter( i => i.type === "TIP" ).map( i => i.content ) );
+          setItemsLoaded( true );
+        } )
         .catch( err => setError( (err as Error).message ) );
     }
   }, [taskId] );
@@ -114,6 +147,12 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         recurrenceType === "INTERVAL" ? parsedIntervalValue : undefined,
       intervalUnit: recurrenceType === "INTERVAL" ? intervalUnit : undefined,
       months: recurrenceType === "YEARLY_MONTHS" ? months : undefined,
+      items: itemsLoaded
+        ? [
+            ...toTaskItemInputs( steps, "DEFAULT" ),
+            ...toTaskItemInputs( tips, "TIP" ),
+          ]
+        : undefined,
     };
 
     setIsSaving( true );
@@ -276,6 +315,23 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
             </View>
           </View>
       }
+
+      <TaskItemListEditor
+        label="방법"
+        placeholder="이 집안일을 하는 방법을 적어주세요"
+        addText="+ 방법 추가"
+        items={ steps }
+        numbered
+        onChange={ setSteps }
+      />
+
+      <TaskItemListEditor
+        label="💡 TIP"
+        placeholder="알아두면 좋은 팁을 적어주세요"
+        addText="+ TIP 추가"
+        items={ tips }
+        onChange={ setTips }
+      />
 
       <Pressable
         style={ styles.saveButton }

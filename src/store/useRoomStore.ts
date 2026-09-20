@@ -186,6 +186,16 @@ async function deleteTaskAndLogs(taskId: string): Promise<void> {
     nextToken = token;
   } while (nextToken);
 
+  const { data: items, errors: itemListErrors } =
+    await client.models.TaskItem.listTaskItemByTaskId({ taskId });
+  throwIfErrors(itemListErrors, '집안일 안내 항목 삭제에 실패했습니다.');
+  const itemDeleteResults = await Promise.all(
+    items.map(item => client.models.TaskItem.delete({ id: item.id })),
+  );
+  itemDeleteResults.forEach(result =>
+    throwIfErrors(result.errors, '집안일 안내 항목 삭제에 실패했습니다.'),
+  );
+
   const { errors } = await client.models.Task.delete({ id: taskId });
   throwIfErrors(errors, '집안일 삭제에 실패했습니다.');
 }

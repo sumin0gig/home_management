@@ -2,22 +2,32 @@ import React from "react";
 import { Alert } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import TaskFormScreen from "../../../src/screens/home/TaskFormScreen";
-import { useTaskStore, listTaskLogs } from "../../../src/store/useTaskStore";
+import {
+  useTaskStore,
+  listTaskLogs,
+  listTaskItems,
+} from "../../../src/store/useTaskStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
-import type { TaskRow, TaskLogRow } from "../../../src/store/useTaskStore";
+import type {
+  TaskRow,
+  TaskLogRow,
+  TaskItemRow,
+} from "../../../src/store/useTaskStore";
 
 jest.mock( "../../../src/store/useTaskStore", () => ( {
   ...jest.requireActual( "../../../src/store/useTaskStore" ),
   listTaskLogs: jest.fn(),
+  listTaskItems: jest.fn(),
 } ) );
 
 const mockedCreateTask = jest.fn();
 const mockedUpdateTask = jest.fn();
 const mockedDeleteTask = jest.fn();
 const mockedListTaskLogs = listTaskLogs as jest.Mock;
+const mockedListTaskItems = listTaskItems as jest.Mock;
 
 const bedroom: RoomRow = {
   id: "r1",
@@ -36,6 +46,11 @@ const existingTask: TaskRow = {
   months: null,
   nextDueDate: "2000-01-01",
 } as TaskRow;
+
+const existingItems: TaskItemRow[] = [
+  { id: "i1", taskId: "c1", type: "DEFAULT", content: "이불을 걷는다", ord: 0 },
+  { id: "i2", taskId: "c1", type: "TIP", content: "오전 11시가 좋다", ord: 1 },
+] as TaskItemRow[];
 
 const log: TaskLogRow = {
   id: "log1",
@@ -74,6 +89,7 @@ describe( "TaskFormScreen", () => {
       deleteTask: mockedDeleteTask,
     } );
     mockedListTaskLogs.mockResolvedValue( [] );
+    mockedListTaskItems.mockResolvedValue( [] );
   } );
 
   describe( "생성 모드", () => {
@@ -122,6 +138,42 @@ describe( "TaskFormScreen", () => {
       );
       expect( navigation.goBack ).toHaveBeenCalled();
     } );
+
+    test( "방법과 TIP을 입력하면 빈 칸을 제외하고 items로 전달한다", async () => {
+      mockedCreateTask.mockResolvedValue( undefined );
+      const { getByText, getAllByDisplayValue, getByPlaceholderText } = render(
+        <TaskFormScreen
+          navigation={ createMockNavigation() }
+          route={ { params: { roomId: "r1" } } as never }
+        />,
+      );
+      fireEvent.changeText( getAllByDisplayValue( "" )[0], "새 집안일" );
+
+      fireEvent.press( getByText( "+ 방법 추가" ) );
+      fireEvent.changeText(
+        getByPlaceholderText( "이 집안일을 하는 방법을 적어주세요" ),
+        " 이불을 턴다 ",
+      );
+      fireEvent.press( getByText( "+ 방법 추가" ) );
+      fireEvent.press( getByText( "+ TIP 추가" ) );
+      fireEvent.changeText(
+        getByPlaceholderText( "알아두면 좋은 팁을 적어주세요" ),
+        "햇빛 좋은 날",
+      );
+      fireEvent.press( getByText( "저장" ) );
+
+      await waitFor( () =>
+        expect( mockedCreateTask ).toHaveBeenCalledWith(
+          "r1",
+          expect.objectContaining( {
+            items: [
+              { type: "DEFAULT", content: "이불을 턴다" },
+              { type: "TIP", content: "햇빛 좋은 날" },
+            ],
+          } ),
+        ),
+      );
+    } );
   } );
 
   describe( "수정 모드", () => {
@@ -132,6 +184,48 @@ describe( "TaskFormScreen", () => {
     test( "기존 값을 미리 채워서 보여준다", () => {
       const { getByDisplayValue } = renderEdit();
       expect( getByDisplayValue( "침구 햇빛살균" ) ).toBeTruthy();
+    } );
+
+    test( "기존 방법과 TIP을 불러와서 보여준다", async () => {
+      mockedListTaskItems.mockResolvedValue( existingItems );
+      const { findByDisplayValue } = renderEdit();
+      expect( await findByDisplayValue( "이불을 걷는다" ) ).toBeTruthy();
+      expect( await findByDisplayValue( "오전 11시가 좋다" ) ).toBeTruthy();
+    } );
+
+    test( "불러온 방법을 수정하고 저장하면 items로 전달한다", async () => {
+      mockedListTaskItems.mockResolvedValue( existingItems );
+      mockedUpdateTask.mockResolvedValue( undefined );
+      const { getByText, findByDisplayValue } = renderEdit();
+      fireEvent.changeText(
+        await findByDisplayValue( "이불을 걷는다" ),
+        "이불을 턴다",
+      );
+      fireEvent.press( getByText( "저장" ) );
+
+      await waitFor( () =>
+        expect( mockedUpdateTask ).toHaveBeenCalledWith(
+          "c1",
+          expect.objectContaining( {
+            items: [
+              { type: "DEFAULT", content: "이불을 턴다" },
+              { type: "TIP", content: "오전 11시가 좋다" },
+            ],
+          } ),
+          "r1",
+        ),
+      );
+    } );
+
+    test( "안내 항목을 불러오지 못하면 items를 보내지 않아 기존 항목을 보존한다", async () => {
+      mockedListTaskItems.mockRejectedValue( new Error( "불러오기 실패" ) );
+      mockedUpdateTask.mockResolvedValue( undefined );
+      const { getByText, findByText } = renderEdit();
+      await findByText( "불러오기 실패" );
+      fireEvent.press( getByText( "저장" ) );
+
+      await waitFor( () => expect( mockedUpdateTask ).toHaveBeenCalled() );
+      expect( mockedUpdateTask.mock.calls[0][1].items ).toBeUndefined();
     } );
 
     test( "완료 기록을 불러와서 보여준다", async () => {

@@ -19,12 +19,19 @@ export function formatDueLabel(
   return null;
 }
 
+export interface TaskItemInput {
+  type: 'DEFAULT' | 'TIP';
+  content: string;
+}
+
 export interface TaskInput {
   title: string;
   recurrenceType: 'INTERVAL' | 'YEARLY_MONTHS';
   intervalValue?: number;
   intervalUnit?: 'DAY' | 'WEEK' | 'MONTH';
   months?: number[];
+  // undefined면 기존 안내 항목을 건드리지 않고, 배열이면 그 내용으로 통째로 교체한다.
+  items?: TaskItemInput[];
 }
 
 function addMonthsClamped(date: Date, months: number): Date {
