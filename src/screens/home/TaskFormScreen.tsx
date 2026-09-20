@@ -326,7 +326,8 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       />
 
       <TaskItemListEditor
-        label="💡 TIP"
+        label="TIP"
+        icon="Lightbulb"
         placeholder="알아두면 좋은 팁을 적어주세요"
         addText="+ TIP 추가"
         items={ tips }

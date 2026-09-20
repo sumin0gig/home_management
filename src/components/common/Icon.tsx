@@ -8,6 +8,7 @@ import ChevronLeftIcon from "bootstrap-icons/icons/chevron-left.svg";
 import ChevronRightIcon from "bootstrap-icons/icons/chevron-right.svg";
 import PersonPlusIcon from "bootstrap-icons/icons/person-plus.svg";
 import PlusIcon from "bootstrap-icons/icons/plus-lg.svg";
+import LightbulbIcon from "bootstrap-icons/icons/lightbulb.svg";
 import { colors } from "../../styles/commonStyle";
 
 const IconSet = {
@@ -19,6 +20,7 @@ const IconSet = {
   ChevronRight: ChevronRightIcon,
   PersonPlus: PersonPlusIcon,
   Plus: PlusIcon,
+  Lightbulb: LightbulbIcon,
 } as const;
 
 export type IconName = keyof typeof IconSet;

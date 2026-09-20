@@ -1,9 +1,11 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import Icon, { type IconName } from "../common/Icon";
 import { colors, commonColor } from "../../styles/commonStyle";
 
 interface Props {
   label: string;
+  icon?: IconName;
   placeholder: string;
   addText: string;
   items: string[];
@@ -13,6 +15,7 @@ interface Props {
 
 function TaskItemListEditor( {
   label,
+  icon,
   placeholder,
   addText,
   items,
@@ -29,7 +32,14 @@ function TaskItemListEditor( {
 
   return (
     <View>
-      <Text style={ styles.label }> { label } </Text>
+      <View style={ styles.labelRow }>
+        {
+          icon
+          ? <Icon name={ icon } size={ 16 } />
+          : null
+        }
+        <Text style={ styles.label }> { label } </Text>
+      </View>
 
       { items.map( (item, index) => (
         <View style={ styles.row } key={ index }>
@@ -64,11 +74,16 @@ function TaskItemListEditor( {
 }
 
 const styles = StyleSheet.create( {
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 16,
+    marginBottom: 8,
+  },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 8,
   },
   row: {
     flexDirection: "row",

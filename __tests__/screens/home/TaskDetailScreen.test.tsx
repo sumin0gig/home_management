@@ -69,7 +69,7 @@ describe( "TaskDetailScreen", () => {
     await waitFor( () => expect( getByText( "첫 번째 단계" ) ).toBeTruthy() );
     expect( getByText( "두 번째 단계" ) ).toBeTruthy();
     expect( getByText( "유용한 팁" ) ).toBeTruthy();
-    expect( getByText( "💡 TIP" ) ).toBeTruthy();
+    expect( getByText( "TIP" ) ).toBeTruthy();
   } );
 
   test( "항목이 없으면 안내 문구를 보여준다", async () => {

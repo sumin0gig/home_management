@@ -17,6 +17,7 @@ import {
 } from "../../store/useTaskStore";
 import { formatDueLabel, toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
+import Icon from "../../components/common/Icon";
 
 type Props = NativeStackScreenProps<MainStackParamList, "TaskDetail">;
 
@@ -118,7 +119,10 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
       {
         tips.length > 0
         ? <View style={ styles.tipBox }>
-            <Text style={ styles.tipLabel }> 💡 TIP </Text>
+            <View style={ styles.tipLabelRow }>
+              <Icon name="Lightbulb" size={ 14 } />
+              <Text style={ styles.tipLabel }> TIP </Text>
+            </View>
             { tips.map( tip => (
               <Text style={ styles.tipContent } key={ tip.id }>
                 { tip.content }
@@ -198,11 +202,16 @@ const styles = StyleSheet.create( {
     borderRadius: 12,
     backgroundColor: colors.tipBackground,
   },
+  tipLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 6,
+  },
   tipLabel: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.tipLabel,
-    marginBottom: 6,
   },
   tipContent: {
     fontSize: 14,
