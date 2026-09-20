@@ -54,7 +54,8 @@ function RootNavigator(): React.JSX.Element {
 
   const isLoading =
     authStatus === 'loading' ||
-    (authStatus === 'signedIn' && familyStatus === 'loading');
+    (authStatus === 'signedIn' &&
+      (familyStatus === 'loading' || mascotStatus === 'loading'));
   const isRoomsLoading = familyStatus === 'joined' && roomStatus === 'idle';
 
   if (isLoading) {
@@ -86,14 +87,6 @@ function RootNavigator(): React.JSX.Element {
       membership?.role === 'OWNER'
       ? <RoomSetupScreen />
       : <RoomWaitingScreen />
-    );
-  }
-
-  if (mascotStatus === 'loading') {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
     );
   }
 
