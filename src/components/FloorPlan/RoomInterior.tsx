@@ -5,8 +5,7 @@ import { colors, commonColor } from "../../styles/commonStyle";
 import WanderingMascot from "../Mascot/WanderingMascot";
 import { useMascotConfig } from "../Mascot/useMascotConfig";
 
-// 방 안에서는 마스코트를 평면도 위 핀보다 작게 그린다.
-const INTERIOR_MASCOT_SIZE = 64;
+const INTERIOR_MASCOT_SIZE = 200;
 
 interface Props {
   room: FloorPlanRoom;
