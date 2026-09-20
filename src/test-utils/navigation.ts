@@ -11,5 +11,6 @@ export function createMockNavigation<
     navigate: jest.fn(),
     goBack: jest.fn(),
     setOptions: jest.fn(),
+    addListener: jest.fn( () => jest.fn() ),
   } as unknown as MainNavigation<Screen>;
 }

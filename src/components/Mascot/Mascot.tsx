@@ -1,19 +1,17 @@
 import React, { useEffect } from "react";
-import Animated, { useAnimatedProps } from "react-native-reanimated";
+import { useAnimatedProps } from "react-native-reanimated";
 import Svg, { G } from "react-native-svg";
 import { colors } from "../../styles/commonStyle";
 import { ACTIONS } from "./actions";
 import { rotateDeg, scaleXY, translateY } from "./animations/svgTransforms";
 import { useMascotSharedValues } from "./animations/useMascotSharedValues";
 import Body, { BODY_BOX } from "./parts/Body";
-import Eye, { EYE_RADIUS } from "./parts/Eye";
-import Face from "./parts/Face";
+import MascotHead from "./MascotHead";
+import AnimatedG from "./parts/AnimatedG";
+import { EYE_RADIUS } from "./parts/Eye";
 import Leg from "./parts/Leg";
 import type { MascotAction, MascotConfig } from "./types";
-import { EAR_PIVOTS, EAR_VARIANTS } from "./variants/ears";
 import { TAIL_PIVOTS, TAIL_VARIANTS } from "./variants/tails";
-
-const AnimatedG = Animated.createAnimatedComponent( G );
 
 const DEFAULT_ACTION: MascotAction = "idle";
 
@@ -23,9 +21,6 @@ const DEFAULT_ACTION: MascotAction = "idle";
 const VIEW_BOX = { width: 280, height: 200 };
 const HEAD_X = 100;
 const HEAD_BASE_Y = 90;
-const EAR_BOX = { width: 34, height: 46 };
-const EAR_L_ORIGIN = { x: -40, y: -63 };
-const EAR_R_ORIGIN = { x: 6, y: -63 };
 const TAIL_BOX = { width: 50, height: 30 };
 const TAIL_ATTACH = { x: BODY_BOX.x + BODY_BOX.width + 2, y: BODY_BOX.y + 5 };
 const GROUND_Y = 185;
@@ -47,8 +42,6 @@ interface Props {
 
 const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
   const fill = config.fillColor ?? colors.yellow;
-  const EarComponent = EAR_VARIANTS[config.earStyle];
-  const earPivot = EAR_PIVOTS[config.earStyle];
   const TailComponent = TAIL_VARIANTS[config.tailStyle];
   const tailPivot = TAIL_PIVOTS[config.tailStyle];
 
@@ -181,47 +174,13 @@ const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
         />
         <G x={ HEAD_X } y={ HEAD_BASE_Y }>
           <AnimatedG animatedProps={ headAnimatedProps }>
-            <Face fill={ fill } />
-            <G x={ EAR_L_ORIGIN.x } y={ EAR_L_ORIGIN.y }>
-              <AnimatedG
-                origin={ `${earPivot.x}, ${earPivot.y}` }
-                animatedProps={ earLAnimatedProps }
-              >
-                <EarComponent
-                  width={ EAR_BOX.width }
-                  height={ EAR_BOX.height }
-                  fill={ fill }
-                />
-              </AnimatedG>
-            </G>
-            { /* Mirrored horizontally so an asymmetric ear shape (e.g. the
-                floppy variant, which flares outward to one side) droops
-                away from the head on both sides instead of both ears
-                flaring the same absolute direction. A no-op for the
-                left-right-symmetric round/pointy shapes. */ }
-            <G transform={ `translate(${EAR_BOX.width + EAR_R_ORIGIN.x}, ${EAR_R_ORIGIN.y}) scale(-1, 1)` }>
-              <AnimatedG
-                origin={ `${earPivot.x}, ${earPivot.y}` }
-                animatedProps={ earRAnimatedProps }
-              >
-                <EarComponent
-                  width={ EAR_BOX.width }
-                  height={ EAR_BOX.height }
-                  fill={ fill }
-                />
-              </AnimatedG>
-            </G>
-            <Eye
-              cx={ -15 }
-              cy={ -3 }
-              fill={ colors.black }
-              animatedProps={ eyeLAnimatedProps }
-            />
-            <Eye
-              cx={ 15 }
-              cy={ -3 }
-              fill={ colors.black }
-              animatedProps={ eyeRAnimatedProps }
+            <MascotHead
+              fill={ fill }
+              earStyle={ config.earStyle }
+              earLAnimatedProps={ earLAnimatedProps }
+              earRAnimatedProps={ earRAnimatedProps }
+              eyeLAnimatedProps={ eyeLAnimatedProps }
+              eyeRAnimatedProps={ eyeRAnimatedProps }
             />
           </AnimatedG>
         </G>

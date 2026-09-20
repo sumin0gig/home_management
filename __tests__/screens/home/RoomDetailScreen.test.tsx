@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
+import PlusIcon from "bootstrap-icons/icons/plus-lg.svg";
 import RoomDetailScreen from "../../../src/screens/home/RoomDetailScreen";
 import { useRoomStore } from "../../../src/store/useRoomStore";
 import { useTaskStore } from "../../../src/store/useTaskStore";
@@ -57,8 +58,10 @@ describe( "RoomDetailScreen", () => {
   } );
 
   test( "집안일 추가를 탭하면 TaskForm으로 이동한다", () => {
-    const { getByText, navigation } = renderRoomDetailScreen();
-    fireEvent.press( getByText( "+ 집안일 추가" ) );
+    const { UNSAFE_getByType, navigation } = renderRoomDetailScreen();
+    // 추가 버튼은 텍스트 없이 Plus 아이콘만 있다. 테스트에서는 모든 svg가 같은
+    // SvgMock으로 대체되고, 이 화면의 아이콘은 추가 버튼 하나뿐이다.
+    fireEvent.press( UNSAFE_getByType( PlusIcon ) );
 
     expect( navigation.navigate ).toHaveBeenCalledWith( "TaskForm", {
       roomId: "r1",

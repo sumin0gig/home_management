@@ -4,6 +4,7 @@ import HomeScreen from "../../../src/screens/home/HomeScreen";
 import { useFamilyStore } from "../../../src/store/useFamilyStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
 import { useTaskStore } from "../../../src/store/useTaskStore";
+import { useMascotStore, type MascotRow } from "../../../src/store/useMascotStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { FamilyRow } from "../../../src/store/useFamilyStore";
@@ -40,10 +41,17 @@ const task: TaskRow = {
 } as TaskRow;
 
 function renderHomeScreen( navigation = createMockNavigation<"HomeMain">() ) {
-  return {
-    ...render( <HomeScreen navigation={ navigation } route={ {} as never } /> ),
-    navigation,
-  };
+  const utils = render(
+    <HomeScreen navigation={ navigation } route={ {} as never } />,
+  );
+
+  const canvas = utils.queryByTestId( "floor-plan-canvas" );
+  if (canvas) {
+    fireEvent( canvas, "layout", {
+      nativeEvent: { layout: { width: 300, height: 300 } },
+    } );
+  }
+  return { ...utils, navigation };
 }
 
 describe( "HomeScreen", () => {
@@ -85,9 +93,31 @@ describe( "HomeScreen", () => {
     const { getByText, navigation } = renderHomeScreen();
     fireEvent.press( getByText( "침실" ) );
 
+    // 방이 하나뿐이면 마스코트는 항상 그 방에 있다.
     expect( navigation.navigate ).toHaveBeenCalledWith( "RoomDetail", {
       roomId: "r1",
+      hasMascot: true,
     } );
+  } );
+
+  test( "마스코트가 있는 방에만 핀을 보여준다", () => {
+    const kitchen = { ...bedroom, id: "r2", roomType: "KITCHEN", x: 4 } as RoomRow;
+    useRoomStore.setState( { status: "loaded", rooms: [bedroom, kitchen] } );
+    useTaskStore.setState( { status: "loaded", tasks: [] } );
+    useMascotStore.setState( {
+      status: "created",
+      mascot: {
+        id: "m1",
+        userId: "u1",
+        earStyle: "ROUND",
+        tailStyle: "STRAIGHT",
+        fillColor: null,
+      } as MascotRow,
+    } );
+
+    const { queryAllByTestId } = renderHomeScreen();
+
+    expect( queryAllByTestId( /^mascot-pin-/ ) ).toHaveLength( 1 );
   } );
 
   test( "방이 없으면 안내 문구를 보여준다", () => {

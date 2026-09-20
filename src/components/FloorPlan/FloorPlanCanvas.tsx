@@ -14,6 +14,7 @@ interface Props {
   onRoomPress?: (room: FloorPlanRoom) => void;
   onRoomMove?: (roomId: string, x: number, y: number) => void;
   hasDueToday?: (room: FloorPlanRoom) => boolean;
+  mascotRoomId?: string | null;
 }
 
 function FloorPlanCanvas( {
@@ -23,6 +24,7 @@ function FloorPlanCanvas( {
   onRoomPress,
   onRoomMove,
   hasDueToday,
+  mascotRoomId,
 }: Props ): React.JSX.Element {
   const [containerWidth, setContainerWidth] = React.useState( 0 );
   const cellSize = containerWidth / GRID_COLUMNS;
@@ -42,6 +44,7 @@ function FloorPlanCanvas( {
   if( containerWidth === 0 ) {
     return (
       <View
+        testID="floor-plan-canvas"
         onLayout={ onLayout }
         style={ [styles.canvas, { height: canvasHeight }] }
       />
@@ -50,6 +53,7 @@ function FloorPlanCanvas( {
 
   return (
     <View
+      testID="floor-plan-canvas"
       onLayout={ onLayout }
       style={ [styles.canvas, { height: canvasHeight }] }
     >
@@ -78,6 +82,7 @@ function FloorPlanCanvas( {
               onRoomMove ? (x, y) => onRoomMove( room.id, x, y ) : undefined
             }
             hasDueToday={ hasDueToday ? hasDueToday( room ) : false }
+            hasMascot={ room.id === mascotRoomId }
             isRemovable={ removable }
           />
         ) )
