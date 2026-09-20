@@ -125,7 +125,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       return;
     }
     if (!title.trim()) {
-      setError( "제목을 입력해주세요." );
+      setError( "집안일 명을 입력해주세요." );
       return;
     }
     if (recurrenceType === "YEARLY_MONTHS" && months.length === 0) {
@@ -207,7 +207,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         : null
       }
 
-      <Text style={ styles.label }> 제목 </Text>
+      <Text style={ styles.label }> 집안일 명 </Text>
       <TextInput
         style={ styles.input }
         value={ title }
