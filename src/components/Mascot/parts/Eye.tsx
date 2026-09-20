@@ -22,7 +22,7 @@ const Eye = ({ cx, cy, fill, animatedProps }: Props): React.JSX.Element => {
       rx={ EYE_RADIUS }
       ry={ EYE_RADIUS }
       fill={ fill }
-      animatedProps={ animatedProps }
+      { ...(animatedProps && { animatedProps }) }
     />
   );
 };

@@ -1,7 +1,6 @@
 import React from "react";
 import {
   ActivityIndicator,
-  type LayoutChangeEvent,
   Pressable,
   StyleSheet,
   Text,
@@ -13,18 +12,19 @@ import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
-import { useMascotStore } from "../../store/useMascotStore";
 import { toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
-import WanderingMascot from "../../components/Mascot/WanderingMascot";
-import {
-  EAR_OPTIONS,
-  TAIL_OPTIONS,
-} from "../../components/Mascot/optionMaps";
 import { type FloorPlanRoom } from "../../store/useRoomStore";
 
 type Props = NativeStackScreenProps<MainStackParamList, "HomeMain">;
+
+function pickRandomRoomId( rooms: FloorPlanRoom[] ): string | null {
+  if (rooms.length === 0) {
+    return null;
+  }
+  return rooms[Math.floor( Math.random() * rooms.length )].id;
+}
 
 function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
@@ -41,17 +41,14 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     state => state.fetchTasksForFamily,
   );
 
-  const mascot = useMascotStore( state => state.mascot );
-
-  const [wanderBounds, setWanderBounds] = React.useState( {
-    width: 0,
-    height: 0,
-  } );
-
-  const onOverlayLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    setWanderBounds( { width, height } );
-  };
+  // 마스코트가 "있는" 방 — 방 목록이 바뀌거나(불러오기 완료, 방 삭제 등)
+  // 홈에 포커스될 때마다 새로 뽑는다.
+  const [mascotRoomId, setMascotRoomId] = React.useState<string | null>( null );
+  React.useEffect( () => {
+    const rollMascotRoom = () => setMascotRoomId( pickRandomRoomId( rooms ) );
+    rollMascotRoom();
+    return navigation.addListener( "focus", rollMascotRoom );
+  }, [navigation, rooms] );
 
   React.useEffect( () => {
     if (family?.id) {
@@ -79,18 +76,6 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const hasDueToday = (room: FloorPlanRoom): boolean =>
     tasks.some( t => t.roomId === room.id && t.nextDueDate <= today );
 
-  const mascotConfig = mascot
-    ? {
-        earStyle:
-          EAR_OPTIONS.find( option => option.value === mascot.earStyle )
-            ?.variant ?? "round",
-        tailStyle:
-          TAIL_OPTIONS.find( option => option.value === mascot.tailStyle )
-            ?.variant ?? "straight",
-        fillColor: mascot.fillColor ?? undefined,
-      }
-    : null;
-
   return (
     <View style={ styles.root }>
       <View style={ styles.container }>
@@ -116,27 +101,15 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
             <FloorPlanCanvas
               rooms={ rooms }
               onRoomPress={ room =>
-                navigation.navigate( "RoomDetail", { roomId: room.id } )
+                navigation.navigate( "RoomDetail", {
+                  roomId: room.id,
+                  hasMascot: room.id === mascotRoomId,
+                } )
               }
               hasDueToday={ hasDueToday }
+              mascotRoomId={ mascotRoomId }
             />
           </ScrollView>
-        }
-      </View>
-
-      <View
-        style={ styles.wanderLayer }
-        pointerEvents="box-none"
-        onLayout={ onOverlayLayout }
-      >
-        {
-          mascotConfig
-          ? <WanderingMascot
-            config={ mascotConfig }
-            bounds={ wanderBounds }
-            onPress={ () => navigation.navigate( "MascotDetail" ) }
-          />
-          : null
         }
       </View>
     </View>
@@ -146,9 +119,6 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
 const styles = StyleSheet.create( {
   root: {
     flex: 1,
-  },
-  wanderLayer: {
-    ...StyleSheet.absoluteFillObject,
   },
   container: {
     flex: 1,

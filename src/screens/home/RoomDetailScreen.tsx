@@ -13,13 +13,14 @@ import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../utils/date";
 import { roomDisplayName } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
-import DefaultButton from "../../components/common/DefaultButton";
 import TaskCard from "../../components/TaskCard/TaskCard";
+import RoomInterior from "../../components/FloorPlan/RoomInterior";
+import Icon from "../../components/common/Icon";
 
 type Props = NativeStackScreenProps<MainStackParamList, "RoomDetail">;
 
 function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
-  const { roomId } = route.params;
+  const { roomId, hasMascot } = route.params;
 
   const room = useRoomStore( state =>
     state.rooms.find( r => r.id === roomId ),
@@ -53,11 +54,20 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         : null
       }
 
-      <DefaultButton
-        text="+ 집안일 추가"
-        onPress={ () => navigation.navigate( "TaskForm", { roomId } ) }
+      {
+        room
+        ? <RoomInterior
+          room={ room }
+          hasMascot={ hasMascot }
+          onMascotPress={ () => navigation.navigate( "MascotDetail" ) }
+        />
+        : null
+      }
+
+      <Icon
+        name="Plus"
         style={ styles.addButton }
-        textStyle={ styles.addButtonText }
+        onPress={ () => navigation.navigate( "TaskForm", { roomId } ) }
       />
 
       <ScrollView>
@@ -104,16 +114,9 @@ const styles = StyleSheet.create( {
     textAlign: "center",
   },
   addButton: {
-    backgroundColor: commonColor.touchable,
     paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
+    alignItems: "flex-end",
     marginBottom: 16,
-  },
-  addButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "600",
   },
 } );
 
