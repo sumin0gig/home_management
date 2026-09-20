@@ -12,7 +12,6 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
-import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../utils/date";
 import {
   listTaskLogs,
@@ -20,7 +19,6 @@ import {
   type TaskLogRow,
   type IntervalUnit,
 } from "../../store/useTaskStore";
-import { roomDisplayName } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 
@@ -42,16 +40,13 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   const createTask = useTaskStore( state => state.createTask );
   const updateTask = useTaskStore( state => state.updateTask );
   const deleteTask = useTaskStore( state => state.deleteTask );
-  const rooms = useRoomStore( state => state.rooms );
 
   const existingTask = React.useMemo(
     () => tasks.find( t => t.id === taskId ),
     [tasks, taskId],
   );
 
-  const [roomId, setRoomId] = React.useState<string | null>(
-    existingTask?.roomId ?? route.params?.roomId ?? null,
-  );
+  const roomId = existingTask?.roomId ?? route.params?.roomId ?? null;
   const [title, setTitle] = React.useState( existingTask?.title ?? "" );
   const [recurrenceType, setRecurrenceType] = React.useState<
     "INTERVAL" | "YEARLY_MONTHS"
@@ -172,25 +167,6 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         ? <Text style={ styles.error }> { error } </Text>
         : null
       }
-
-      <Text style={ styles.label }> 방 </Text>
-      <View style={ styles.chipRow }>
-        { rooms.map( room => (
-          <Pressable
-            key={ room.id }
-            style={ [styles.chip, roomId === room.id && styles.chipSelected] }
-            onPress={ () => setRoomId( room.id ) }
-          >
-            <Text
-              style={
-                roomId === room.id ? styles.chipTextSelected : styles.chipText
-              }
-            >
-              { roomDisplayName( room ) }
-            </Text>
-          </Pressable>
-        ) ) }
-      </View>
 
       <Text style={ styles.label }> 제목 </Text>
       <TextInput
