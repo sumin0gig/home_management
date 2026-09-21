@@ -151,7 +151,7 @@ describe( "TaskFormScreen", () => {
 
       fireEvent.press( getByText( "+ 방법 추가" ) );
       fireEvent.changeText(
-        getByPlaceholderText( "이 집안일을 하는 방법을 적어주세요" ),
+        getByPlaceholderText( "방법 제목을 적어주세요 (줄바꿈 후 설명 입력)" ),
         " 이불을 턴다 ",
       );
       fireEvent.press( getByText( "+ 방법 추가" ) );

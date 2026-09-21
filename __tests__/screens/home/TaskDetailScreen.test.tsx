@@ -83,6 +83,28 @@ describe( "TaskDetailScreen", () => {
     expect( getByText( "TIP" ) ).toBeTruthy();
   } );
 
+  test( "단계는 첫 줄을 제목, 나머지 줄을 설명으로 보여준다", async () => {
+    mockedListTaskItems.mockResolvedValue( [
+      {
+        id: "i1",
+        taskId: "c1",
+        type: "DEFAULT",
+        content: "솔로 문지르기\n약 5분 정도 기다린 후,\n솔로 문질러 닦아주세요.",
+        ord: 0,
+      },
+      { id: "i2", taskId: "c1", type: "DEFAULT", content: "물로 헹구기", ord: 1 },
+    ] as TaskItemRow[] );
+    const { findByText, getByText } = renderTaskDetailScreen();
+
+    expect( await findByText( "솔로 문지르기" ) ).toBeTruthy();
+    expect(
+      getByText( "약 5분 정도 기다린 후,\n솔로 문질러 닦아주세요." ),
+    ).toBeTruthy();
+    expect( getByText( "물로 헹구기" ) ).toBeTruthy();
+    expect( getByText( "1" ) ).toBeTruthy();
+    expect( getByText( "2" ) ).toBeTruthy();
+  } );
+
   test( "방 이름 배지와 집안일 제목을 보여준다", async () => {
     mockedListTaskItems.mockResolvedValue( [] );
     const { findByText, getByText } = renderTaskDetailScreen();
@@ -138,7 +160,7 @@ describe( "TaskDetailScreen", () => {
     mockedListTaskItems.mockResolvedValue( [] );
     mockedCompleteTask.mockResolvedValue( undefined );
     const { findByText, navigation } = renderTaskDetailScreen();
-    fireEvent.press( await findByText( "완료" ) );
+    fireEvent.press( await findByText( "완료했어요" ) );
 
     await waitFor( () =>
       expect( mockedCompleteTask ).toHaveBeenCalledWith( task ),

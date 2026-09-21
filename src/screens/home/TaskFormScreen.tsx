@@ -318,7 +318,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
 
       <TaskItemListEditor
         label="방법"
-        placeholder="이 집안일을 하는 방법을 적어주세요"
+        placeholder="방법 제목을 적어주세요 (줄바꿈 후 설명 입력)"
         addText="+ 방법 추가"
         items={ steps }
         numbered
