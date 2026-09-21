@@ -10,7 +10,6 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
-import { toDateString } from "../../utils/date";
 import { roomDisplayName } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import TaskCard from "../../components/TaskCard/TaskCard";
@@ -33,7 +32,6 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
     navigation.setOptions( { title: room ? roomDisplayName( room ) : "방" } );
   }, [navigation, room] );
 
-  const today = toDateString( new Date() );
   const roomTasks = tasks
     .filter( t => t.roomId === roomId )
     .sort( (a, b) => a.nextDueDate.localeCompare( b.nextDueDate ) );
@@ -75,14 +73,7 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
           <Text style={ styles.emptySection }> 집안일이 없습니다. </Text>
         ) : (
           roomTasks.map( task => (
-            <TaskCard
-              key={ task.id }
-              task={ task }
-              today={ today }
-              onPress={ () =>
-                navigation.navigate( "TaskDetail", { taskId: task.id } )
-              }
-            />
+            <TaskCard key={ task.id } task={ task } />
           ) )
         )}
       </ScrollView>

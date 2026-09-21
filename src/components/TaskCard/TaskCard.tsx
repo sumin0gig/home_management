@@ -1,23 +1,27 @@
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { MainStackParamList } from "../../navigation/types";
 import type { TaskRow } from "../../store/useTaskStore";
-import { formatDueLabel } from "../../utils/date";
+import { formatDueLabel, toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
 
 interface Props {
   task: TaskRow;
-  today: string;
-  onPress: () => void;
 }
 
-const TaskCard = ( { task, today, onPress }: Props ): React.JSX.Element => {
+const TaskCard = ( { task }: Props ): React.JSX.Element => {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const today = toDateString( new Date() );
   const isDue = task.nextDueDate <= today;
   const dueLabel = formatDueLabel( task.nextDueDate, today );
 
   return (
     <Pressable
       style={ [styles.card, isDue ? styles.dueCard : styles.notDueCard] }
-      onPress={ onPress }
+      onPress={ () => navigation.navigate( "TaskDetail", { taskId: task.id } ) }
     >
       <Text style={ styles.title }> { task.title } </Text>
       {
