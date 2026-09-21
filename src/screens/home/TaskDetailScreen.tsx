@@ -65,6 +65,14 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
     );
   }
 
+  if (isLoading) {
+    return (
+      <View style={ styles.centerContainer }>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   const today = toDateString( new Date() );
   const dueLabel = formatDueLabel( task.nextDueDate, today );
   const steps = items.filter( item => item.type === "DEFAULT" );
@@ -98,13 +106,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
       }
 
       {
-        isLoading
-        ? <ActivityIndicator style={ styles.loading } />
-        : null
-      }
-
-      {
-        !isLoading && steps.length === 0 && tips.length === 0
+        steps.length === 0 && tips.length === 0
         ? <Text style={ styles.emptyText }> 등록된 안내가 없습니다. </Text>
         : null
       }
@@ -172,9 +174,6 @@ const styles = StyleSheet.create( {
     color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
-  },
-  loading: {
-    marginTop: 24,
   },
   emptyText: {
     fontSize: 14,

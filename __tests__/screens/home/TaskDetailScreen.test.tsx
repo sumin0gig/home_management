@@ -100,8 +100,8 @@ describe( "TaskDetailScreen", () => {
   test( "완료 버튼을 탭하면 completeTask 후 완료 토스트를 띄우고 뒤로 간다", async () => {
     mockedListTaskItems.mockResolvedValue( [] );
     mockedCompleteTask.mockResolvedValue( undefined );
-    const { getByText, navigation } = renderTaskDetailScreen();
-    fireEvent.press( getByText( "완료" ) );
+    const { findByText, navigation } = renderTaskDetailScreen();
+    fireEvent.press( await findByText( "완료" ) );
 
     await waitFor( () =>
       expect( mockedCompleteTask ).toHaveBeenCalledWith( task ),
