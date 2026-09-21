@@ -16,7 +16,7 @@ const TaskCard = ( { task, today, onPress }: Props ): React.JSX.Element => {
 
   return (
     <Pressable
-      style={ [styles.card, isDue ? styles.dueCard : styles.notDueCard] }
+      style={ [styles.card, !isDue && styles.notDueCard] }
       onPress={ onPress }
     >
       <Text style={ styles.title }> { task.title } </Text>
@@ -34,15 +34,13 @@ const styles = StyleSheet.create( {
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 8,
-    borderWidth: 3,
+    borderWidth: 1,
     borderColor: commonColor.divider,
+    backgroundColor: colors.white,
     marginBottom: 8,
   },
-  dueCard: {
-    backgroundColor: colors.white,
-  },
   notDueCard: {
-    backgroundColor: colors.lightGray,
+    opacity: 0.5,
   },
   title: {
     fontSize: 16,
@@ -50,7 +48,7 @@ const styles = StyleSheet.create( {
   },
   due: {
     fontSize: 12,
-    color: commonColor.info,
+    color: commonColor.textMuted,
     marginTop: 4,
     fontWeight: "600",
   },
