@@ -3,8 +3,10 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import Toast from "react-native-root-toast";
 import TaskDetailScreen from "../../../src/screens/home/TaskDetailScreen";
 import { useTaskStore, listTaskItems } from "../../../src/store/useTaskStore";
+import { useRoomStore } from "../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
+import type { RoomRow } from "../../../src/store/useRoomStore";
 import type { TaskRow, TaskItemRow } from "../../../src/store/useTaskStore";
 
 jest.mock( "../../../src/store/useTaskStore", () => ( {
@@ -32,6 +34,14 @@ const task: TaskRow = {
   nextDueDate: "2000-01-01",
 } as TaskRow;
 
+const room: RoomRow = {
+  id: "r1",
+  familyId: "f1",
+  roomType: "BATHROOM",
+  label: null,
+  color: "#A9DDF2",
+} as RoomRow;
+
 const items: TaskItemRow[] = [
   { id: "i1", taskId: "c1", type: "DEFAULT", content: "첫 번째 단계", ord: 0 },
   { id: "i2", taskId: "c1", type: "DEFAULT", content: "두 번째 단계", ord: 1 },
@@ -56,6 +66,7 @@ describe( "TaskDetailScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
+    useRoomStore.setState( { rooms: [room] } );
     useTaskStore.setState( {
       tasks: [task],
       completeTask: mockedCompleteTask,
@@ -70,6 +81,32 @@ describe( "TaskDetailScreen", () => {
     expect( getByText( "두 번째 단계" ) ).toBeTruthy();
     expect( getByText( "유용한 팁" ) ).toBeTruthy();
     expect( getByText( "TIP" ) ).toBeTruthy();
+  } );
+
+  test( "방 이름 배지와 집안일 제목을 보여준다", async () => {
+    mockedListTaskItems.mockResolvedValue( [] );
+    const { findByText, getByText } = renderTaskDetailScreen();
+
+    expect( await findByText( "화장실 청소" ) ).toBeTruthy();
+    expect( getByText( "냉장고 정리정돈" ) ).toBeTruthy();
+  } );
+
+  test( "방 배지의 배경색은 방 색을 따른다", async () => {
+    mockedListTaskItems.mockResolvedValue( [] );
+    const { findByTestId } = renderTaskDetailScreen();
+
+    expect( await findByTestId( "room-badge" ) ).toHaveStyle( {
+      backgroundColor: "#A9DDF2",
+    } );
+  } );
+
+  test( "방을 찾을 수 없으면 배지를 보여주지 않는다", async () => {
+    useRoomStore.setState( { rooms: [] } );
+    mockedListTaskItems.mockResolvedValue( [] );
+    const { findByText, queryByText } = renderTaskDetailScreen();
+
+    await findByText( "냉장고 정리정돈" );
+    expect( queryByText( /청소/ ) ).toBeNull();
   } );
 
   test( "항목이 없으면 안내 문구를 보여준다", async () => {

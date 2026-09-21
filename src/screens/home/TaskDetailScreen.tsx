@@ -15,6 +15,7 @@ import {
   useTaskStore,
   type TaskItemRow,
 } from "../../store/useTaskStore";
+import { roomDisplayName, useRoomStore } from "../../store/useRoomStore";
 import { formatDueLabel, toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
 import Icon from "../../components/common/Icon";
@@ -34,6 +35,9 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const task = useTaskStore( state =>
     state.tasks.find( t => t.id === taskId ),
   );
+  const room = useRoomStore( state =>
+    state.rooms.find( r => r.id === task?.roomId ),
+  );
   const completeTask = useTaskStore( state => state.completeTask );
 
   const [items, setItems] = React.useState<TaskItemRow[]>( [] );
@@ -43,11 +47,10 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
 
   React.useEffect( () => {
     navigation.setOptions( {
-      title: task?.title ?? "집안일",
       headerRight: () =>
         renderEditButton( () => navigation.navigate( "TaskForm", { taskId } ) ),
     } );
-  }, [navigation, task, taskId] );
+  }, [navigation, taskId] );
 
   React.useEffect( () => {
     setIsLoading( true );
@@ -93,11 +96,30 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
 
   return (
     <ScrollView style={ styles.screen } contentContainerStyle={ styles.container }>
-      {
-        dueLabel
-        ? <Text style={ styles.dueLabel }> { dueLabel } </Text>
-        : null
-      }
+      <View style={ styles.topRow }>
+        {
+          room
+          ? <View
+              testID="room-badge"
+              style={ [
+                styles.roomBadge,
+                { backgroundColor: room.color ?? colors.lightGray },
+              ] }
+            >
+              <Text style={ styles.roomBadgeText }>
+                { `${roomDisplayName( room )} 청소` }
+              </Text>
+            </View>
+          : null
+        }
+        {
+          dueLabel
+          ? <Text style={ styles.dueLabel }> { dueLabel } </Text>
+          : null
+        }
+      </View>
+
+      <Text style={ styles.title }> { task.title } </Text>
 
       {
         error
@@ -164,11 +186,32 @@ const styles = StyleSheet.create( {
     padding: 24,
     backgroundColor: commonColor.backgroundColor,
   },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  roomBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+  },
+  roomBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+  },
   dueLabel: {
     fontSize: 13,
     fontWeight: "600",
     color: commonColor.info,
-    marginBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+    marginBottom: 20,
   },
   error: {
     color: commonColor.error,
