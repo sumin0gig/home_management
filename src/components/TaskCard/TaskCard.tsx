@@ -16,7 +16,7 @@ const TaskCard = ( { task, today, onPress }: Props ): React.JSX.Element => {
 
   return (
     <Pressable
-      style={ [styles.card, !isDue && styles.notDueCard] }
+      style={ [styles.card, isDue ? styles.dueCard : styles.notDueCard] }
       onPress={ onPress }
     >
       <Text style={ styles.title }> { task.title } </Text>
@@ -38,6 +38,12 @@ const styles = StyleSheet.create( {
     borderColor: commonColor.divider,
     backgroundColor: colors.white,
     marginBottom: 8,
+  },
+  dueCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: commonColor.touchable,
+    // 왼쪽 테두리가 3px 두꺼워진 만큼 줄여서 제목 위치를 notDueCard와 맞춘다.
+    paddingLeft: 9,
   },
   notDueCard: {
     opacity: 0.5,
