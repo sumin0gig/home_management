@@ -256,13 +256,13 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         recurrenceType === "INTERVAL"
         ? <View>
             <Text style={ styles.label }> 간격 </Text>
-            <TextInput
-              style={ styles.input }
-              value={ intervalValue }
-              onChangeText={ setIntervalValue }
-              keyboardType="number-pad"
-            />
-            <View style={ styles.chipRow }>
+            <View style={ styles.intervalRow }>
+              <TextInput
+                style={ [styles.input, {flex: 1}] }
+                value={ intervalValue }
+                onChangeText={ setIntervalValue }
+                keyboardType="number-pad"
+              />
               { (
                 Object.keys( INTERVAL_UNIT_LABELS ) as Array<
                   "DAY" | "WEEK" | "MONTH"
@@ -402,6 +402,12 @@ const styles = StyleSheet.create( {
   },
   chipRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  intervalRow: {
+    flexDirection: "row",
+    alignItems: "center",
     flexWrap: "wrap",
     gap: 8,
   },
