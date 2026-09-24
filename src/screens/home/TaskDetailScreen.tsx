@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Toast from "react-native-root-toast";
 import type { MainStackParamList } from "../../navigation/types";
@@ -15,8 +16,11 @@ import {
   useTaskStore,
   type TaskItemRow,
 } from "../../store/useTaskStore";
+import { roomDisplayName, useRoomStore } from "../../store/useRoomStore";
 import { formatDueLabel, toDateString } from "../../utils/date";
+import { splitTaskItemContent } from "../../utils/taskItem";
 import { colors, commonColor } from "../../styles/commonStyle";
+import Icon from "../../components/common/Icon";
 
 type Props = NativeStackScreenProps<MainStackParamList, "TaskDetail">;
 
@@ -30,8 +34,12 @@ function renderEditButton(onPress: () => void): React.JSX.Element {
 
 function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const { taskId } = route.params;
+  const insets = useSafeAreaInsets();
   const task = useTaskStore( state =>
     state.tasks.find( t => t.id === taskId ),
+  );
+  const room = useRoomStore( state =>
+    state.rooms.find( r => r.id === task?.roomId ),
   );
   const completeTask = useTaskStore( state => state.completeTask );
 
@@ -42,11 +50,10 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
 
   React.useEffect( () => {
     navigation.setOptions( {
-      title: task?.title ?? "집안일",
       headerRight: () =>
         renderEditButton( () => navigation.navigate( "TaskForm", { taskId } ) ),
     } );
-  }, [navigation, task, taskId] );
+  }, [navigation, taskId] );
 
   React.useEffect( () => {
     setIsLoading( true );
@@ -60,6 +67,14 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
     return (
       <View style={ styles.centerContainer }>
         <Text style={ styles.emptyText }> 집안일을 찾을 수 없습니다. </Text>
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View style={ styles.centerContainer }>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -83,63 +98,100 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   };
 
   return (
-    <ScrollView style={ styles.screen } contentContainerStyle={ styles.container }>
-      {
-        dueLabel
-        ? <Text style={ styles.dueLabel }> { dueLabel } </Text>
-        : null
-      }
-
-      {
-        error
-        ? <Text style={ styles.error }> { error } </Text>
-        : null
-      }
-
-      {
-        isLoading
-        ? <ActivityIndicator style={ styles.loading } />
-        : null
-      }
-
-      {
-        !isLoading && steps.length === 0 && tips.length === 0
-        ? <Text style={ styles.emptyText }> 등록된 안내가 없습니다. </Text>
-        : null
-      }
-
-      { steps.map( (step, index) => (
-        <View style={ styles.stepRow } key={ step.id }>
-          <Text style={ styles.stepNumber }> { index + 1 }. </Text>
-          <Text style={ styles.stepContent }> { step.content } </Text>
-        </View>
-      ) ) }
-
-      {
-        tips.length > 0
-        ? <View style={ styles.tipBox }>
-            <Text style={ styles.tipLabel }> 💡 TIP </Text>
-            { tips.map( tip => (
-              <Text style={ styles.tipContent } key={ tip.id }>
-                { tip.content }
-              </Text>
-            ) ) }
-          </View>
-        : null
-      }
-
-      <Pressable
-        style={ styles.completeButton }
-        onPress={ onComplete }
-        disabled={ isCompleting }
+    <View style={ styles.screen }>
+      <ScrollView
+        style={ styles.scroll }
+        contentContainerStyle={ styles.container }
       >
+        <View style={ styles.topRow }>
+          {
+            room
+            ? <View
+                testID="room-badge"
+                style={ [
+                  styles.roomBadge,
+                  { backgroundColor: room.color ?? colors.lightGray },
+                ] }
+              >
+                <Text style={ styles.roomBadgeText }>
+                  { `${roomDisplayName( room )} 청소` }
+                </Text>
+              </View>
+            : null
+          }
+          {
+            dueLabel
+            ? <Text style={ styles.dueLabel }> { dueLabel } </Text>
+            : null
+          }
+        </View>
+
+        <Text style={ styles.title }> { task.title } </Text>
+
         {
-          isCompleting
-          ? <ActivityIndicator color={ colors.white } />
-          : <Text style={ styles.completeButtonText }> 완료 </Text>
+          error
+          ? <Text style={ styles.error }> { error } </Text>
+          : null
         }
-      </Pressable>
-    </ScrollView>
+
+        {
+          steps.length === 0 && tips.length === 0
+          ? <Text style={ styles.emptyText }> 등록된 안내가 없습니다. </Text>
+          : null
+        }
+
+        { steps.map( (step, index) => {
+          const { title, description } = splitTaskItemContent( step.content );
+          return (
+            <View style={ styles.stepCard } key={ step.id }>
+              <View style={ styles.stepBadge }>
+                <Text style={ styles.stepBadgeText }> { index + 1 } </Text>
+              </View>
+              <View style={ styles.stepBody }>
+                <Text style={ styles.stepTitle }> { title } </Text>
+                {
+                  description
+                  ? <Text style={ styles.stepDescription }> { description } </Text>
+                  : null
+                }
+              </View>
+            </View>
+          );
+        } ) }
+
+        {
+          tips.length > 0
+          ? <View style={ styles.tipBox }>
+              <View style={ styles.tipLabelRow }>
+                <Icon name="Lightbulb" size={ 14 } />
+                <Text style={ styles.tipLabel }> TIP </Text>
+              </View>
+              { tips.map( tip => (
+                <Text style={ styles.tipContent } key={ tip.id }>
+                  { tip.content }
+                </Text>
+              ) ) }
+            </View>
+          : null
+        }
+      </ScrollView>
+      <View style={ [styles.bottomBar, { paddingBottom: insets.bottom + 16 }] }>
+        <Pressable
+          style={ styles.completeButton }
+          onPress={ onComplete }
+          disabled={ isCompleting }
+        >
+          {
+            isCompleting
+            ? <ActivityIndicator color={ colors.white } />
+            : <View style={ styles.completeContent }>
+                <Icon name="CheckCircle" size={ 20 } color={ colors.white } />
+                <Text style={ styles.completeButtonText }> 완료했어요 </Text>
+              </View>
+          }
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -147,6 +199,9 @@ const styles = StyleSheet.create( {
   screen: {
     flex: 1,
     backgroundColor: commonColor.backgroundColor,
+  },
+  scroll: {
+    flex: 1,
   },
   container: {
     padding: 24,
@@ -158,51 +213,95 @@ const styles = StyleSheet.create( {
     padding: 24,
     backgroundColor: commonColor.backgroundColor,
   },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  roomBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+  },
+  roomBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+  },
   dueLabel: {
     fontSize: 13,
     fontWeight: "600",
     color: commonColor.info,
-    marginBottom: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+    marginBottom: 20,
   },
   error: {
     color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
   },
-  loading: {
-    marginTop: 24,
-  },
   emptyText: {
     fontSize: 14,
     color: colors.gray,
   },
-  stepRow: {
+  stepCard: {
     flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: commonColor.divider,
+    borderRadius: 16,
+    backgroundColor: colors.white,
     marginBottom: 12,
   },
-  stepNumber: {
-    fontSize: 15,
+  stepBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: commonColor.touchableSoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepBadgeText: {
+    fontSize: 16,
     fontWeight: "700",
     color: commonColor.touchable,
-    marginRight: 6,
   },
-  stepContent: {
+  stepBody: {
     flex: 1,
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.darkGray,
+  },
+  stepTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+  },
+  stepDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: commonColor.textMuted,
+    marginTop: 4,
   },
   tipBox: {
-    marginTop: 12,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: colors.tipBackground,
+  },
+  tipLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 6,
   },
   tipLabel: {
     fontSize: 13,
     fontWeight: "700",
     color: colors.tipLabel,
-    marginBottom: 6,
   },
   tipContent: {
     fontSize: 14,
@@ -214,12 +313,21 @@ const styles = StyleSheet.create( {
     fontWeight: "600",
     color: commonColor.touchable,
   },
+  bottomBar: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    backgroundColor: commonColor.backgroundColor,
+  },
   completeButton: {
     backgroundColor: commonColor.touchable,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 24,
+  },
+  completeContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   completeButtonText: {
     color: colors.white,

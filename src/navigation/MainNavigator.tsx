@@ -38,7 +38,11 @@ function MainNavigator(): React.JSX.Element {
         component={RoomEditScreen}
         options={{ title: '방 편집' }}
       />
-      <Stack.Screen name="TaskDetail" component={TaskDetailScreen} />
+      <Stack.Screen
+        name="TaskDetail"
+        component={TaskDetailScreen}
+        options={{ title: '' }}
+      />
       <Stack.Screen name="TaskForm" component={TaskFormScreen} />
       <Stack.Screen name="MascotDetail" component={MascotDetailScreen} />
       <Stack.Screen

@@ -7,6 +7,7 @@ import {
   toDateString,
   computeNextDueDate,
   type TaskInput,
+  type TaskItemInput,
 } from '../utils/date';
 import { computeHappinessGain } from '../utils/happiness';
 import { listRoomsForFamily } from './useRoomStore';
@@ -20,7 +21,7 @@ export type TaskItemRow = Schema['TaskItem']['type'];
 export type RecurrenceType = TaskRow['recurrenceType'];
 export type IntervalUnit = TaskRow['intervalUnit'];
 
-export type { TaskInput };
+export type { TaskInput, TaskItemInput };
 export { computeNextDueDate };
 
 async function listTasksForRoom(roomId: string): Promise<TaskRow[]> {
@@ -74,6 +75,36 @@ export async function listTaskItems(taskId: string): Promise<TaskItemRow[]> {
     await client.models.TaskItem.listTaskItemByTaskId({ taskId });
   throwIfErrors(errors, '집안일 안내 항목을 불러오지 못했습니다.');
   return [...items].sort((a, b) => a.ord - b.ord);
+}
+
+async function deleteAllTaskItemsForTask(taskId: string): Promise<void> {
+  const items = await listTaskItems(taskId);
+  const deleteResults = await Promise.all(
+    items.map(item => client.models.TaskItem.delete({ id: item.id })),
+  );
+  deleteResults.forEach(result =>
+    throwIfErrors(result.errors, '집안일 안내 항목 삭제에 실패했습니다.'),
+  );
+}
+
+// 안내 항목은 입력 순서(방법 → TIP)대로 ord를 매겨 저장한다.
+async function createTaskItems(
+  taskId: string,
+  items: TaskItemInput[],
+): Promise<void> {
+  const results = await Promise.all(
+    items.map((item, index) =>
+      client.models.TaskItem.create({
+        taskId,
+        type: item.type,
+        content: item.content,
+        ord: index,
+      }),
+    ),
+  );
+  results.forEach(result =>
+    throwIfErrors(result.errors, '집안일 안내 항목 저장에 실패했습니다.'),
+  );
 }
 
 type TaskStatus = 'idle' | 'loading' | 'loaded';
@@ -134,6 +165,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       if (!task) {
         throw new Error('집안일 생성에 실패했습니다.');
       }
+      if (input.items && input.items.length > 0) {
+        await createTaskItems(task.id, input.items);
+      }
       set({ tasks: [...get().tasks, task] });
     } catch (err) {
       set({ error: (err as Error).message });
@@ -154,6 +188,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         months: input.months ?? null,
       });
       throwIfErrors(errors, '집안일 수정에 실패했습니다.');
+      if (input.items) {
+        await deleteAllTaskItemsForTask(taskId);
+        await createTaskItems(taskId, input.items);
+      }
       const { currentFamilyId } = get();
       if (currentFamilyId) {
         await get().fetchTasksForFamily(currentFamilyId);
@@ -168,6 +206,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ error: null });
     try {
       await deleteAllTaskLogsForTask(taskId);
+      await deleteAllTaskItemsForTask(taskId);
       const { errors } = await client.models.Task.delete({ id: taskId });
       throwIfErrors(errors, '집안일 삭제에 실패했습니다.');
       set({ tasks: get().tasks.filter(t => t.id !== taskId) });

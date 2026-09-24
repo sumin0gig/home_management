@@ -12,17 +12,18 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
-import { useRoomStore } from "../../store/useRoomStore";
 import { toDateString } from "../../utils/date";
 import {
+  listTaskItems,
   listTaskLogs,
   type TaskInput,
+  type TaskItemInput,
   type TaskLogRow,
   type IntervalUnit,
 } from "../../store/useTaskStore";
-import { roomDisplayName } from "../../store/useRoomStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
+import TaskItemListEditor from "../../components/TaskItemListEditor/TaskItemListEditor";
 
 type Props = NativeStackScreenProps<MainStackParamList, "TaskForm">;
 
@@ -34,6 +35,17 @@ const INTERVAL_UNIT_LABELS: Record<"DAY" | "WEEK" | "MONTH", string> = {
 
 const MONTHS = Array.from( { length: 12 }, (_, i) => i + 1 );
 
+// 빈 칸으로 남겨둔 항목은 저장하지 않는다.
+function toTaskItemInputs(
+  contents: string[],
+  type: TaskItemInput["type"],
+): TaskItemInput[] {
+  return contents
+    .map( content => content.trim() )
+    .filter( content => content.length > 0 )
+    .map( content => ( { type, content } ) );
+}
+
 function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   const taskId = route.params?.taskId;
   const isEditMode = Boolean( taskId );
@@ -42,16 +54,13 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   const createTask = useTaskStore( state => state.createTask );
   const updateTask = useTaskStore( state => state.updateTask );
   const deleteTask = useTaskStore( state => state.deleteTask );
-  const rooms = useRoomStore( state => state.rooms );
 
   const existingTask = React.useMemo(
     () => tasks.find( t => t.id === taskId ),
     [tasks, taskId],
   );
 
-  const [roomId, setRoomId] = React.useState<string | null>(
-    existingTask?.roomId ?? route.params?.roomId ?? null,
-  );
+  const roomId = existingTask?.roomId ?? route.params?.roomId ?? null;
   const [title, setTitle] = React.useState( existingTask?.title ?? "" );
   const [recurrenceType, setRecurrenceType] = React.useState<
     "INTERVAL" | "YEARLY_MONTHS"
@@ -68,6 +77,11 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   const [isSaving, setIsSaving] = React.useState( false );
   const [error, setError] = React.useState<string | null>( null );
   const [logs, setLogs] = React.useState<TaskLogRow[]>( [] );
+  const [steps, setSteps] = React.useState<string[]>( [] );
+  const [tips, setTips] = React.useState<string[]>( [] );
+  // 수정 모드에서 기존 안내 항목을 다 불러오기 전에 저장하면 빈 목록으로 덮어쓰게 되므로,
+  // 불러오기 전에는 items를 보내지 않는다(= 기존 항목 유지).
+  const [itemsLoaded, setItemsLoaded] = React.useState( !taskId );
 
   React.useEffect( () => {
     navigation.setOptions( {
@@ -79,6 +93,20 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
     if (taskId) {
       listTaskLogs( taskId )
         .then( setLogs )
+        .catch( err => setError( (err as Error).message ) );
+    }
+  }, [taskId] );
+
+  React.useEffect( () => {
+    if (taskId) {
+      listTaskItems( taskId )
+        .then( loaded => {
+          setSteps(
+            loaded.filter( i => i.type === "DEFAULT" ).map( i => i.content ),
+          );
+          setTips( loaded.filter( i => i.type === "TIP" ).map( i => i.content ) );
+          setItemsLoaded( true );
+        } )
         .catch( err => setError( (err as Error).message ) );
     }
   }, [taskId] );
@@ -97,7 +125,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       return;
     }
     if (!title.trim()) {
-      setError( "제목을 입력해주세요." );
+      setError( "집안일 명을 입력해주세요." );
       return;
     }
     if (recurrenceType === "YEARLY_MONTHS" && months.length === 0) {
@@ -119,6 +147,12 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         recurrenceType === "INTERVAL" ? parsedIntervalValue : undefined,
       intervalUnit: recurrenceType === "INTERVAL" ? intervalUnit : undefined,
       months: recurrenceType === "YEARLY_MONTHS" ? months : undefined,
+      items: itemsLoaded
+        ? [
+            ...toTaskItemInputs( steps, "DEFAULT" ),
+            ...toTaskItemInputs( tips, "TIP" ),
+          ]
+        : undefined,
     };
 
     setIsSaving( true );
@@ -173,26 +207,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         : null
       }
 
-      <Text style={ styles.label }> 방 </Text>
-      <View style={ styles.chipRow }>
-        { rooms.map( room => (
-          <Pressable
-            key={ room.id }
-            style={ [styles.chip, roomId === room.id && styles.chipSelected] }
-            onPress={ () => setRoomId( room.id ) }
-          >
-            <Text
-              style={
-                roomId === room.id ? styles.chipTextSelected : styles.chipText
-              }
-            >
-              { roomDisplayName( room ) }
-            </Text>
-          </Pressable>
-        ) ) }
-      </View>
-
-      <Text style={ styles.label }> 제목 </Text>
+      <Text style={ styles.label }> 집안일 명 </Text>
       <TextInput
         style={ styles.input }
         value={ title }
@@ -241,13 +256,13 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         recurrenceType === "INTERVAL"
         ? <View>
             <Text style={ styles.label }> 간격 </Text>
-            <TextInput
-              style={ styles.input }
-              value={ intervalValue }
-              onChangeText={ setIntervalValue }
-              keyboardType="number-pad"
-            />
-            <View style={ styles.chipRow }>
+            <View style={ styles.intervalRow }>
+              <TextInput
+                style={ [styles.input, {flex: 1}] }
+                value={ intervalValue }
+                onChangeText={ setIntervalValue }
+                keyboardType="number-pad"
+              />
               { (
                 Object.keys( INTERVAL_UNIT_LABELS ) as Array<
                   "DAY" | "WEEK" | "MONTH"
@@ -300,6 +315,24 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
             </View>
           </View>
       }
+
+      <TaskItemListEditor
+        label="방법"
+        placeholder="방법 제목을 적어주세요 (줄바꿈 후 설명 입력)"
+        addText="+ 방법 추가"
+        items={ steps }
+        numbered
+        onChange={ setSteps }
+      />
+
+      <TaskItemListEditor
+        label="TIP"
+        icon="Lightbulb"
+        placeholder="알아두면 좋은 팁을 적어주세요"
+        addText="+ TIP 추가"
+        items={ tips }
+        onChange={ setTips }
+      />
 
       <Pressable
         style={ styles.saveButton }
@@ -369,6 +402,12 @@ const styles = StyleSheet.create( {
   },
   chipRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  intervalRow: {
+    flexDirection: "row",
+    alignItems: "center",
     flexWrap: "wrap",
     gap: 8,
   },

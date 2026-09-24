@@ -1,5 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
+import { useNavigation } from "@react-navigation/native";
 import PlusIcon from "bootstrap-icons/icons/plus-lg.svg";
 import RoomDetailScreen from "../../../src/screens/home/RoomDetailScreen";
 import { useRoomStore } from "../../../src/store/useRoomStore";
@@ -8,6 +9,13 @@ import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 import type { TaskRow } from "../../../src/store/useTaskStore";
+
+// TaskCard는 props가 아니라 useNavigation으로 이동하므로, NavigationContainer 없이
+// 화면과 같은 mock navigation을 돌려주도록 대체한다.
+jest.mock( "@react-navigation/native", () => ( {
+  ...jest.requireActual( "@react-navigation/native" ),
+  useNavigation: jest.fn(),
+} ) );
 
 const bedroom: RoomRow = {
   id: "r1",
@@ -30,6 +38,7 @@ const task: TaskRow = {
 function renderRoomDetailScreen(
   navigation = createMockNavigation<"RoomDetail">(),
 ) {
+  ( useNavigation as jest.Mock ).mockReturnValue( navigation );
   return {
     ...render(
       <RoomDetailScreen

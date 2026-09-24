@@ -23,6 +23,7 @@ export const commonColor = {
   negative: '#D9705B',
   error: '#d32f2f',
   touchable: '#a36044',
+  touchableSoft: '#f3e3da',
   backgroundColor: colors.white,
   textSecondary: colors.gray,
   textDefault: colors.black,
