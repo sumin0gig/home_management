@@ -68,7 +68,14 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
       </View>
 
       <View style={ styles.happinessContainer }>
-        <Text style={ styles.levelLabel }> Lv. { level } </Text>
+        <Pressable
+          testID="memory-level-link"
+          style={ styles.levelLink }
+          onPress={ () => navigation.navigate( "MascotCollection" ) }
+        >
+          <Text style={ styles.levelLabel }> 추억 Lv. { level } </Text>
+          <Text style={ styles.levelChevron }> › </Text>
+        </Pressable>
         <View style={ styles.gaugeTrack }>
           <View
             style={ [
@@ -135,11 +142,20 @@ const styles = StyleSheet.create( {
     marginBottom: 24,
     alignItems: "center",
   },
+  levelLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   levelLabel: {
     fontSize: 18,
     fontWeight: "700",
     color: commonColor.touchable,
-    marginBottom: 8,
+  },
+  levelChevron: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: commonColor.touchable,
   },
   gaugeTrack: {
     width: "100%",

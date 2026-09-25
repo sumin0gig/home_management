@@ -56,7 +56,7 @@ function MascotSetup(): React.JSX.Element {
       <Text style={ styles.stepIndicator }> 3 / 3 단계 · 마스코트 만들기 </Text>
       <Text style={ styles.title }> 집에서 함께할 친구를 만들어봐요 </Text>
       <Text style={ styles.description }>
-        친구는 집안일을 해 행복도를 올려줄 수 있어요.
+        집안일을 할수록 친구와의 추억이 쌓여요.
       </Text>
 
       <View style={ styles.previewContainer }>

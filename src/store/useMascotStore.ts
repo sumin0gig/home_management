@@ -114,7 +114,7 @@ export const useMascotStore = create<MascotState>((set, get) => ({
         set({ status: 'created', mascot: updated });
       }
     } catch {
-      // 마스코트 행복도 갱신 실패가 집안일 완료 자체를 실패시키면 안 됨
+      // 마스코트 추억(happiness) 갱신 실패가 집안일 완료 자체를 실패시키면 안 됨
     }
   },
 
