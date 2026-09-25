@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useAnimatedProps } from "react-native-reanimated";
 import Svg, { G } from "react-native-svg";
 import { colors } from "../../styles/commonStyle";
 import { ACTIONS } from "./actions";
+import { resetMascotValues } from "./animations/resetMascotValues";
 import { rotateDeg, scaleXY, translateY } from "./animations/svgTransforms";
 import { useMascotSharedValues } from "./animations/useMascotSharedValues";
 import Body, { BODY_BOX } from "./parts/Body";
@@ -38,22 +39,50 @@ interface Props {
   config: MascotConfig;
   action: MascotAction;
   size?: number;
+  /**
+   * One-shot 행동(duration이 있는 행동)이 끝났을 때 호출된다. 넘기면 다음
+   * 행동은 부모가 `action`을 바꿔서 정하고, 넘기지 않으면 idle로 돌아간다.
+   * 반복 행동(idle/walk)에서는 호출되지 않는다.
+   */
+  onActionEnd?: () => void;
 }
 
-const Mascot = ({ config, action, size = 200 }: Props): React.JSX.Element => {
+const Mascot = ({
+  config,
+  action,
+  size = 200,
+  onActionEnd,
+}: Props): React.JSX.Element => {
   const fill = config.fillColor ?? colors.yellow;
   const TailComponent = TAIL_VARIANTS[config.tailStyle];
   const tailPivot = TAIL_PIVOTS[config.tailStyle];
 
   const values = useMascotSharedValues();
 
+  // 부모가 매 렌더마다 새 콜백을 넘겨도 액션이 다시 시작되지 않도록 ref로 보관.
+  const onActionEndRef = useRef( onActionEnd );
+  onActionEndRef.current = onActionEnd;
+
   useEffect( () => {
     const { run, duration } = ACTIONS[action];
-    run( values );
+    resetMascotValues( values );
+
     if (duration == null) {
+      run( values );
       return;
     }
+
+    // One-shot 행동은 idle을 바탕에 깔고 그 위에 덮어쓴다 — 행동이 건드리지
+    // 않는 부위(눈 깜빡임, 다리 등)는 idle처럼 계속 살아 움직인다.
+    ACTIONS[DEFAULT_ACTION].run( values );
+    run( values );
+
     const timer = setTimeout( () => {
+      if (onActionEndRef.current) {
+        onActionEndRef.current();
+        return;
+      }
+      resetMascotValues( values );
       ACTIONS[DEFAULT_ACTION].run( values );
     }, duration );
     return () => clearTimeout( timer );
