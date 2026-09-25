@@ -11,6 +11,7 @@ import RoomEditScreen from '../screens/home/RoomEditScreen';
 import TaskDetailScreen from '../screens/home/TaskDetailScreen';
 import TaskFormScreen from '../screens/home/TaskFormScreen';
 import MascotDetailScreen from '../screens/home/MascotDetailScreen';
+import MascotCollectionScreen from '../screens/home/MascotCollectionScreen';
 import FamilyScreen from '../screens/family/FamilyScreen';
 import AddFamilyMemberScreen from '../screens/family/AddFamilyMemberScreen';
 import ScanFamilyQrScreen from '../screens/family/ScanFamilyQrScreen';
@@ -45,6 +46,11 @@ function MainNavigator(): React.JSX.Element {
       />
       <Stack.Screen name="TaskForm" component={TaskFormScreen} />
       <Stack.Screen name="MascotDetail" component={MascotDetailScreen} />
+      <Stack.Screen
+        name="MascotCollection"
+        component={MascotCollectionScreen}
+        options={{ title: '추억 도감' }}
+      />
       <Stack.Screen
         name="FamilyMain"
         component={FamilyScreen}

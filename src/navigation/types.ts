@@ -9,6 +9,7 @@ export type MainStackParamList = {
   TaskDetail: { taskId: string };
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
+  MascotCollection: undefined;
   FamilyMain: undefined;
   AddFamilyMember: undefined;
   ScanFamilyQr: undefined;
