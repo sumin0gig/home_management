@@ -12,6 +12,7 @@ const BITE_DOWN_MS = 220;
 const BITE_UP_MS = 220;
 const BITE_CHEW_MS = 200;
 const BITE_COUNT = 3;
+const BITE_DEPTH = 48 * PX_SCALE;
 const EAT_DURATION_MS = BITE_COUNT * (BITE_DOWN_MS + BITE_UP_MS + BITE_CHEW_MS);
 
 // 밥그릇에 머리를 숙여 한 입 먹고, 고개를 들어 오물거리기를 3번 반복한다.
@@ -21,7 +22,7 @@ const run: ActionRunner = values => {
 
   values.headBob.value = withRepeat(
     withSequence(
-      withTiming( 14 * PX_SCALE, { duration: BITE_DOWN_MS, easing: sine } ),
+      withTiming( BITE_DEPTH, { duration: BITE_DOWN_MS, easing: sine } ),
       withTiming( 0, { duration: BITE_UP_MS, easing: sine } ),
       withTiming( 0, { duration: BITE_CHEW_MS } ),
     ),
