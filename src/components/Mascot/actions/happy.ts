@@ -10,7 +10,7 @@ const SQUASH_ANTICIPATION_MS = 90;
 const SQUASH_RISE_MS = 160;
 const SQUASH_FALL_MS = 100;
 const SQUASH_SETTLE_MS = 140;
-const JUMP_DURATION_MS =
+const HAPPY_DURATION_MS =
   SQUASH_ANTICIPATION_MS + SQUASH_RISE_MS + SQUASH_FALL_MS + SQUASH_SETTLE_MS;
 
 const run: ActionRunner = values => {
@@ -35,6 +35,6 @@ const run: ActionRunner = values => {
   );
 };
 
-const jump: ActionDefinition = { run, duration: JUMP_DURATION_MS };
+const happy: ActionDefinition = { run, duration: HAPPY_DURATION_MS };
 
-export default jump;
+export default happy;

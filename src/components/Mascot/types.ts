@@ -1,3 +1,5 @@
+import type { DefaultAction, UnlockableAction } from "./actionCatalog";
+
 export interface Pivot {
   x: number;
   y: number;
@@ -23,4 +25,6 @@ export interface MascotConfig {
   fillColor?: string;
 }
 
-export type MascotAction = "idle" | "jump" | "walk";
+// idle/walk는 기본 상태, 나머지는 한 번 재생하고 끝나는 행동.
+// 행동 목록과 개방 레벨은 actionCatalog.ts 참고.
+export type MascotAction = "idle" | "walk" | DefaultAction | UnlockableAction;
