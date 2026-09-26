@@ -28,6 +28,16 @@ const bedroom: RoomRow = {
   height: 3,
 } as RoomRow;
 
+// FloorPlanCanvas는 실제 너비를 알기 전(onLayout 전)에는 방을 그리지 않으므로,
+// 렌더 직후 캔버스에 layout 이벤트를 보내 방 타일이 나타나게 한다.
+function renderRoomEdit() {
+  const utils = render( <RoomEditScreen /> );
+  fireEvent( utils.getByTestId( "floor-plan-canvas" ), "layout", {
+    nativeEvent: { layout: { width: 300, height: 300 } },
+  } );
+  return utils;
+}
+
 describe( "RoomEditScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
@@ -44,7 +54,7 @@ describe( "RoomEditScreen", () => {
   test( "+ 방 추가로 방을 만들면 addRoom이 호출된다", async () => {
     mockedAddRoom.mockResolvedValue( undefined );
 
-    const { getByText } = render( <RoomEditScreen /> );
+    const { getByText } = renderRoomEdit();
     fireEvent.press( getByText( "+ 방 추가" ) );
     fireEvent.press( getByText( "거실" ) );
     fireEvent.press( getByText( "추가" ) );
@@ -61,7 +71,7 @@ describe( "RoomEditScreen", () => {
   test( "방을 탭하면 수정 모달이 열리고 저장하면 updateRoomDetails가 호출된다", async () => {
     mockedUpdateRoomDetails.mockResolvedValue( undefined );
 
-    const { getByText, getByPlaceholderText } = render( <RoomEditScreen /> );
+    const { getByText, getByPlaceholderText } = renderRoomEdit();
     fireEvent.press( getByText( "침실" ) );
     fireEvent.changeText( getByPlaceholderText( "이름(선택)" ), "안방" );
     fireEvent.press( getByText( "저장" ) );
@@ -79,7 +89,7 @@ describe( "RoomEditScreen", () => {
 
   test( "수정 모달에서 취소를 탭하면 updateRoomDetails가 호출되지 않는다", () => {
     const { getByText, getByPlaceholderText, queryByPlaceholderText } =
-      render( <RoomEditScreen /> );
+      renderRoomEdit();
     fireEvent.press( getByText( "침실" ) );
     fireEvent.changeText( getByPlaceholderText( "이름(선택)" ), "안방" );
     fireEvent.press( getByText( "취소" ) );

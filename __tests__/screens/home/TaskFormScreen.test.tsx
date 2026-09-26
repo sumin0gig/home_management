@@ -60,11 +60,12 @@ const log: TaskLogRow = {
   completedAt: "2026-01-01T00:00:00.000Z",
 } as TaskLogRow;
 
-function renderCreate() {
+// 방 상세 화면에서 "+"로 들어오면 roomId가 params로 넘어온다 (폼에는 방 선택 UI가 없다).
+function renderCreate( roomId?: string ) {
   return render(
     <TaskFormScreen
       navigation={ createMockNavigation() }
-      route={ { params: undefined } as never }
+      route={ { params: roomId ? { roomId } : undefined } as never }
     />,
   );
 }
@@ -103,8 +104,7 @@ describe( "TaskFormScreen", () => {
 
     test( "간격이 0이면 에러를 표시한다", () => {
       const { getByText, getAllByDisplayValue, getByDisplayValue } =
-        renderCreate();
-      fireEvent.press( getByText( "침실" ) );
+        renderCreate( "r1" );
       fireEvent.changeText( getAllByDisplayValue( "" )[0], "새 집안일" );
       fireEvent.changeText( getByDisplayValue( "1" ), "0" );
       fireEvent.press( getByText( "저장" ) );
@@ -120,10 +120,9 @@ describe( "TaskFormScreen", () => {
       const { getByText, getAllByDisplayValue } = render(
         <TaskFormScreen
           navigation={ navigation }
-          route={ { params: undefined } as never }
+          route={ { params: { roomId: "r1" } } as never }
         />,
       );
-      fireEvent.press( getByText( "침실" ) );
       fireEvent.changeText( getAllByDisplayValue( "" )[0], "새 집안일" );
       fireEvent.press( getByText( "저장" ) );
 
