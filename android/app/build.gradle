@@ -92,15 +92,22 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        // Upload key credentials live in ~/.gradle/gradle.properties (outside the repo).
+        if (project.hasProperty('HOMEMANAGEMENT_UPLOAD_STORE_FILE')) {
+            release {
+                storeFile file(HOMEMANAGEMENT_UPLOAD_STORE_FILE)
+                storePassword HOMEMANAGEMENT_UPLOAD_STORE_PASSWORD
+                keyAlias HOMEMANAGEMENT_UPLOAD_KEY_ALIAS
+                keyPassword HOMEMANAGEMENT_UPLOAD_KEY_PASSWORD
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.findByName('release') ?: signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
