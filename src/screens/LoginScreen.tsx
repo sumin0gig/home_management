@@ -1,7 +1,8 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { signInWithGoogle, getAuthErrorMessage } from "../api/auth";
 import { colors, commonColor } from "../styles/commonStyle";
+import { openPrivacyPolicy } from "../utils/links";
 import DefaultButton from "../components/common/DefaultButton";
 
 function LoginScreen(): React.JSX.Element {
@@ -13,6 +14,14 @@ function LoginScreen(): React.JSX.Element {
       await signInWithGoogle();
     } catch (err) {
       setError( getAuthErrorMessage( err ) );
+    }
+  };
+
+  const onOpenPrivacyPolicy = async () => {
+    try {
+      await openPrivacyPolicy();
+    } catch {
+      setError( "개인정보처리방침을 열 수 없습니다." );
     }
   };
 
@@ -33,6 +42,10 @@ function LoginScreen(): React.JSX.Element {
         style={ styles.button }
         textStyle={ styles.buttonText }
       />
+
+      <Pressable onPress={ onOpenPrivacyPolicy } style={ styles.policyLink }>
+        <Text style={ styles.policyLinkText }> 개인정보처리방침 </Text>
+      </Pressable>
     </View>
   );
 }
@@ -69,6 +82,15 @@ const styles = StyleSheet.create( {
     color: colors.white,
     fontSize: 16,
     fontWeight: "600",
+  },
+  policyLink: {
+    marginTop: 16,
+    padding: 8,
+  },
+  policyLinkText: {
+    fontSize: 13,
+    color: colors.darkGray,
+    textDecorationLine: "underline",
   },
 } );
 

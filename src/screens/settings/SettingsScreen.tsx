@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { signOutUser, getAuthErrorMessage } from "../../api/auth";
 import { commonColor } from "../../styles/commonStyle";
+import { openPrivacyPolicy } from "../../utils/links";
 import Icon from "../../components/common/Icon";
 import type { MainStackParamList } from "../../navigation/types";
 
@@ -50,6 +51,14 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
     navigation.navigate( "FamilyMain" );
   };
 
+  const onOpenPrivacyPolicy = async () => {
+    try {
+      await openPrivacyPolicy();
+    } catch {
+      setError( "개인정보처리방침을 열 수 없습니다." );
+    }
+  };
+
   return (
     <View style={ styles.container }>
       {
@@ -58,6 +67,7 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
         : null
       }
       <MenuItem label="가족 관리" onPress={ goToFamily } />
+      <MenuItem label="개인정보처리방침" onPress={ onOpenPrivacyPolicy } />
       <MenuItem label="로그아웃" onPress={ onSignOut } color={ "error" } />
     </View>
   );

@@ -1,8 +1,10 @@
 import React from "react";
+import { Linking } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import SettingsScreen from "../../../src/screens/settings/SettingsScreen";
 import { signOutUser, getAuthErrorMessage } from "../../../src/api/auth";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
+import { PRIVACY_POLICY_URL } from "../../../src/utils/links";
 
 jest.mock( "../../../src/api/auth" );
 
@@ -51,5 +53,23 @@ describe( "SettingsScreen", () => {
     const { getByText, navigation } = renderSettingsScreen();
     fireEvent.press( getByText( "가족 관리" ) );
     expect( navigation.navigate ).toHaveBeenCalledWith( "FamilyMain" );
+  } );
+
+  test( "개인정보처리방침 메뉴를 탭하면 방침 URL을 연다", () => {
+    const openURL = jest.spyOn( Linking, "openURL" ).mockResolvedValueOnce( true );
+    const { getByText } = renderSettingsScreen();
+    fireEvent.press( getByText( "개인정보처리방침" ) );
+    expect( openURL ).toHaveBeenCalledWith( PRIVACY_POLICY_URL );
+  } );
+
+  test( "개인정보처리방침을 열 수 없으면 에러 메시지를 표시한다", async () => {
+    jest
+      .spyOn( Linking, "openURL" )
+      .mockRejectedValueOnce( new Error( "no browser" ) );
+    const { getByText } = renderSettingsScreen();
+    fireEvent.press( getByText( "개인정보처리방침" ) );
+    await waitFor( () =>
+      expect( getByText( "개인정보처리방침을 열 수 없습니다." ) ).toBeTruthy(),
+    );
   } );
 } );

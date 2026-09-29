@@ -1,7 +1,9 @@
 import React from "react";
+import { Linking } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import LoginScreen from "../../src/screens/LoginScreen";
 import { signInWithGoogle, getAuthErrorMessage } from "../../src/api/auth";
+import { PRIVACY_POLICY_URL } from "../../src/utils/links";
 
 jest.mock( "../../src/api/auth" );
 
@@ -36,5 +38,12 @@ describe( "LoginScreen", () => {
     await waitFor( () =>
       expect( getByText( "로그인에 실패했습니다." ) ).toBeTruthy(),
     );
+  } );
+
+  test( "개인정보처리방침 링크를 탭하면 방침 URL을 연다", () => {
+    const openURL = jest.spyOn( Linking, "openURL" ).mockResolvedValueOnce( true );
+    const { getByText } = render( <LoginScreen /> );
+    fireEvent.press( getByText( "개인정보처리방침" ) );
+    expect( openURL ).toHaveBeenCalledWith( PRIVACY_POLICY_URL );
   } );
 } );
