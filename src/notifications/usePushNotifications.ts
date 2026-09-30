@@ -20,8 +20,7 @@ export function usePushNotifications(enabled: boolean): void {
       try {
         const token = await getToken(messagingInstance);
         await registerDeviceToken(token);
-      } catch {
-      }
+      } catch {}
     })();
 
     const unsubscribeTokenRefresh = onTokenRefresh(
