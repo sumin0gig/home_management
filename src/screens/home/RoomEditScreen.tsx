@@ -31,11 +31,8 @@ function RoomEditScreen(): React.JSX.Element {
     setIsAddingRoom( false );
   };
 
-  const onRoomMove = async (roomId: string, x: number, y: number) => {
-    try {
-      await updateRoomPosition( roomId, x, y );
-    } catch {}
-  };
+  const onRoomMove = (roomId: string, x: number, y: number) =>
+    updateRoomPosition( roomId, x, y );
 
   return (
     <View style={ styles.container }>

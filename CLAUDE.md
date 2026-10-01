@@ -187,6 +187,44 @@ straight back to the default `? (` / `) : (` shape. That conflicts with the
 ternaries, re-apply this manual shape to it after formatting instead of
 trusting the formatter's output for that block.
 
+## Async handlers: prefer Promise chains over `try { await } catch {}`
+
+When code fires a single promise-returning call (a store action, an API call)
+and only needs to react to its success / failure / completion, chain
+`.then()` / `.catch()` / `.finally()` on that call instead of wrapping it in an
+`async` function with `try { await ... } catch {}`:
+
+```tsx
+// Preferred
+const onRoomMove = (roomId: string, x: number, y: number) =>
+  updateRoomPosition( roomId, x, y ).catch( () => {
+    // 에러는 store의 error 상태로 표시됨
+  } );
+
+// Avoid
+const onRoomMove = async (roomId: string, x: number, y: number) => {
+  try {
+    await updateRoomPosition( roomId, x, y );
+  } catch {}
+};
+```
+
+- Don't add no-op links — no `.then( () => {} )` when there's nothing to do on
+  success.
+- Return the chain (as above) so a caller or a test can still wait for it to
+  settle; a Promise-returning function is still assignable to a
+  `(...) => void` prop type.
+- An intentionally empty `.catch` (or `catch`) body must say why, usually
+  `// 에러는 store의 error 상태로 표시됨`, so it doesn't read as an
+  accidentally swallowed error.
+- `async`/`await` with `try/catch` is still the right choice when a function
+  awaits several dependent calls in sequence or uses an awaited result in
+  later statements (e.g. store actions like `addRoom`, which create the room
+  and then seed its tasks) — chaining those reads worse than straight-line
+  code.
+- Existing `try/catch` handlers aren't being retrofitted wholesale — apply
+  this to new code and to handlers you're already changing.
+
 ## Colors
 
 `src/styles/commonStyle.ts` exports two palettes:
