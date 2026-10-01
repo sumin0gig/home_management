@@ -389,7 +389,14 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   },
 
   updateRoomPosition: async (roomId: string, x: number, y: number) => {
-    set({ error: null });
+    const previous = get().rooms.find(r => r.id === roomId);
+    const isLatestMove = (r: RoomRow) =>
+      r.id === roomId && r.x === x && r.y === y;
+
+    set({
+      error: null,
+      rooms: get().rooms.map(r => (r.id === roomId ? { ...r, x, y } : r)),
+    });
     try {
       const { data: room, errors } = await client.models.Room.update({
         id: roomId,
@@ -400,9 +407,16 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       if (!room) {
         throw new Error('방 위치 변경에 실패했습니다.');
       }
-      set({ rooms: get().rooms.map(r => (r.id === roomId ? room : r)) });
+      set({ rooms: get().rooms.map(r => (isLatestMove(r) ? room : r)) });
     } catch (err) {
-      set({ error: (err as Error).message });
+      set({
+        error: (err as Error).message,
+        rooms: get().rooms.map(r =>
+          previous && isLatestMove(r)
+          ? { ...r, x: previous.x, y: previous.y }
+          : r,
+        ),
+      });
       throw err;
     }
   },

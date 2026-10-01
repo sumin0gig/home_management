@@ -56,9 +56,6 @@ function DraggableRoomBlock( {
   const translateY = useSharedValue( 0 );
   const [isDeleting, setIsDeleting] = React.useState( false );
 
-  // room.x/y가 서버 반영 후 갱신되는 시점에 맞춰 오프셋을 0으로 되돌린다 —
-  // 그 전에 미리 0으로 리셋하면 새 좌표가 반영되기 전까지 한 프레임 동안
-  // 원래 자리로 되돌아갔다가 다시 이동하는 것처럼 보인다.
   React.useEffect( () => {
     translateX.value = 0;
     translateY.value = 0;
@@ -88,10 +85,6 @@ function DraggableRoomBlock( {
       return;
     }
 
-    // 목표 위치의 픽셀 오프셋으로 우선 이동시켜두고, 부모가 onMove로 받은
-    // 좌표를 반영해 room.x/y prop이 갱신되면 위 useEffect가 오프셋을 0으로
-    // 정리한다(그 사이 화면 위치는 동일하게 유지됨). DB 저장은 여기서 하지
-    // 않고, 부모(RoomEditScreen)가 별도 저장 버튼을 누를 때 한꺼번에 한다.
     translateX.value = (nextX - room.x) * cellSize;
     translateY.value = (nextY - room.y) * cellSize;
     onMove?.( nextX, nextY );
@@ -101,8 +94,6 @@ function DraggableRoomBlock( {
     setIsDeleting( true );
     try {
       await removeRoom( room.id );
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
     } finally {
       setIsDeleting( false );
     }
