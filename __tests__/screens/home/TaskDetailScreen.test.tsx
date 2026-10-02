@@ -2,15 +2,16 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import Toast from "react-native-root-toast";
 import TaskDetailScreen from "../../../src/screens/home/TaskDetailScreen";
-import { useTaskStore, listTaskItems } from "../../../src/store/useTaskStore";
+import { listTaskItems } from "../../../actions";
+import { useTaskStore } from "../../../src/store/useTaskStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 import type { TaskRow, TaskItemRow } from "../../../src/store/useTaskStore";
 
-jest.mock( "../../../src/store/useTaskStore", () => ( {
-  ...jest.requireActual( "../../../src/store/useTaskStore" ),
+jest.mock( "../../../actions", () => ( {
+  ...jest.requireActual( "../../../actions" ),
   listTaskItems: jest.fn(),
 } ) );
 
@@ -158,7 +159,7 @@ describe( "TaskDetailScreen", () => {
 
   test( "완료 버튼을 탭하면 completeTask 후 완료 토스트를 띄우고 뒤로 간다", async () => {
     mockedListTaskItems.mockResolvedValue( [] );
-    mockedCompleteTask.mockResolvedValue( undefined );
+    mockedCompleteTask.mockResolvedValue( true );
     const { findByText, navigation } = renderTaskDetailScreen();
     fireEvent.press( await findByText( "완료했어요" ) );
 

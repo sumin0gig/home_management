@@ -74,7 +74,7 @@ describe( "RoomEditScreen", () => {
   } );
 
   test( "+ 방 추가로 방을 만들면 addRoom이 호출된다", async () => {
-    mockedAddRoom.mockResolvedValue( undefined );
+    mockedAddRoom.mockResolvedValue( true );
 
     const { getByText } = renderRoomEdit();
     fireEvent.press( getByText( "+ 방 추가" ) );
@@ -91,7 +91,7 @@ describe( "RoomEditScreen", () => {
   } );
 
   test( "방을 끌어서 옮기면 저장 버튼 없이 바로 updateRoomPosition이 호출된다", async () => {
-    mockedUpdateRoomPosition.mockResolvedValue( undefined );
+    mockedUpdateRoomPosition.mockResolvedValue( true );
 
     const utils = renderRoomEdit();
     await moveRoom( utils, "r1", 5, 2 );
@@ -101,9 +101,7 @@ describe( "RoomEditScreen", () => {
   } );
 
   test( "위치 저장이 실패해도 드래그 처리가 에러를 밖으로 던지지 않는다", async () => {
-    mockedUpdateRoomPosition.mockRejectedValue(
-      new Error( "방 위치 변경에 실패했습니다." ),
-    );
+    mockedUpdateRoomPosition.mockResolvedValue( false );
 
     const utils = renderRoomEdit();
 
@@ -111,7 +109,7 @@ describe( "RoomEditScreen", () => {
   } );
 
   test( "방을 탭하면 수정 모달이 열리고 저장하면 updateRoomDetails가 호출된다", async () => {
-    mockedUpdateRoomDetails.mockResolvedValue( undefined );
+    mockedUpdateRoomDetails.mockResolvedValue( true );
 
     const { getByText, getByPlaceholderText } = renderRoomEdit();
     fireEvent.press( getByText( "침실" ) );

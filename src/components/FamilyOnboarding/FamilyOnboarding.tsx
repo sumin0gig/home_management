@@ -9,8 +9,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
-import { signOutUser } from "../../api/auth";
-import { ensureUserExists } from "../../api/user";
+import { ensureUserExists, signOutUser } from "../../../actions";
 import { colors, commonColor } from "../../styles/commonStyle";
 
 function FamilyOnboarding(): React.JSX.Element {
@@ -31,49 +30,37 @@ function FamilyOnboarding(): React.JSX.Element {
   React.useEffect( () => {
     let cancelled = false;
     ensureUserExists()
-      .catch( () => {
-        if (!cancelled) {
-          setBootstrapError(
-            "사용자 정보를 등록하지 못했습니다. 다시 시도해주세요.",
-          );
-        }
-      } )
-      .finally( () => {
-        if (!cancelled) {
-          setIsBootstrapping( false );
-        }
-      } );
+    .catch( () => {
+      if (!cancelled) {
+        setBootstrapError(
+          "사용자 정보를 등록하지 못했습니다. 다시 시도해주세요.",
+        );
+      }
+    } )
+    .finally( () => {
+      if (!cancelled) {
+        setIsBootstrapping( false );
+      }
+    } );
     return () => {
       cancelled = true;
     };
   }, [] );
 
-  const onCreate = async () => {
+  const onCreate = () => {
     if (!familyName.trim()) {
       return;
     }
     setIsCreating( true );
-    try {
-      await createFamily( familyName.trim() );
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsCreating( false );
-    }
+    return createFamily( familyName.trim() ).finally( () => setIsCreating( false ) );
   };
 
-  const onJoin = async () => {
+  const onJoin = () => {
     if (!inviteCode.trim()) {
       return;
     }
     setIsJoining( true );
-    try {
-      await joinFamily( inviteCode.trim() );
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsJoining( false );
-    }
+    return joinFamily( inviteCode.trim() ).finally( () => setIsJoining( false ) );
   };
 
   if (isBootstrapping) {

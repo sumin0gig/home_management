@@ -25,17 +25,12 @@ function EnterFamilyCodeScreen( { navigation }: Props ): React.JSX.Element {
     navigation.setOptions( { title: "가족 코드 입력" } );
   }, [navigation] );
 
-  const onJoin = async () => {
+  const onJoin = () => {
     if (!inviteCode.trim()) return;
     setIsJoining( true );
-    try {
-      await joinFamily( inviteCode.trim() );
-      navigation.popToTop();
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsJoining( false );
-    }
+    return joinFamily( inviteCode.trim() )
+    .then( ok => ok && navigation.popToTop() )
+    .finally( () => setIsJoining( false ) );
   };
 
   return (

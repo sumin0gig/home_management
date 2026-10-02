@@ -36,7 +36,7 @@ export interface RoomEditModalSaveValues {
 interface Props {
   room: FloorPlanRoom;
   rooms: FloorPlanRoom[];
-  onSave: (updates: RoomEditModalSaveValues) => void | Promise<void>;
+  onSave: (updates: RoomEditModalSaveValues) => void | Promise<boolean>;
   onClose: () => void;
 }
 
@@ -91,12 +91,7 @@ function RoomEditModal( {
       return;
     }
     setIsSaving( true );
-    result
-      .then( onClose )
-      .catch( () => {
-        // 에러는 store의 error 상태로 표시됨
-      } )
-      .finally( () => setIsSaving( false ) );
+    result.then( ok => ok && onClose() ).finally( () => setIsSaving( false ) );
   };
 
   return (

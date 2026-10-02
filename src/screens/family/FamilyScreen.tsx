@@ -46,16 +46,12 @@ function FamilyScreen( { navigation }: Props ): React.JSX.Element {
     setIsEditingName( true );
   };
 
-  const onSaveName = async () => {
+  const onSaveName = () => {
     if (!nameDraft.trim()) return;
     setIsSaving( true );
-
-    try {
-      await renameFamily( nameDraft.trim() );
-      setIsEditingName( false );
-    } finally {
-      setIsSaving( false );
-    }
+    return renameFamily( nameDraft.trim() )
+    .then( ok => ok && setIsEditingName( false ) )
+    .finally( () => setIsSaving( false ) );
   };
 
   const onRemoveMember = (member: FamilyMemberRow) => {
@@ -75,15 +71,18 @@ function FamilyScreen( { navigation }: Props ): React.JSX.Element {
       {
         text: "떠나기",
         style: "destructive",
-        onPress: async () => {
+        onPress: () => {
           setIsLeaving( true );
-          try {
-            await leaveFamily();
-          } catch (err) {
-            Alert.alert( "오류", (err as Error).message );
-          } finally {
-            setIsLeaving( false );
-          }
+          return leaveFamily()
+          .then( ok => {
+            if (!ok) {
+              Alert.alert(
+                "오류",
+                useFamilyStore.getState().error ?? undefined,
+              );
+            }
+          } )
+          .finally( () => setIsLeaving( false ) );
         },
       },
     ] );

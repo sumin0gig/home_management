@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
-import { getCurrentAuthUser } from '../api/auth';
-import { throwIfErrors } from '../api/shared';
+import { throwIfErrors, getCurrentAuthUser } from '../../actions';
 
 const client = generateClient<Schema>();
 
@@ -22,8 +21,8 @@ interface MascotState {
   mascot: MascotRow | null;
   error: string | null;
   fetchMyMascot: () => Promise<void>;
-  createMascot: (input: MascotInput) => Promise<void>;
-  updateMascot: (input: Partial<MascotInput>) => Promise<void>;
+  createMascot: (input: MascotInput) => Promise<boolean>;
+  updateMascot: (input: Partial<MascotInput>) => Promise<boolean>;
   addHappiness: (gain: number) => Promise<void>;
   reset: () => void;
 }
@@ -65,9 +64,10 @@ export const useMascotStore = create<MascotState>((set, get) => ({
         throw new Error('마스코트 생성에 실패했습니다.');
       }
       set({ status: 'created', mascot });
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
@@ -75,7 +75,7 @@ export const useMascotStore = create<MascotState>((set, get) => ({
     set({ error: null });
     const { mascot } = get();
     if (!mascot) {
-      return;
+      return false;
     }
     try {
       const { data: updated, errors } = await client.models.Mascot.update({
@@ -87,9 +87,10 @@ export const useMascotStore = create<MascotState>((set, get) => ({
         throw new Error('마스코트 수정에 실패했습니다.');
       }
       set({ mascot: updated });
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 

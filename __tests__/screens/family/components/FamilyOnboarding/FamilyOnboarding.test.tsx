@@ -1,13 +1,15 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import FamilyOnboarding from "../../../../../src/components/FamilyOnboarding/FamilyOnboarding";
-import { signOutUser } from "../../../../../src/api/auth";
-import { ensureUserExists } from "../../../../../src/api/user";
+import { ensureUserExists, signOutUser } from "../../../../../actions";
 import { useFamilyStore } from "../../../../../src/store/useFamilyStore";
 import { resetAllStores } from "../../../../../src/test-utils/resetStores";
 
-jest.mock( "../../../../../src/api/auth" );
-jest.mock( "../../../../../src/api/user" );
+jest.mock( "../../../../../actions", () => ( {
+  ...jest.requireActual( "../../../../../actions" ),
+  signOutUser: jest.fn(),
+  ensureUserExists: jest.fn(),
+} ) );
 
 const mockedCreateFamily = jest.fn();
 const mockedJoinFamily = jest.fn();
@@ -33,12 +35,7 @@ describe( "FamilyOnboarding", () => {
   } );
 
   test( "가족 이름을 입력하면 가족을 생성한다", async () => {
-    mockedCreateFamily.mockResolvedValue( {
-      id: "f1",
-      name: "우리집",
-      inviteCode: "ABC123",
-      ownerId: "u1",
-    } );
+    mockedCreateFamily.mockResolvedValue( true );
 
     const { getByText, getByPlaceholderText } = render( <FamilyOnboarding /> );
     await waitFor( () => expect( getByText( "만들기" ) ).toBeTruthy() );
@@ -58,7 +55,7 @@ describe( "FamilyOnboarding", () => {
   } );
 
   test( "초대 코드를 입력하면 가족에 참여한다", async () => {
-    mockedJoinFamily.mockResolvedValue( undefined );
+    mockedJoinFamily.mockResolvedValue( true );
 
     const { getByText, getByPlaceholderText } = render( <FamilyOnboarding /> );
     await waitFor( () => expect( getByText( "참여하기" ) ).toBeTruthy() );

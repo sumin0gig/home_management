@@ -105,7 +105,7 @@ describe( "FamilyScreen", () => {
       membership: ownerMembership,
       members: [ownerMembership, otherMember],
     } );
-    mockedRemoveMember.mockResolvedValue( undefined );
+    mockedRemoveMember.mockResolvedValue( true );
     const { getByText } = renderFamilyScreen();
     fireEvent.press( getByText( "제거" ) );
     await waitFor( () =>
@@ -120,7 +120,7 @@ describe( "FamilyScreen", () => {
       membership: otherMember,
       members: [ownerMembership, otherMember],
     } );
-    mockedLeaveFamily.mockResolvedValue( undefined );
+    mockedLeaveFamily.mockResolvedValue( true );
     const { getByText } = renderFamilyScreen();
     fireEvent.press( getByText( "가족 떠나기" ) );
     await waitFor( () => expect( mockedLeaveFamily ).toHaveBeenCalled() );

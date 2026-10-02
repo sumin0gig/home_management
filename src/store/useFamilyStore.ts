@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
-import { getCurrentAuthUser, fetchDisplayName } from '../api/auth';
-import { throwIfErrors } from '../api/shared';
+import {
+  throwIfErrors,
+  getCurrentAuthUser,
+  fetchDisplayName,
+} from '../../actions';
 import { useRoomStore } from './useRoomStore';
 
 const client = generateClient<Schema>();
@@ -28,12 +31,12 @@ interface FamilyState {
   members: FamilyMemberRow[];
   error: string | null;
   fetchMyFamily: () => Promise<void>;
-  createFamily: (name: string) => Promise<FamilyRow>;
-  joinFamily: (inviteCode: string) => Promise<void>;
+  createFamily: (name: string) => Promise<boolean>;
+  joinFamily: (inviteCode: string) => Promise<boolean>;
   refreshMembers: () => Promise<void>;
-  renameFamily: (name: string) => Promise<void>;
-  removeMember: (memberRecordId: string) => Promise<void>;
-  leaveFamily: () => Promise<void>;
+  renameFamily: (name: string) => Promise<boolean>;
+  removeMember: (memberRecordId: string) => Promise<boolean>;
+  leaveFamily: () => Promise<boolean>;
   reset: () => void;
 }
 
@@ -87,8 +90,10 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
   createFamily: async (name: string) => {
     set({ error: null });
     try {
-      const displayName = await fetchDisplayName();
-      const user = await getCurrentAuthUser();
+      const [displayName, user] = await Promise.all([
+        fetchDisplayName(),
+        getCurrentAuthUser(),
+      ]);
       const { data: family, errors } = await client.models.Family.create({
         name,
         inviteCode: generateInviteCode(),
@@ -109,18 +114,20 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       throwIfErrors(memberErrors, '가족 생성에 실패했습니다.');
 
       await get().fetchMyFamily();
-      return family;
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
   joinFamily: async (inviteCode: string) => {
     set({ error: null });
     try {
-      const displayName = await fetchDisplayName();
-      const user = await getCurrentAuthUser();
+      const [displayName, user] = await Promise.all([
+        fetchDisplayName(),
+        getCurrentAuthUser(),
+      ]);
       const normalizedCode = inviteCode.trim().toUpperCase();
 
       const { data: families, errors } =
@@ -144,9 +151,10 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       throwIfErrors(memberErrors, '가족 참여에 실패했습니다.');
 
       await get().fetchMyFamily();
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
@@ -169,7 +177,7 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
   renameFamily: async (name: string) => {
     const { family } = get();
     if (!family) {
-      return;
+      return false;
     }
     set({ error: null });
     try {
@@ -179,9 +187,10 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       });
       throwIfErrors(errors, '가족 이름 변경에 실패했습니다.');
       set({ family: { ...family, name } });
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
@@ -193,16 +202,17 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       });
       throwIfErrors(errors, '멤버 제거에 실패했습니다.');
       await get().refreshMembers();
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
   leaveFamily: async () => {
     const { membership, members } = get();
     if (!membership) {
-      return;
+      return false;
     }
     set({ error: null });
     try {
@@ -216,7 +226,11 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       }
 
       if (membership.role === 'OWNER') {
-        await useRoomStore.getState().clearRoomsForFamily(membership.familyId);
+        const { clearRoomsForFamily } = useRoomStore.getState();
+        const cleared = await clearRoomsForFamily(membership.familyId);
+        if (!cleared) {
+          throw new Error('방 정리에 실패했습니다.');
+        }
       }
 
       const { errors } = await client.models.FamilyMember.delete({
@@ -232,9 +246,10 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
 
       useRoomStore.getState().reset();
       set({ status: 'none', family: null, membership: null, members: [] });
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 

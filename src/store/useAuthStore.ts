@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Hub } from 'aws-amplify/utils';
-import { getCurrentAuthUser } from '../api/auth';
+import { getCurrentAuthUser } from '../../actions';
 import { useFamilyStore } from './useFamilyStore';
 import { useTaskStore } from './useTaskStore';
 import { useRoomStore } from './useRoomStore';
@@ -17,14 +17,10 @@ interface AuthState {
 export const useAuthStore = create<AuthState>(set => ({
   status: 'loading',
 
-  checkAuthStatus: async () => {
-    try {
-      await getCurrentAuthUser();
-      set({ status: 'signedIn' });
-    } catch {
-      set({ status: 'signedOut' });
-    }
-  },
+  checkAuthStatus: () =>
+    getCurrentAuthUser()
+    .then(() => set({ status: 'signedIn' }))
+    .catch(() => set({ status: 'signedOut' })),
 
   subscribeToAuthEvents: () => {
     return Hub.listen('auth', ({ payload }) => {

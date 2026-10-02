@@ -1,9 +1,12 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { signOutUser, getAuthErrorMessage } from "../../api/auth";
+import {
+  getAuthErrorMessage,
+  openPrivacyPolicy,
+  signOutUser,
+} from "../../../actions";
 import { commonColor } from "../../styles/commonStyle";
-import { openPrivacyPolicy } from "../../utils/links";
 import Icon from "../../components/common/Icon";
 import type { MainStackParamList } from "../../navigation/types";
 
@@ -39,25 +42,17 @@ function MenuItem( {
 function SettingsScreen( { navigation }: Props ): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
 
-  const onSignOut = async () => {
-    try {
-      await signOutUser();
-    } catch (err) {
-      setError( getAuthErrorMessage( err ) );
-    }
-  };
+  const onSignOut = () =>
+    signOutUser().catch( err => setError( getAuthErrorMessage( err ) ) );
 
   const goToFamily = () => {
     navigation.navigate( "FamilyMain" );
   };
 
-  const onOpenPrivacyPolicy = async () => {
-    try {
-      await openPrivacyPolicy();
-    } catch {
-      setError( "개인정보처리방침을 열 수 없습니다." );
-    }
-  };
+  const onOpenPrivacyPolicy = () =>
+    openPrivacyPolicy().catch( () =>
+      setError( "개인정보처리방침을 열 수 없습니다." ),
+    );
 
   return (
     <View style={ styles.container }>

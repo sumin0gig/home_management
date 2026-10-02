@@ -1,7 +1,15 @@
 import { create } from 'zustand';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
-import { throwIfErrors } from '../api/shared';
+import {
+  throwIfErrors,
+  listRoomsForFamily,
+  listAllRoomsForFamily,
+  listAllTaskIdsForRoom,
+  deleteTaskWithChildren,
+  listTaskTemplatesForRoomType,
+  listTaskTemplateItemsForTemplate,
+} from '../../actions';
 import { computeNextDueDate } from '../utils/date';
 import { randomRoomColor } from '../utils/commonUtils';
 
@@ -119,109 +127,6 @@ export function roomDisplayName(room: {
   return room.roomType ? ROOM_TYPE_LABELS[room.roomType] : '방';
 }
 
-export async function listRoomsForFamily(familyId: string): Promise<RoomRow[]> {
-  const { data: rooms, errors } = await client.models.Room.listRoomByFamilyId({
-    familyId,
-  });
-  throwIfErrors(errors, '방 목록을 불러오지 못했습니다.');
-  return rooms;
-}
-
-async function listAllRoomsForFamily(familyId: string): Promise<RoomRow[]> {
-  const results: RoomRow[] = [];
-  let nextToken: string | null | undefined;
-  do {
-    const {
-      data,
-      nextToken: token,
-      errors,
-    } = await client.models.Room.listRoomByFamilyId(
-      { familyId },
-      { nextToken },
-    );
-    throwIfErrors(errors, '방 목록을 불러오지 못했습니다.');
-    results.push(...data);
-    nextToken = token;
-  } while (nextToken);
-  return results;
-}
-
-// 방을 삭제할 때 그 안의 집안일/완료 기록도 함께 지워야 한다. useTaskStore를 가져다 쓰면
-// useTaskStore -> useRoomStore(listRoomsForFamily) 방향과 순환 참조가 생기므로,
-// 여기서는 필요한 Amplify 호출을 직접 반복한다(useTaskStore.deleteTask와 로직이 겹침).
-async function listAllTaskIdsForRoom(roomId: string): Promise<string[]> {
-  const results: string[] = [];
-  let nextToken: string | null | undefined;
-  do {
-    const {
-      data,
-      nextToken: token,
-      errors,
-    } = await client.models.Task.listTaskByRoomId({ roomId }, { nextToken });
-    throwIfErrors(errors, '집안일 목록을 불러오지 못했습니다.');
-    results.push(...data.map(task => task.id));
-    nextToken = token;
-  } while (nextToken);
-  return results;
-}
-
-async function deleteTaskAndLogs(taskId: string): Promise<void> {
-  let nextToken: string | null | undefined;
-  do {
-    const {
-      data: logs,
-      nextToken: token,
-      errors,
-    } = await client.models.TaskLog.listTaskLogByTaskId(
-      { taskId },
-      { nextToken },
-    );
-    throwIfErrors(errors, '완료 기록 삭제에 실패했습니다.');
-    const deleteResults = await Promise.all(
-      logs.map(log => client.models.TaskLog.delete({ id: log.id })),
-    );
-    deleteResults.forEach(result =>
-      throwIfErrors(result.errors, '완료 기록 삭제에 실패했습니다.'),
-    );
-    nextToken = token;
-  } while (nextToken);
-
-  const { data: items, errors: itemListErrors } =
-    await client.models.TaskItem.listTaskItemByTaskId({ taskId });
-  throwIfErrors(itemListErrors, '집안일 안내 항목 삭제에 실패했습니다.');
-  const itemDeleteResults = await Promise.all(
-    items.map(item => client.models.TaskItem.delete({ id: item.id })),
-  );
-  itemDeleteResults.forEach(result =>
-    throwIfErrors(result.errors, '집안일 안내 항목 삭제에 실패했습니다.'),
-  );
-
-  const { errors } = await client.models.Task.delete({ id: taskId });
-  throwIfErrors(errors, '집안일 삭제에 실패했습니다.');
-}
-
-async function listTaskTemplatesForRoomType(
-  roomType: NonNullable<RoomType>,
-): Promise<Schema['TaskTemplate']['type'][]> {
-  const { data: templates, errors } =
-    await client.models.TaskTemplate.listTaskTemplateByRoomType({
-      roomType,
-    });
-  throwIfErrors(errors, '집안일 템플릿을 불러오지 못했습니다.');
-  return templates;
-}
-
-async function listTaskTemplateItemsForTemplate(
-  templateId: string,
-): Promise<Schema['TaskTemplateItem']['type'][]> {
-  const { data: items, errors } =
-    await client.models.TaskTemplateItem.listTaskTemplateItemByTemplateId({
-      templateId,
-    });
-  throwIfErrors(errors, '집안일 템플릿 항목을 불러오지 못했습니다.');
-  return items;
-}
-
 type RoomStatus = 'idle' | 'loading' | 'loaded';
 
 interface RoomState {
@@ -240,9 +145,13 @@ interface RoomState {
       height?: number;
       color?: string;
     },
-  ) => Promise<void>;
-  removeRoom: (roomId: string) => Promise<void>;
-  updateRoomPosition: (roomId: string, x: number, y: number) => Promise<void>;
+  ) => Promise<boolean>;
+  removeRoom: (roomId: string) => Promise<boolean>;
+  updateRoomPosition: (
+    roomId: string,
+    x: number,
+    y: number,
+  ) => Promise<boolean>;
   updateRoomDetails: (
     roomId: string,
     updates: {
@@ -252,8 +161,8 @@ interface RoomState {
       height?: number;
       color?: string;
     },
-  ) => Promise<void>;
-  clearRoomsForFamily: (familyId: string) => Promise<void>;
+  ) => Promise<boolean>;
+  clearRoomsForFamily: (familyId: string) => Promise<boolean>;
   reset: () => void;
 }
 
@@ -368,9 +277,10 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       );
 
       set({ rooms: [...get().rooms, room] });
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
@@ -378,13 +288,14 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     set({ error: null });
     try {
       const taskIds = await listAllTaskIdsForRoom(roomId);
-      await Promise.all(taskIds.map(taskId => deleteTaskAndLogs(taskId)));
+      await Promise.all(taskIds.map(taskId => deleteTaskWithChildren(taskId)));
       const { errors } = await client.models.Room.delete({ id: roomId });
       throwIfErrors(errors, '방 삭제에 실패했습니다.');
       set({ rooms: get().rooms.filter(r => r.id !== roomId) });
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
@@ -408,6 +319,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         throw new Error('방 위치 변경에 실패했습니다.');
       }
       set({ rooms: get().rooms.map(r => (isLatestMove(r) ? room : r)) });
+      return true;
     } catch (err) {
       set({
         error: (err as Error).message,
@@ -417,7 +329,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
           : r,
         ),
       });
-      throw err;
+      return false;
     }
   },
 
@@ -442,15 +354,24 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         throw new Error('방 수정에 실패했습니다.');
       }
       set({ rooms: get().rooms.map(r => (r.id === roomId ? room : r)) });
+      return true;
     } catch (err) {
       set({ error: (err as Error).message });
-      throw err;
+      return false;
     }
   },
 
   clearRoomsForFamily: async (familyId: string) => {
-    const rooms = await listAllRoomsForFamily(familyId);
-    await Promise.all(rooms.map(room => get().removeRoom(room.id)));
+    try {
+      const rooms = await listAllRoomsForFamily(familyId);
+      const results = await Promise.all(
+        rooms.map(room => get().removeRoom(room.id)),
+      );
+      return results.every(Boolean);
+    } catch (err) {
+      set({ error: (err as Error).message });
+      return false;
+    }
   },
 
   reset: () => set({ ...initialState }),

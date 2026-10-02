@@ -19,7 +19,10 @@ import DefaultButton from "../common/DefaultButton";
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (roomType: NonNullable<RoomType>, label: string) => Promise<void>;
+  onSubmit: (
+    roomType: NonNullable<RoomType>,
+    label: string,
+  ) => Promise<boolean>;
 }
 
 function AddRoomModal( {
@@ -43,16 +46,11 @@ function AddRoomModal( {
     onCloseModal();
   };
 
-  const onSubmit = async () => {
+  const onSubmit = () => {
     setIsSaving( true );
-    try {
-      await onSubmitRoom( newRoomType, newRoomLabel );
-      resetForm();
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsSaving( false );
-    }
+    return onSubmitRoom( newRoomType, newRoomLabel )
+    .then( ok => ok && resetForm() )
+    .finally( () => setIsSaving( false ) );
   };
 
   return (

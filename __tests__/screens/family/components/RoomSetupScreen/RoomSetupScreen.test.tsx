@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import RoomSetupScreen from "../../../../../src/components/RoomSetupScreen/RoomSetupScreen";
-import { signOutUser } from "../../../../../src/api/auth";
+import { signOutUser } from "../../../../../actions";
 import { useFamilyStore } from "../../../../../src/store/useFamilyStore";
 import {
   ROOM_TYPE_DEFAULT_DIMENSIONS,
@@ -10,7 +10,10 @@ import {
 import { resetAllStores } from "../../../../../src/test-utils/resetStores";
 import type { FamilyRow } from "../../../../../src/store/useFamilyStore";
 
-jest.mock( "../../../../../src/api/auth" );
+jest.mock( "../../../../../actions", () => ( {
+  ...jest.requireActual( "../../../../../actions" ),
+  signOutUser: jest.fn(),
+} ) );
 
 const mockedAddRoom = jest.fn();
 const mockedSignOutUser = signOutUser as jest.Mock;
@@ -55,7 +58,7 @@ describe( "RoomSetupScreen", () => {
   } );
 
   test( "타일을 추가하고 집 만들기를 누르면 addRoom이 호출된다", async () => {
-    mockedAddRoom.mockResolvedValue( undefined );
+    mockedAddRoom.mockResolvedValue( true );
 
     const { getByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 침실" ) );
@@ -72,7 +75,7 @@ describe( "RoomSetupScreen", () => {
   } );
 
   test( "여러 방을 추가하고 집 만들기를 누르면 모든 방에 대해 addRoom이 호출된다", async () => {
-    mockedAddRoom.mockResolvedValue( undefined );
+    mockedAddRoom.mockResolvedValue( true );
 
     const { getByText } = render( <RoomSetupScreen /> );
     fireEvent.press( getByText( "+ 침실" ) );
@@ -110,7 +113,7 @@ describe( "RoomSetupScreen", () => {
   } );
 
   test( "이름을 입력하고 추가하면 커스텀 타일이 생성되고 집 만들기 시 GENERAL_ROOM으로 저장된다", async () => {
-    mockedAddRoom.mockResolvedValue( undefined );
+    mockedAddRoom.mockResolvedValue( true );
 
     const { getByText, getByPlaceholderText, getByTestId } = render(
       <RoomSetupScreen />,

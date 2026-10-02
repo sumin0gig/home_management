@@ -47,15 +47,12 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
     );
   }, [] );
 
-  const onReadCode = async (event: OnReadCodeEvent) => {
+  const onReadCode = (event: OnReadCodeEvent) => {
     if (scanStatus !== "scanning") return;
     setScanStatus( "joining" );
-    try {
-      await joinFamily( event.nativeEvent.codeStringValue.trim() );
-      navigation.popToTop();
-    } catch {
-      setScanStatus( "error" );
-    }
+    return joinFamily( event.nativeEvent.codeStringValue.trim() ).then( ok =>
+      ok ? navigation.popToTop() : setScanStatus( "error" ),
+    );
   };
 
   if (permissionStatus === "checking") {

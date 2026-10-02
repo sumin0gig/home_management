@@ -67,7 +67,7 @@ describe( "useRoomStore.updateRoomPosition", () => {
 
     await expect(
       useRoomStore.getState().updateRoomPosition( "r1", 3, 1 ),
-    ).rejects.toThrow( "network" );
+    ).resolves.toBe( false );
 
     expect( currentBedroom() ).toMatchObject( { x: 0, y: 0 } );
     expect( useRoomStore.getState().error ).toBe( "network" );
@@ -103,7 +103,7 @@ describe( "useRoomStore.updateRoomPosition", () => {
     const secondMove = useRoomStore.getState().updateRoomPosition( "r1", 5, 4 );
 
     first.reject( new Error( "network" ) );
-    await expect( firstMove ).rejects.toThrow( "network" );
+    await expect( firstMove ).resolves.toBe( false );
     expect( currentBedroom() ).toMatchObject( { x: 5, y: 4 } );
 
     second.resolve( { data: { ...bedroom, x: 5, y: 4 }, errors: undefined } );

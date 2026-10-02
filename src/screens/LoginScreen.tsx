@@ -1,29 +1,25 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { signInWithGoogle, getAuthErrorMessage } from "../api/auth";
+import {
+  getAuthErrorMessage,
+  openPrivacyPolicy,
+  signInWithGoogle,
+} from "../../actions";
 import { colors, commonColor } from "../styles/commonStyle";
-import { openPrivacyPolicy } from "../utils/links";
 import DefaultButton from "../components/common/DefaultButton";
 
 function LoginScreen(): React.JSX.Element {
   const [error, setError] = React.useState<string | null>( null );
 
-  const onGoogleSignIn = async () => {
+  const onGoogleSignIn = () => {
     setError( null );
-    try {
-      await signInWithGoogle();
-    } catch (err) {
-      setError( getAuthErrorMessage( err ) );
-    }
+    return signInWithGoogle().catch( err => setError( getAuthErrorMessage( err ) ) );
   };
 
-  const onOpenPrivacyPolicy = async () => {
-    try {
-      await openPrivacyPolicy();
-    } catch {
-      setError( "개인정보처리방침을 열 수 없습니다." );
-    }
-  };
+  const onOpenPrivacyPolicy = () =>
+    openPrivacyPolicy().catch( () =>
+      setError( "개인정보처리방침을 열 수 없습니다." ),
+    );
 
   return (
     <View style={ styles.container }>

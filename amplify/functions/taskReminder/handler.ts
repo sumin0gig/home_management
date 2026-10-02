@@ -136,13 +136,13 @@ export const handler = async (): Promise<void> => {
     tokens.forEach(deviceToken => {
       sendPromises.push(
         messaging
-          .send({
-            token: deviceToken.token,
-            notification: { title: '집안일 알림', body },
-          })
-          .catch(() => {
-            // 만료/무효화된 토큰 등은 무시하고 나머지 발송을 계속 진행한다.
-          }),
+        .send({
+          token: deviceToken.token,
+          notification: { title: '집안일 알림', body },
+        })
+        .catch(() => {
+          // 만료/무효화된 토큰 등은 무시하고 나머지 발송을 계속 진행한다.
+        }),
       );
     });
   });

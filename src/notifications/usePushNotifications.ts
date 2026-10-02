@@ -6,7 +6,7 @@ import {
   onTokenRefresh,
   onMessage,
 } from '@react-native-firebase/messaging';
-import { registerDeviceToken } from '../api/deviceToken';
+import { registerDeviceToken } from '../../actions';
 
 export function usePushNotifications(enabled: boolean): void {
   useEffect(() => {
@@ -16,22 +16,11 @@ export function usePushNotifications(enabled: boolean): void {
 
     const messagingInstance = getMessaging();
 
-    (async () => {
-      try {
-        const token = await getToken(messagingInstance);
-        await registerDeviceToken(token);
-      } catch {}
-    })();
+    getToken(messagingInstance).then(registerDeviceToken);
 
     const unsubscribeTokenRefresh = onTokenRefresh(
       messagingInstance,
-      async token => {
-        try {
-          await registerDeviceToken(token);
-        } catch {
-          // 무시
-        }
-      },
+      registerDeviceToken,
     );
 
     const unsubscribeMessage = onMessage(

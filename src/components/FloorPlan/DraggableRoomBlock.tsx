@@ -90,13 +90,9 @@ function DraggableRoomBlock( {
     onMove?.( nextX, nextY );
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     setIsDeleting( true );
-    try {
-      await removeRoom( room.id );
-    } finally {
-      setIsDeleting( false );
-    }
+    return removeRoom( room.id ).finally( () => setIsDeleting( false ) );
   };
 
   const onDelete = () => {

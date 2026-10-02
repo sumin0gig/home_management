@@ -1,13 +1,16 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import RoomWaitingScreen from "../../../../../src/components/RoomWaitingScreen/RoomWaitingScreen";
-import { signOutUser } from "../../../../../src/api/auth";
+import { signOutUser } from "../../../../../actions";
 import { useFamilyStore } from "../../../../../src/store/useFamilyStore";
 import { useRoomStore } from "../../../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../../../src/test-utils/resetStores";
 import type { FamilyRow } from "../../../../../src/store/useFamilyStore";
 
-jest.mock( "../../../../../src/api/auth" );
+jest.mock( "../../../../../actions", () => ( {
+  ...jest.requireActual( "../../../../../actions" ),
+  signOutUser: jest.fn(),
+} ) );
 
 const mockedSignOutUser = signOutUser as jest.Mock;
 const mockedFetchRooms = jest.fn();

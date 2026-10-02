@@ -2,11 +2,18 @@ import React from "react";
 import { Linking } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import SettingsScreen from "../../../src/screens/settings/SettingsScreen";
-import { signOutUser, getAuthErrorMessage } from "../../../src/api/auth";
+import {
+  getAuthErrorMessage,
+  PRIVACY_POLICY_URL,
+  signOutUser,
+} from "../../../actions";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
-import { PRIVACY_POLICY_URL } from "../../../src/utils/links";
 
-jest.mock( "../../../src/api/auth" );
+jest.mock( "../../../actions", () => ( {
+  ...jest.requireActual( "../../../actions" ),
+  signOutUser: jest.fn(),
+  getAuthErrorMessage: jest.fn(),
+} ) );
 
 const mockedSignOutUser = signOutUser as jest.Mock;
 const mockedGetAuthErrorMessage = getAuthErrorMessage as jest.Mock;

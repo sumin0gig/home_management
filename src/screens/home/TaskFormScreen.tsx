@@ -13,9 +13,8 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
 import { toDateString } from "../../utils/date";
+import { listTaskItems, listTaskLogs } from "../../../actions";
 import {
-  listTaskItems,
-  listTaskLogs,
   type TaskInput,
   type TaskItemInput,
   type TaskLogRow,
@@ -92,22 +91,22 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   React.useEffect( () => {
     if (taskId) {
       listTaskLogs( taskId )
-        .then( setLogs )
-        .catch( err => setError( (err as Error).message ) );
+      .then( setLogs )
+      .catch( err => setError( (err as Error).message ) );
     }
   }, [taskId] );
 
   React.useEffect( () => {
     if (taskId) {
       listTaskItems( taskId )
-        .then( loaded => {
-          setSteps(
-            loaded.filter( i => i.type === "DEFAULT" ).map( i => i.content ),
-          );
-          setTips( loaded.filter( i => i.type === "TIP" ).map( i => i.content ) );
-          setItemsLoaded( true );
-        } )
-        .catch( err => setError( (err as Error).message ) );
+      .then( loaded => {
+        setSteps(
+          loaded.filter( i => i.type === "DEFAULT" ).map( i => i.content ),
+        );
+        setTips( loaded.filter( i => i.type === "TIP" ).map( i => i.content ) );
+        setItemsLoaded( true );
+      } )
+      .catch( err => setError( (err as Error).message ) );
     }
   }, [taskId] );
 
@@ -119,7 +118,11 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
     );
   };
 
-  const onSubmit = async () => {
+  // 저장/삭제 결과: 성공하면 이전 화면으로, 실패하면 store에 남은 에러를 보여준다
+  const goBackOrShowError = (ok: boolean) =>
+    ok ? navigation.goBack() : setError( useTaskStore.getState().error );
+
+  const onSubmit = () => {
     if (!roomId) {
       setError( "방을 선택해주세요." );
       return;
@@ -157,18 +160,11 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
 
     setIsSaving( true );
     setError( null );
-    try {
-      if (isEditMode && taskId) {
-        await updateTask( taskId, input, roomId );
-      } else {
-        await createTask( roomId, input );
-      }
-      navigation.goBack();
-    } catch (err) {
-      setError( (err as Error).message );
-    } finally {
-      setIsSaving( false );
-    }
+    const save =
+      isEditMode && taskId
+        ? updateTask( taskId, input, roomId )
+        : createTask( roomId, input );
+    return save.then( goBackOrShowError ).finally( () => setIsSaving( false ) );
   };
 
   const onDelete = () => {
@@ -183,14 +179,7 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         {
           text: "삭제",
           style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteTask( taskId );
-              navigation.goBack();
-            } catch (err) {
-              setError( (err as Error).message );
-            }
-          },
+          onPress: () => deleteTask( taskId ).then( goBackOrShowError ),
         },
       ],
     );

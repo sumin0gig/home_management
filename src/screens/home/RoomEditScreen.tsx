@@ -25,10 +25,12 @@ function RoomEditScreen(): React.JSX.Element {
     null,
   );
 
-  const onAddRoom = async (roomType: NonNullable<RoomType>, label: string) => {
-    if (!family) return;
-    await addRoom( family.id, roomType, label.trim() || undefined );
-    setIsAddingRoom( false );
+  const onAddRoom = (roomType: NonNullable<RoomType>, label: string) => {
+    if (!family) return Promise.resolve( false );
+    return addRoom( family.id, roomType, label.trim() || undefined ).then( ok => {
+      if (ok) setIsAddingRoom( false );
+      return ok;
+    } );
   };
 
   const onRoomMove = (roomId: string, x: number, y: number) =>

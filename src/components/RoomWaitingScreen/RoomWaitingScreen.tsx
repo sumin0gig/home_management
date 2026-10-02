@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { useRoomStore } from "../../store/useRoomStore";
-import { signOutUser } from "../../api/auth";
+import { signOutUser } from "../../../actions";
 import { colors, commonColor } from "../../styles/commonStyle";
 
 function RoomWaitingScreen(): React.JSX.Element {
@@ -18,16 +18,12 @@ function RoomWaitingScreen(): React.JSX.Element {
   const fetchRooms = useRoomStore( state => state.fetchRooms );
   const [isRefreshing, setIsRefreshing] = React.useState( false );
 
-  const onRefresh = async () => {
+  const onRefresh = () => {
     if (!family) {
       return;
     }
     setIsRefreshing( true );
-    try {
-      await fetchRooms( family.id );
-    } finally {
-      setIsRefreshing( false );
-    }
+    return fetchRooms( family.id ).finally( () => setIsRefreshing( false ) );
   };
 
   return (

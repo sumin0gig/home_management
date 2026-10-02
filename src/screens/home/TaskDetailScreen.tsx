@@ -11,11 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import Toast from "react-native-root-toast";
 import type { MainStackParamList } from "../../navigation/types";
-import {
-  listTaskItems,
-  useTaskStore,
-  type TaskItemRow,
-} from "../../store/useTaskStore";
+import { listTaskItems } from "../../../actions";
+import { useTaskStore, type TaskItemRow } from "../../store/useTaskStore";
 import { roomDisplayName, useRoomStore } from "../../store/useRoomStore";
 import { formatDueLabel, toDateString } from "../../utils/date";
 import { splitTaskItemContent } from "../../utils/taskItem";
@@ -58,9 +55,9 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   React.useEffect( () => {
     setIsLoading( true );
     listTaskItems( taskId )
-      .then( setItems )
-      .catch( err => setError( (err as Error).message ) )
-      .finally( () => setIsLoading( false ) );
+    .then( setItems )
+    .catch( err => setError( (err as Error).message ) )
+    .finally( () => setIsLoading( false ) );
   }, [taskId] );
 
   if (!task) {
@@ -84,17 +81,18 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const steps = items.filter( item => item.type === "DEFAULT" );
   const tips = items.filter( item => item.type === "TIP" );
 
-  const onComplete = async () => {
+  const onComplete = () => {
     setIsCompleting( true );
-    try {
-      await completeTask( task );
+    return completeTask( task )
+    .then( ok => {
+      if (!ok) {
+        setError( useTaskStore.getState().error );
+        return;
+      }
       Toast.show( "완료되었습니다", { duration: Toast.durations.SHORT } );
       navigation.goBack();
-    } catch (err) {
-      setError( (err as Error).message );
-    } finally {
-      setIsCompleting( false );
-    }
+    } )
+    .finally( () => setIsCompleting( false ) );
   };
 
   return (

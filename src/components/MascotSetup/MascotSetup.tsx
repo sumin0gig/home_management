@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Mascot from "../Mascot/Mascot";
 import MascotStyleEditor from "../Mascot/MascotStyleEditor";
 import { EAR_OPTIONS, TAIL_OPTIONS } from "../Mascot/optionMaps";
-import { signOutUser } from "../../api/auth";
+import { signOutUser } from "../../../actions";
 import { useMascotStore, type MascotInput } from "../../store/useMascotStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 
@@ -33,15 +33,11 @@ function MascotSetup(): React.JSX.Element {
     TAIL_OPTIONS.find( option => option.value === tailStyle )?.variant ??
     "straight";
 
-  const onSubmit = async () => {
+  const onSubmit = () => {
     setIsSaving( true );
-    try {
-      await createMascot( { earStyle, tailStyle, fillColor } );
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsSaving( false );
-    }
+    return createMascot( { earStyle, tailStyle, fillColor } ).finally( () =>
+      setIsSaving( false ),
+    );
   };
 
   return (

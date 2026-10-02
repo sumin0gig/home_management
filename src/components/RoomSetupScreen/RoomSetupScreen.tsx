@@ -18,7 +18,7 @@ import {
   type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
-import { signOutUser } from "../../api/auth";
+import { signOutUser } from "../../../actions";
 import { randomRoomColor } from "../../utils/commonUtils";
 import CustomRoomModal from "./CustomRoomModal";
 import FloorPlanCanvas from "../FloorPlan/FloorPlanCanvas";
@@ -106,35 +106,32 @@ function RoomSetupScreen(): React.JSX.Element {
     );
   };
 
-  const onSubmit = async () => {
+  const onSubmit = () => {
     if (!family || blocks.length === 0) {
       return;
     }
     setIsSaving( true );
     setSubmitError( null );
-    try {
-      // 아직 저장되지 않은 draft들이라, addRoom이 겹치지 않는 좌표를 매길 수 있도록
-      // 순서대로 하나씩 저장한다(Promise.all로 동시에 보내면 서로의 좌표를 모른 채
-      // 겹치는 위치를 계산하게 된다).
-      for (const block of blocks) {
-        await addRoom(
-          family.id,
-          block.roomType,
-          block.label.trim() || undefined,
-          {
-            x: block.x,
-            y: block.y,
-            width: block.width,
-            height: block.height,
-            color: block.color,
-          },
-        );
+    // draft마다 좌표(x/y)를 이미 넘기므로 addRoom이 자동 배치를 하지 않는다 —
+    // 서로의 저장 결과를 기다릴 필요가 없어 한꺼번에 보낸다.
+    const ps = blocks.map( block =>
+      addRoom( family.id, block.roomType, block.label.trim() || undefined, {
+        x: block.x,
+        y: block.y,
+        width: block.width,
+        height: block.height,
+        color: block.color,
+      } ),
+    );
+    // addRoom은 실패해도 reject하지 않고 false로 끝나므로, Promise.all은 모든
+    // 저장이 끝날 때까지 기다린다.
+    return Promise.all( ps )
+    .then( results => {
+      if (results.includes( false )) {
+        setSubmitError( useRoomStore.getState().error );
       }
-    } catch (err) {
-      setSubmitError( (err as Error).message );
-    } finally {
-      setIsSaving( false );
-    }
+    } )
+    .finally( () => setIsSaving( false ) );
   };
 
   return (

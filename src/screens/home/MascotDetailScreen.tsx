@@ -46,15 +46,11 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
     mascot.happiness ?? 0,
   );
 
-  const onSubmit = async () => {
+  const onSubmit = () => {
     setIsSaving( true );
-    try {
-      await updateMascot( { earStyle, tailStyle, fillColor } );
-    } catch {
-      // 에러는 store의 error 상태로 표시됨
-    } finally {
-      setIsSaving( false );
-    }
+    return updateMascot( { earStyle, tailStyle, fillColor } ).finally( () =>
+      setIsSaving( false ),
+    );
   };
 
   return (

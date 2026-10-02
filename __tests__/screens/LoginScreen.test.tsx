@@ -2,10 +2,17 @@ import React from "react";
 import { Linking } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import LoginScreen from "../../src/screens/LoginScreen";
-import { signInWithGoogle, getAuthErrorMessage } from "../../src/api/auth";
-import { PRIVACY_POLICY_URL } from "../../src/utils/links";
+import {
+  getAuthErrorMessage,
+  PRIVACY_POLICY_URL,
+  signInWithGoogle,
+} from "../../actions";
 
-jest.mock( "../../src/api/auth" );
+jest.mock( "../../actions", () => ( {
+  ...jest.requireActual( "../../actions" ),
+  signInWithGoogle: jest.fn(),
+  getAuthErrorMessage: jest.fn(),
+} ) );
 
 const mockedSignInWithGoogle = signInWithGoogle as jest.Mock;
 const mockedGetAuthErrorMessage = getAuthErrorMessage as jest.Mock;

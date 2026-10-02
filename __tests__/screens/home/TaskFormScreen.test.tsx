@@ -2,11 +2,8 @@ import React from "react";
 import { Alert } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import TaskFormScreen from "../../../src/screens/home/TaskFormScreen";
-import {
-  useTaskStore,
-  listTaskLogs,
-  listTaskItems,
-} from "../../../src/store/useTaskStore";
+import { listTaskItems, listTaskLogs } from "../../../actions";
+import { useTaskStore } from "../../../src/store/useTaskStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
@@ -17,8 +14,8 @@ import type {
   TaskItemRow,
 } from "../../../src/store/useTaskStore";
 
-jest.mock( "../../../src/store/useTaskStore", () => ( {
-  ...jest.requireActual( "../../../src/store/useTaskStore" ),
+jest.mock( "../../../actions", () => ( {
+  ...jest.requireActual( "../../../actions" ),
   listTaskLogs: jest.fn(),
   listTaskItems: jest.fn(),
 } ) );
@@ -115,7 +112,7 @@ describe( "TaskFormScreen", () => {
     } );
 
     test( "정상 입력 시 createTask를 호출하고 뒤로 간다", async () => {
-      mockedCreateTask.mockResolvedValue( undefined );
+      mockedCreateTask.mockResolvedValue( true );
       const navigation = createMockNavigation<"TaskForm">();
       const { getByText, getAllByDisplayValue } = render(
         <TaskFormScreen
@@ -139,7 +136,7 @@ describe( "TaskFormScreen", () => {
     } );
 
     test( "방법과 TIP을 입력하면 빈 칸을 제외하고 items로 전달한다", async () => {
-      mockedCreateTask.mockResolvedValue( undefined );
+      mockedCreateTask.mockResolvedValue( true );
       const { getByText, getAllByDisplayValue, getByPlaceholderText } = render(
         <TaskFormScreen
           navigation={ createMockNavigation() }
@@ -194,7 +191,7 @@ describe( "TaskFormScreen", () => {
 
     test( "불러온 방법을 수정하고 저장하면 items로 전달한다", async () => {
       mockedListTaskItems.mockResolvedValue( existingItems );
-      mockedUpdateTask.mockResolvedValue( undefined );
+      mockedUpdateTask.mockResolvedValue( true );
       const { getByText, findByDisplayValue } = renderEdit();
       fireEvent.changeText(
         await findByDisplayValue( "이불을 걷는다" ),
@@ -218,7 +215,7 @@ describe( "TaskFormScreen", () => {
 
     test( "안내 항목을 불러오지 못하면 items를 보내지 않아 기존 항목을 보존한다", async () => {
       mockedListTaskItems.mockRejectedValue( new Error( "불러오기 실패" ) );
-      mockedUpdateTask.mockResolvedValue( undefined );
+      mockedUpdateTask.mockResolvedValue( true );
       const { getByText, findByText } = renderEdit();
       await findByText( "불러오기 실패" );
       fireEvent.press( getByText( "저장" ) );
@@ -234,7 +231,7 @@ describe( "TaskFormScreen", () => {
     } );
 
     test( "저장하면 updateTask를 호출한다", async () => {
-      mockedUpdateTask.mockResolvedValue( undefined );
+      mockedUpdateTask.mockResolvedValue( true );
       const navigation = createMockNavigation<"TaskForm">();
       const { getByText, getByDisplayValue } = render(
         <TaskFormScreen
@@ -281,7 +278,7 @@ describe( "TaskFormScreen", () => {
     } );
 
     test( "삭제 확인을 누르면 deleteTask를 호출한다", async () => {
-      mockedDeleteTask.mockResolvedValue( undefined );
+      mockedDeleteTask.mockResolvedValue( true );
       jest.spyOn( Alert, "alert" ).mockImplementation( (_t, _m, buttons) => {
         buttons?.find( b => b.style === "destructive" )?.onPress?.();
       } );
