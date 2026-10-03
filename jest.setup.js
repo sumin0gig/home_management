@@ -32,6 +32,30 @@ jest.mock('react-native-camera-kit', () => {
   return { Camera: React.forwardRef(() => null) };
 });
 
+jest.mock('react-native-device-info', () =>
+  require('react-native-device-info/jest/react-native-device-info-mock'),
+);
+
+// sp-react-native-in-app-updates looks up its native TurboModule on import, which
+// doesn't exist outside a real native build. By default there's no update available.
+jest.mock('sp-react-native-in-app-updates', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    checkNeedsUpdate: jest.fn().mockResolvedValue({
+      shouldUpdate: false,
+      other: { updateAvailability: 1 },
+    }),
+    startUpdate: jest.fn().mockResolvedValue(undefined),
+  })),
+  IAUAvailabilityStatus: {
+    UNKNOWN: 0,
+    UNAVAILABLE: 1,
+    AVAILABLE: 2,
+    DEVELOPER_TRIGGERED: 3,
+  },
+  IAUUpdateKind: { FLEXIBLE: 0, IMMEDIATE: 1 },
+}));
+
 jest.mock('@react-native-firebase/messaging', () => ({
   __esModule: true,
   getMessaging: jest.fn(() => ({})),

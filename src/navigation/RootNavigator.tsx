@@ -3,9 +3,11 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import FamilyOnboarding from '../components/FamilyOnboarding/FamilyOnboarding';
+import ForceUpdateScreen from '../components/ForceUpdate/ForceUpdateScreen';
 import MascotSetup from '../components/MascotSetup/MascotSetup';
 import RoomSetupScreen from '../components/RoomSetupScreen/RoomSetupScreen';
 import RoomWaitingScreen from '../components/RoomWaitingScreen/RoomWaitingScreen';
+import { useAppUpdateStore } from '../store/useAppUpdateStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useFamilyStore } from '../store/useFamilyStore';
 import { useMascotStore } from '../store/useMascotStore';
@@ -13,6 +15,12 @@ import { useRoomStore } from '../store/useRoomStore';
 import { usePushNotifications } from '../notifications/usePushNotifications';
 
 function RootNavigator(): React.JSX.Element {
+  const updateStatus = useAppUpdateStore( state => state.status );
+  const checkForUpdate = useAppUpdateStore( state => state.checkForUpdate );
+  const subscribeToAppState = useAppUpdateStore(
+    state => state.subscribeToAppState,
+  );
+
   const authStatus = useAuthStore( state => state.status );
   const checkAuthStatus = useAuthStore( state => state.checkAuthStatus );
   const subscribeToAuthEvents = useAuthStore(
@@ -34,6 +42,12 @@ function RootNavigator(): React.JSX.Element {
   const fetchRooms = useRoomStore( state => state.fetchRooms );
 
   useEffect(() => {
+    checkForUpdate();
+    const unsubscribe = subscribeToAppState();
+    return unsubscribe;
+  }, [checkForUpdate, subscribeToAppState]);
+
+  useEffect(() => {
     checkAuthStatus();
     const unsubscribe = subscribeToAuthEvents();
     return unsubscribe;
@@ -53,10 +67,13 @@ function RootNavigator(): React.JSX.Element {
   }, [familyStatus, family, fetchRooms]);
 
   const isLoading =
-    authStatus === 'loading' ||
-    (authStatus === 'signedIn' &&
-      (familyStatus === 'loading' || mascotStatus === 'loading'));
+    updateStatus === "checking"
+    || authStatus === "loading"
+    || (authStatus === 'signedIn' && (familyStatus === 'loading' || mascotStatus === 'loading'))
+  ;
   const isRoomsLoading = familyStatus === 'joined' && roomStatus === 'idle';
+
+  if (updateStatus === 'updateRequired') return <ForceUpdateScreen />;
 
   if (isLoading) {
     return (
@@ -66,13 +83,9 @@ function RootNavigator(): React.JSX.Element {
     );
   }
 
-  if (authStatus !== 'signedIn') {
-    return <AuthNavigator />;
-  }
+  if (authStatus !== 'signedIn') return <AuthNavigator />;
 
-  if (familyStatus === 'none') {
-    return <FamilyOnboarding />;
-  }
+  if (familyStatus === 'none') return <FamilyOnboarding />;
 
   if (isRoomsLoading) {
     return (

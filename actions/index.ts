@@ -1,7 +1,13 @@
 // 서버(Amplify)·인증·외부 링크를 호출하는 API 함수 모음.
 // 여기 함수들은 실패하면 error를 throw한다(registerDeviceToken만 예외)
 // — 실패를 받아서 error 상태로 남기는 일은 이 함수들을 부르는 스토어 액션이 맡는다.
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
+import { getBuildNumber } from 'react-native-device-info';
+import SpInAppUpdates, {
+  IAUAvailabilityStatus,
+  IAUUpdateKind,
+  type AndroidNeedsUpdateResponse,
+} from 'sp-react-native-in-app-updates';
 import { generateClient } from 'aws-amplify/data';
 import {
   signInWithRedirect,
@@ -14,6 +20,7 @@ import type { Schema } from '../amplify/data/resource';
 import type { TaskItemInput } from '../src/utils/date';
 
 const client = generateClient<Schema>();
+const inAppUpdates = new SpInAppUpdates(false);
 
 type RoomRow = Schema['Room']['type'];
 type RoomType = NonNullable<RoomRow['roomType']>;
@@ -124,6 +131,32 @@ export const PRIVACY_POLICY_URL =
 
 export function openPrivacyPolicy(): Promise<void> {
   return Linking.openURL(PRIVACY_POLICY_URL);
+}
+
+export const PLAY_STORE_URL =
+  'https://play.google.com/store/apps/details?id=com.homemanagement';
+
+export function openPlayStore(): Promise<void> {
+  return Linking.openURL(PLAY_STORE_URL);
+}
+
+// ─── 앱 업데이트 ─────────────────────────────────────────────────────────
+
+export async function checkStoreUpdateAvailable(): Promise<boolean> {
+  if( Platform.OS !== "android" ) return false;
+  const need_update = (
+    await inAppUpdates.checkNeedsUpdate({
+    curVersion: getBuildNumber(),
+  })) as AndroidNeedsUpdateResponse;
+
+  return (
+    need_update.shouldUpdate
+    || need_update.other?.updateAvailability === IAUAvailabilityStatus.DEVELOPER_TRIGGERED
+  );
+}
+
+export function startImmediateUpdate(): Promise<void> {
+  return inAppUpdates.startUpdate({ updateType: IAUUpdateKind.IMMEDIATE });
 }
 
 // ─── 방 ──────────────────────────────────────────────────────────────────

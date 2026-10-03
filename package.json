@@ -27,6 +27,7 @@
     "react-native": "0.80.3",
     "react-native-android-widget": "^0.22.1",
     "react-native-camera-kit": "^18.0.1",
+    "react-native-device-info": "^15.0.2",
     "react-native-gesture-handler": "^2.32.0",
     "react-native-get-random-values": "^1.11.0",
     "react-native-qrcode-svg": "^6.3.22",
@@ -35,6 +36,7 @@
     "react-native-safe-area-context": "^5.8.1",
     "react-native-screens": "4.18.0",
     "react-native-svg": "^15.15.5",
+    "sp-react-native-in-app-updates": "^2.0.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
@@ -73,6 +75,9 @@
   "overrides": {
     "@babel/types": "7.25.6",
     "@babel/traverse": "7.25.6",
-    "@babel/generator": "7.25.6"
+    "@babel/generator": "7.25.6",
+    "sp-react-native-in-app-updates": {
+      "react-native-device-info": "$react-native-device-info"
+    }
   }
 }
