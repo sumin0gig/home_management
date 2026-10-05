@@ -12,6 +12,7 @@ import { generateClient } from 'aws-amplify/data';
 import {
   signInWithRedirect,
   signOut,
+  deleteUser,
   getCurrentUser,
   fetchUserAttributes,
   type GetCurrentUserOutput,
@@ -191,6 +192,14 @@ export async function listAllRoomsForFamily(
   return results;
 }
 
+// 방 하나를 그 안의 집안일(완료 기록·안내 항목 포함)까지 함께 지운다 (방 삭제, 회원 탈퇴에서 공용).
+export async function deleteRoomWithChildren(roomId: string): Promise<void> {
+  const taskIds = await listAllTaskIdsForRoom(roomId);
+  await Promise.all(taskIds.map(taskId => deleteTaskWithChildren(taskId)));
+  const { errors } = await client.models.Room.delete({ id: roomId });
+  throwIfErrors(errors, '방 삭제에 실패했습니다.');
+}
+
 export async function listTaskTemplatesForRoomType(
   roomType: RoomType,
 ): Promise<Schema['TaskTemplate']['type'][]> {
@@ -319,4 +328,84 @@ export async function deleteTaskWithChildren(taskId: string): Promise<void> {
   ]);
   const { errors } = await client.models.Task.delete({ id: taskId });
   throwIfErrors(errors, '집안일 삭제에 실패했습니다.');
+}
+
+// ─── 회원 탈퇴 ───────────────────────────────────────────────────────────
+
+// 내 데이터를 서버에서 지운 뒤 Cognito 계정까지 삭제한다. 스토어는 건드리지
+// 않는다 — 마지막 deleteUser가 signOut까지 하므로 useAuthStore의 'signedOut'
+// Hub 이벤트에서 모든 스토어가 초기화된다. 지울 대상은 매번 서버에서 다시
+// 조회하므로, 중간에 실패해도 다시 호출하면 남은 것부터 이어서 지운다.
+export async function deleteAccount(): Promise<void> {
+  const user = await getCurrentAuthUser();
+
+  const { data: memberships, errors } = await client.models.FamilyMember.list({
+    filter: { userId: { eq: user.userId } },
+  });
+  throwIfErrors(errors, '가족 정보를 불러오지 못했습니다.');
+
+  // 아무것도 지우기 전에 확인: 소유한 가족에 다른 구성원이 남아 있으면 탈퇴할 수
+  // 없다 (가족을 지우면 그 구성원들의 방·집안일까지 사라지므로).
+  const ownedMemberships = memberships.filter(m => m.role === 'OWNER');
+  const ownedFamilyMembers = await Promise.all(
+    ownedMemberships.map(async m => {
+      const { data: members, errors: membersErrors } =
+        await client.models.FamilyMember.list({
+          filter: { familyId: { eq: m.familyId } },
+        });
+      throwIfErrors(membersErrors, '멤버 목록을 불러오지 못했습니다.');
+      return members;
+    }),
+  );
+  if (ownedFamilyMembers.flat().some(m => m.userId !== user.userId)) {
+    throw new Error(
+      '다른 구성원이 있는 가족의 소유자는 탈퇴할 수 없습니다. 가족 관리에서 구성원을 먼저 내보내 주세요.',
+    );
+  }
+
+  // 소유한 가족은 방(집안일 포함)과 가족 자체까지 지우고, 참여한 가족에서는 내
+  // 멤버 기록만 지운다 (useFamilyStore.leaveFamily와 같은 순서).
+  await Promise.all(
+    memberships.map(async membership => {
+      const isOwner = membership.role === 'OWNER';
+      if (isOwner) {
+        const rooms = await listAllRoomsForFamily(membership.familyId);
+        await Promise.all(rooms.map(room => deleteRoomWithChildren(room.id)));
+      }
+      const { errors: memberErrors } = await client.models.FamilyMember.delete({
+        id: membership.id,
+      });
+      throwIfErrors(memberErrors, '가족을 떠나지 못했습니다.');
+      if (isOwner) {
+        const { errors: familyErrors } = await client.models.Family.delete({
+          id: membership.familyId,
+        });
+        throwIfErrors(familyErrors, '가족 삭제에 실패했습니다.');
+      }
+    }),
+  );
+
+  const [mascotsResult, tokensResult, userResult] = await Promise.all([
+    client.models.Mascot.listMascotByUserId({ userId: user.userId }),
+    client.models.DeviceToken.listDeviceTokenByUserId({ userId: user.userId }),
+    client.models.User.get({ id: user.userId }),
+  ]);
+  throwIfErrors(mascotsResult.errors, '마스코트 정보를 불러오지 못했습니다.');
+  throwIfErrors(tokensResult.errors, '알림 등록 정보를 불러오지 못했습니다.');
+  throwIfErrors(userResult.errors, '사용자 정보를 확인하지 못했습니다.');
+
+  const deleteResults = await Promise.all([
+    ...mascotsResult.data.map(m => client.models.Mascot.delete({ id: m.id })),
+    ...tokensResult.data.map(d =>
+      client.models.DeviceToken.delete({ id: d.id }),
+    ),
+    ...(userResult.data
+      ? [client.models.User.delete({ id: user.userId })]
+      : []),
+  ]);
+  deleteResults.forEach(result =>
+    throwIfErrors(result.errors, '회원 정보 삭제에 실패했습니다.'),
+  );
+
+  await deleteUser();
 }

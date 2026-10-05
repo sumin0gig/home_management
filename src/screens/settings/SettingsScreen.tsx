@@ -1,7 +1,9 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
+  deleteAccount,
   getAuthErrorMessage,
   openPrivacyPolicy,
   signOutUser,
@@ -40,7 +42,9 @@ function MenuItem( {
 }
 
 function SettingsScreen( { navigation }: Props ): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const [error, setError] = React.useState<string | null>( null );
+  const [isDeleting, setIsDeleting] = React.useState( false );
 
   const onSignOut = () =>
     signOutUser().catch( err => setError( getAuthErrorMessage( err ) ) );
@@ -54,6 +58,25 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
       setError( "개인정보처리방침을 열 수 없습니다." ),
     );
 
+  const onDeleteAccount = () => {
+    Alert.alert(
+      "회원 탈퇴",
+      "탈퇴하면 계정과 마스코트가 삭제되며 되돌릴 수 없어요. 혼자 있는 가족의 소유자라면 가족과 방, 집안일도 함께 삭제돼요. 정말 탈퇴하시겠어요?",
+      [
+        { text: "취소" },
+        {
+          text: "탈퇴",
+          onPress: () => {
+            setIsDeleting( true );
+            return deleteAccount()
+            .catch( err => setError( getAuthErrorMessage( err ) ) )
+            .finally( () => setIsDeleting( false ) );
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <View style={ styles.container }>
       {
@@ -64,6 +87,15 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
       <MenuItem label="가족 관리" onPress={ goToFamily } />
       <MenuItem label="개인정보처리방침" onPress={ onOpenPrivacyPolicy } />
       <MenuItem label="로그아웃" onPress={ onSignOut } color={ "error" } />
+      <Pressable
+        style={ [styles.deleteAccountButton, { marginBottom: insets.bottom }] }
+        onPress={ onDeleteAccount }
+        disabled={ isDeleting }
+      >
+        <Text style={ styles.deleteAccountText }>
+          { isDeleting ? "탈퇴 처리 중…" : "회원 탈퇴" }
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -95,6 +127,17 @@ const styles = StyleSheet.create( {
   },
   menuLabelDestructive: {
     color: commonColor.negative,
+  },
+  deleteAccountButton: {
+    marginTop: "auto",
+    alignSelf: "center",
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+  },
+  deleteAccountText: {
+    fontSize: 13,
+    color: commonColor.textSecondary,
+    textDecorationLine: "underline",
   },
 } );
 

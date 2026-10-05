@@ -5,8 +5,7 @@ import {
   throwIfErrors,
   listRoomsForFamily,
   listAllRoomsForFamily,
-  listAllTaskIdsForRoom,
-  deleteTaskWithChildren,
+  deleteRoomWithChildren,
   listTaskTemplatesForRoomType,
   listTaskTemplateItemsForTemplate,
 } from '../../actions';
@@ -287,10 +286,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   removeRoom: async (roomId: string) => {
     set({ error: null });
     try {
-      const taskIds = await listAllTaskIdsForRoom(roomId);
-      await Promise.all(taskIds.map(taskId => deleteTaskWithChildren(taskId)));
-      const { errors } = await client.models.Room.delete({ id: roomId });
-      throwIfErrors(errors, '방 삭제에 실패했습니다.');
+      await deleteRoomWithChildren(roomId);
       set({ rooms: get().rooms.filter(r => r.id !== roomId) });
       return true;
     } catch (err) {
