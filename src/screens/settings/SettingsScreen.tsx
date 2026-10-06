@@ -63,9 +63,10 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
       "회원 탈퇴",
       "탈퇴하면 계정과 마스코트가 삭제되며 되돌릴 수 없어요. 혼자 있는 가족의 소유자라면 가족과 방, 집안일도 함께 삭제돼요. 정말 탈퇴하시겠어요?",
       [
-        { text: "취소" },
+        { text: "취소", style: "cancel" },
         {
           text: "탈퇴",
+          style: "destructive",
           onPress: () => {
             setIsDeleting( true );
             return deleteAccount()
