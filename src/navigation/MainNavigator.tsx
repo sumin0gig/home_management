@@ -10,6 +10,7 @@ import RoomDetailScreen from '../screens/home/RoomDetailScreen';
 import RoomEditScreen from '../screens/home/RoomEditScreen';
 import TaskDetailScreen from '../screens/home/TaskDetailScreen';
 import TaskFormScreen from '../screens/home/TaskFormScreen';
+import CompleteCheckScreen from '../screens/home/CompleteCheckScreen';
 import MascotDetailScreen from '../screens/home/MascotDetailScreen';
 import MascotCollectionScreen from '../screens/home/MascotCollectionScreen';
 import FamilyScreen from '../screens/family/FamilyScreen';
@@ -45,6 +46,11 @@ function MainNavigator(): React.JSX.Element {
         options={{ title: '' }}
       />
       <Stack.Screen name="TaskForm" component={TaskFormScreen} />
+      <Stack.Screen
+        name="CompleteCheck"
+        component={CompleteCheckScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="MascotDetail" component={MascotDetailScreen} />
       <Stack.Screen
         name="MascotCollection"

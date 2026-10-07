@@ -1,6 +1,5 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import Toast from "react-native-root-toast";
 import TaskDetailScreen from "../../../src/screens/home/TaskDetailScreen";
 import { listTaskItems } from "../../../actions";
 import { useTaskStore } from "../../../src/store/useTaskStore";
@@ -15,14 +14,8 @@ jest.mock( "../../../actions", () => ( {
   listTaskItems: jest.fn(),
 } ) );
 
-jest.mock( "react-native-root-toast", () => ( {
-  show: jest.fn(),
-  durations: { SHORT: 0, LONG: 1 },
-} ) );
-
 const mockedListTaskItems = listTaskItems as jest.Mock;
 const mockedCompleteTask = jest.fn();
-const mockedToastShow = Toast.show as jest.Mock;
 
 const task: TaskRow = {
   id: "c1",
@@ -157,20 +150,32 @@ describe( "TaskDetailScreen", () => {
     } );
   } );
 
-  test( "완료 버튼을 탭하면 completeTask 후 완료 토스트를 띄우고 뒤로 간다", async () => {
+  test( "완료 버튼을 탭하면 completeTask 후 CompleteCheck 화면으로 교체된다", async () => {
     mockedListTaskItems.mockResolvedValue( [] );
     mockedCompleteTask.mockResolvedValue( true );
     const { findByText, navigation } = renderTaskDetailScreen();
     fireEvent.press( await findByText( "완료했어요" ) );
 
     await waitFor( () =>
-      expect( mockedCompleteTask ).toHaveBeenCalledWith( task ),
+      expect( navigation.replace ).toHaveBeenCalledWith( "CompleteCheck", {
+        taskId: "c1",
+      } ),
     );
-    expect( mockedToastShow ).toHaveBeenCalledWith(
-      "완료되었습니다",
-      expect.objectContaining( { duration: Toast.durations.SHORT } ),
-    );
-    expect( navigation.goBack ).toHaveBeenCalled();
+    expect( mockedCompleteTask ).toHaveBeenCalledWith( task );
+    expect( navigation.goBack ).not.toHaveBeenCalled();
+  } );
+
+  test( "완료에 실패하면 에러를 보여주고 화면을 떠나지 않는다", async () => {
+    mockedListTaskItems.mockResolvedValue( [] );
+    mockedCompleteTask.mockImplementation( () => {
+      useTaskStore.setState( { error: "완료 처리에 실패했습니다." } );
+      return Promise.resolve( false );
+    } );
+    const { findByText, navigation } = renderTaskDetailScreen();
+    fireEvent.press( await findByText( "완료했어요" ) );
+
+    expect( await findByText( "완료 처리에 실패했습니다." ) ).toBeTruthy();
+    expect( navigation.replace ).not.toHaveBeenCalled();
   } );
 
   test( "존재하지 않는 집안일이면 안내 문구를 보여준다", () => {

@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import Toast from "react-native-root-toast";
 import type { MainStackParamList } from "../../navigation/types";
 import { listTaskItems } from "../../../actions";
 import { useTaskStore, type TaskItemRow } from "../../store/useTaskStore";
@@ -89,8 +88,8 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         setError( useTaskStore.getState().error );
         return;
       }
-      Toast.show( "완료되었습니다", { duration: Toast.durations.SHORT } );
-      navigation.goBack();
+      // replace: 칭찬 화면에서 돌아갈 때 이미 완료한 상세 화면을 건너뛰고 원래 화면으로 간다.
+      navigation.replace( "CompleteCheck", { taskId: task.id } );
     } )
     .finally( () => setIsCompleting( false ) );
   };
