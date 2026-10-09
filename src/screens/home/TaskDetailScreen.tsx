@@ -13,6 +13,7 @@ import type { MainStackParamList } from "../../navigation/types";
 import { listTaskItems } from "../../../actions";
 import { useTaskStore, type TaskItemRow } from "../../store/useTaskStore";
 import { roomDisplayName, useRoomStore } from "../../store/useRoomStore";
+import { useMascotStore } from "../../store/useMascotStore";
 import { formatDueLabel, toDateString } from "../../utils/date";
 import { splitTaskItemContent } from "../../utils/taskItem";
 import { colors, commonColor } from "../../styles/commonStyle";
@@ -81,6 +82,8 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   const tips = items.filter( item => item.type === "TIP" );
 
   const onComplete = () => {
+    const mascot = useMascotStore.getState().mascot;
+    const happinessBefore = mascot ? mascot.happiness ?? 0 : undefined;
     setIsCompleting( true );
     return completeTask( task )
     .then( ok => {
@@ -88,8 +91,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         setError( useTaskStore.getState().error );
         return;
       }
-      // replace: 칭찬 화면에서 돌아갈 때 이미 완료한 상세 화면을 건너뛰고 원래 화면으로 간다.
-      navigation.replace( "CompleteCheck", { taskId: task.id } );
+      navigation.replace( "CompleteCheck", { taskId: task.id, happinessBefore } );
     } )
     .finally( () => setIsCompleting( false ) );
   };

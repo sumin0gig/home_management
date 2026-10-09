@@ -1,12 +1,14 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
-import { computeHappinessGain } from "../../utils/happiness";
+import { useMascotStore } from "../../store/useMascotStore";
+import { computeHappinessLevel } from "../../utils/happiness";
 import Mascot from "../../components/Mascot/Mascot";
 import type { MascotAction } from "../../components/Mascot/types";
+import { getActionsUnlockedBetween } from "../../components/Mascot/actionCatalog";
 import { useMascotConfig } from "../../components/Mascot/useMascotConfig";
 import Icon from "../../components/common/Icon";
 import { colors, commonColor } from "../../styles/commonStyle";
@@ -20,31 +22,50 @@ export const PRAISE_MESSAGES = [
   "오늘도 해냈어요!",
 ] as const;
 
-// happy 점프 사이에 잠깐 쉬는 시간 — 쉬지 않고 뛰면 들뜬 게 아니라 떨리는 것처럼 보인다.
-const HAPPY_PAUSE_MS = 500;
+const REST_MS = 500;
 const MASCOT_SIZE = 220;
 
 function CompleteCheckScreen( { navigation, route }: Props ): React.JSX.Element {
-  const { taskId } = route.params;
+  const { taskId, happinessBefore } = route.params;
   const insets = useSafeAreaInsets();
   const task = useTaskStore( state =>
     state.tasks.find( t => t.id === taskId ),
   );
   const mascotConfig = useMascotConfig();
+  const happinessAfter = useMascotStore( state => state.mascot?.happiness ?? 0 );
 
   const [praise] = React.useState(
     () => PRAISE_MESSAGES[Math.floor( Math.random() * PRAISE_MESSAGES.length )],
   );
-  const [action, setAction] = React.useState<MascotAction>( "happy" );
+  const [performanceIndex, setPerformanceIndex] = React.useState( 0 );
+  const [isResting, setIsResting] = React.useState( false );
 
-  // happy가 끝나면(onActionEnd) idle로 잠깐 쉬었다가 다시 happy — 화면에 있는 동안 계속 기뻐한다.
+  const gain =
+    mascotConfig && happinessBefore != null
+      ? happinessAfter - happinessBefore
+      : 0;
+  const levelBefore = computeHappinessLevel( happinessAfter - gain ).level;
+  const levelAfter = computeHappinessLevel( happinessAfter ).level;
+  const unlockedActions = getActionsUnlockedBetween( levelBefore, levelAfter );
+
+  const performances: MascotAction[] = [
+    "happy",
+    ...unlockedActions.map( entry => entry.action ),
+  ];
+  const action: MascotAction = isResting
+    ? "idle"
+    : performances[performanceIndex % performances.length];
+
   React.useEffect( () => {
-    if (action !== "idle") {
+    if (!isResting) {
       return;
     }
-    const timer = setTimeout( () => setAction( "happy" ), HAPPY_PAUSE_MS );
+    const timer = setTimeout( () => {
+      setIsResting( false );
+      setPerformanceIndex( index => index + 1 );
+    }, REST_MS );
     return () => clearTimeout( timer );
-  }, [action] );
+  }, [isResting] );
 
   return (
     <View
@@ -53,7 +74,7 @@ function CompleteCheckScreen( { navigation, route }: Props ): React.JSX.Element 
         { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 16 },
       ] }
     >
-      <View style={ styles.content }>
+      <ScrollView contentContainerStyle={ styles.content }>
         <View style={ styles.mascotCircle }>
           {
             mascotConfig
@@ -61,7 +82,7 @@ function CompleteCheckScreen( { navigation, route }: Props ): React.JSX.Element 
                 config={ mascotConfig }
                 action={ action }
                 size={ MASCOT_SIZE }
-                onActionEnd={ () => setAction( "idle" ) }
+                onActionEnd={ () => setIsResting( true ) }
               />
             : <Icon name="CheckCircle" size={ 96 } color={ commonColor.touchable } />
           }
@@ -74,15 +95,38 @@ function CompleteCheckScreen( { navigation, route }: Props ): React.JSX.Element 
           : null
         }
         {
-          task && mascotConfig
+          gain > 0
           ? <View style={ styles.gainChip }>
-              <Text style={ styles.gainText }>
-                { `추억 +${computeHappinessGain( task )}` }
-              </Text>
+              <Text style={ styles.gainText }> { `추억 +${gain}` } </Text>
             </View>
           : null
         }
-      </View>
+
+        {
+          levelAfter > levelBefore
+          ? <View style={ styles.levelUpCard } testID="level-up">
+              <Text style={ styles.levelUpTitle }> 레벨 업! </Text>
+              <Text style={ styles.levelUpLevel }>
+                { `추억 Lv. ${levelBefore} → ${levelAfter}` }
+              </Text>
+              {
+                unlockedActions.length > 0
+                ? <View style={ styles.unlockSection }>
+                    <Text style={ styles.unlockLabel }> 새로 열린 행동 </Text>
+                    <View style={ styles.unlockList }>
+                      { unlockedActions.map( entry => (
+                        <View style={ styles.unlockChip } key={ entry.action }>
+                          <Text style={ styles.unlockChipText }> { entry.label } </Text>
+                        </View>
+                      ) ) }
+                    </View>
+                  </View>
+                : null
+              }
+            </View>
+          : null
+        }
+      </ScrollView>
 
       <Pressable
         style={ styles.confirmButton }
@@ -101,9 +145,10 @@ const styles = StyleSheet.create( {
     backgroundColor: commonColor.backgroundColor,
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingBottom: 24,
   },
   mascotCircle: {
     width: MASCOT_SIZE + 40,
@@ -137,6 +182,53 @@ const styles = StyleSheet.create( {
     fontSize: 15,
     fontWeight: "700",
     color: commonColor.touchable,
+  },
+  levelUpCard: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    marginTop: 24,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: commonColor.touchable,
+    borderRadius: 16,
+    backgroundColor: colors.white,
+  },
+  levelUpTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: commonColor.touchable,
+    marginBottom: 4,
+  },
+  levelUpLevel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: commonColor.textDefault,
+  },
+  unlockSection: {
+    alignItems: "center",
+    marginTop: 16,
+  },
+  unlockLabel: {
+    fontSize: 13,
+    color: commonColor.textMuted,
+    marginBottom: 8,
+  },
+  unlockList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+  },
+  unlockChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: commonColor.touchable,
+  },
+  unlockChipText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.white,
   },
   confirmButton: {
     backgroundColor: commonColor.touchable,

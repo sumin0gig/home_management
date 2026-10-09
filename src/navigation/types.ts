@@ -7,7 +7,7 @@ export type MainStackParamList = {
   RoomDetail: { roomId: string; hasMascot?: boolean };
   RoomEdit: undefined;
   TaskDetail: { taskId: string };
-  CompleteCheck: { taskId: string };
+  CompleteCheck: { taskId: string; happinessBefore?: number };
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
   MascotCollection: undefined;

@@ -4,6 +4,10 @@ import TaskDetailScreen from "../../../src/screens/home/TaskDetailScreen";
 import { listTaskItems } from "../../../actions";
 import { useTaskStore } from "../../../src/store/useTaskStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
+import {
+  useMascotStore,
+  type MascotRow,
+} from "../../../src/store/useMascotStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
@@ -60,6 +64,7 @@ describe( "TaskDetailScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
+    useMascotStore.getState().reset();
     useRoomStore.setState( { rooms: [room] } );
     useTaskStore.setState( {
       tasks: [task],
@@ -163,6 +168,29 @@ describe( "TaskDetailScreen", () => {
     );
     expect( mockedCompleteTask ).toHaveBeenCalledWith( task );
     expect( navigation.goBack ).not.toHaveBeenCalled();
+  } );
+
+  test( "완료 직전의 마스코트 추억을 CompleteCheck에 넘긴다", async () => {
+    useMascotStore.setState( {
+      status: "created",
+      mascot: { id: "m1", userId: "u1", happiness: 150 } as MascotRow,
+    } );
+    mockedListTaskItems.mockResolvedValue( [] );
+    mockedCompleteTask.mockImplementation( () => {
+      useMascotStore.setState( {
+        mascot: { id: "m1", userId: "u1", happiness: 157 } as MascotRow,
+      } );
+      return Promise.resolve( true );
+    } );
+    const { findByText, navigation } = renderTaskDetailScreen();
+    fireEvent.press( await findByText( "완료했어요" ) );
+
+    await waitFor( () =>
+      expect( navigation.replace ).toHaveBeenCalledWith( "CompleteCheck", {
+        taskId: "c1",
+        happinessBefore: 150,
+      } ),
+    );
   } );
 
   test( "완료에 실패하면 에러를 보여주고 화면을 떠나지 않는다", async () => {

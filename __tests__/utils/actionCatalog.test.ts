@@ -1,5 +1,6 @@
 import {
   ACTION_CATALOG,
+  getActionsUnlockedBetween,
   getNextUnlock,
   getPlayableActions,
   getUnlockedActions,
@@ -51,6 +52,26 @@ describe( "getPlayableActions", () => {
 
   test( "개방된 도감 행동이 기본 행동 뒤에 붙는다", () => {
     expect( getPlayableActions( 10 ) ).toEqual( ["happy", "wag", "stretch"] );
+  } );
+} );
+
+describe( "getActionsUnlockedBetween", () => {
+  test( "레벨이 그대로거나 개방 레벨을 넘지 않으면 빈 배열", () => {
+    expect( getActionsUnlockedBetween( 5, 5 ) ).toEqual( [] );
+    expect( getActionsUnlockedBetween( 1, 4 ) ).toEqual( [] );
+    expect( getActionsUnlockedBetween( 5, 9 ) ).toEqual( [] );
+  } );
+
+  test( "개방 레벨에 도달한 행동만 돌려준다", () => {
+    expect(
+      getActionsUnlockedBetween( 4, 5 ).map( entry => entry.action ),
+    ).toEqual( ["wag"] );
+  } );
+
+  test( "한 번에 여러 레벨을 오르면 그 사이의 행동을 모두 돌려준다", () => {
+    expect(
+      getActionsUnlockedBetween( 4, 15 ).map( entry => entry.action ),
+    ).toEqual( ["wag", "stretch", "nap"] );
   } );
 } );
 

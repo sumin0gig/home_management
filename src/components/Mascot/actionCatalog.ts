@@ -54,6 +54,15 @@ export function getPlayableActions(
   return [...DEFAULT_ACTIONS, ...getUnlockedActions( level )];
 }
 
+export function getActionsUnlockedBetween(
+  fromLevel: number,
+  toLevel: number,
+): ActionCatalogEntry[] {
+  return ACTION_CATALOG.filter(
+    entry => entry.unlockLevel > fromLevel && entry.unlockLevel <= toLevel,
+  );
+}
+
 // 아직 개방되지 않은 행동 중 가장 먼저 열리는 것. 모두 개방했으면 null.
 export function getNextUnlock( level: number ): ActionCatalogEntry | null {
   return (
