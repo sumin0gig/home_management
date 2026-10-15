@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -25,9 +25,6 @@ import FloorPlanCanvas from "../FloorPlan/FloorPlanCanvas";
 import RoomEditModal from "../FloorPlan/RoomEditModal";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-// 이 화면에서 만드는 draft는 항상 roomType/label/color를 직접 채워서 만들기
-// 때문에, RoomEditModal 등과 공유하는 느슨한 FloorPlanRoom보다 더 구체적으로
-// 좁혀 쓴다.
 type DraftRoom = FloorPlanRoom & {
   roomType: NonNullable<RoomType>;
   label: string;
@@ -40,26 +37,22 @@ function RoomSetupScreen(): React.JSX.Element {
   const error = useRoomStore( state => state.error );
   const addRoom = useRoomStore( state => state.addRoom );
 
-  const [blocks, setBlocks] = React.useState<DraftRoom[]>( [] );
-  const [editingBlock, setEditingBlock] = React.useState<DraftRoom | null>(
+  const [ blocks, setBlocks ] = useState<DraftRoom[]>( [] );
+  const [ editingBlock, setEditingBlock ] = useState<DraftRoom | null>(
     null,
   );
-  const [isSaving, setIsSaving] = React.useState( false );
-  const [submitError, setSubmitError] = React.useState<string | null>( null );
-  const [isCustomModalVisible, setIsCustomModalVisible] =
-    React.useState( false );
+  const [ isSaving, setIsSaving ] = useState( false );
+  const [ submitError, setSubmitError ] = useState<string | null>( null );
+  const [ isCustomModalVisible, setIsCustomModalVisible ] = useState( false );
 
-  // 아직 저장되지 않은 draft들을 온보딩 단계에서부터 실제 배치될 모양 그대로
-  // 미리보기로 보여준다 — Home 화면의 평면도와 같은 findNextRoomPlacement를
-  // 써서, 실제로 저장될 때(addRoom)와 같은 자리에 놓이도록 맞춘다.
-  const onAddBlock = (roomType: NonNullable<RoomType>) => {
+  const onAddBlock = ( roomType: NonNullable<RoomType> ) => {
     const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS[roomType];
     setBlocks( prev => {
       const { x, y } = findNextRoomPlacement( prev, width, height );
       return [
         ...prev,
         {
-          id: `${roomType}-${Date.now()}-${prev.length}`,
+          id: `${ roomType }-${ Date.now() }-${ prev.length }`,
           roomType,
           label: "",
           color: randomRoomColor(),
@@ -72,7 +65,7 @@ function RoomSetupScreen(): React.JSX.Element {
     } );
   };
 
-  const onAddCustomBlock = (name: string) => {
+  const onAddCustomBlock = ( name: string ) => {
     const { width, height } = ROOM_TYPE_DEFAULT_DIMENSIONS.GENERAL_ROOM;
     setBlocks( prev => {
       const { x, y } = findNextRoomPlacement( prev, width, height );
@@ -93,7 +86,7 @@ function RoomSetupScreen(): React.JSX.Element {
     setIsCustomModalVisible( false );
   };
 
-  const onMoveBlock = (id: string, x: number, y: number) => {
+  const onMoveBlock = ( id: string, x: number, y: number ) => {
     setBlocks( prev => prev.map( b => ( b.id === id ? { ...b, x, y } : b ) ) );
   };
 
@@ -101,19 +94,15 @@ function RoomSetupScreen(): React.JSX.Element {
     id: string,
     updates: Omit<DraftRoom, "id" | "x" | "y">,
   ) => {
-    setBlocks( prev =>
-      prev.map( b => ( b.id === id ? { ...b, ...updates } : b ) ),
-    );
+    setBlocks( prev => prev.map( b => ( b.id === id ? { ...b, ...updates } : b ) ) );
   };
 
   const onSubmit = () => {
-    if (!family || blocks.length === 0) {
-      return;
-    }
+    if (!family || blocks.length === 0) return;
+
     setIsSaving( true );
     setSubmitError( null );
-    // draft마다 좌표(x/y)를 이미 넘기므로 addRoom이 자동 배치를 하지 않는다 —
-    // 서로의 저장 결과를 기다릴 필요가 없어 한꺼번에 보낸다.
+
     const ps = blocks.map( block =>
       addRoom( family.id, block.roomType, block.label.trim() || undefined, {
         x: block.x,
@@ -123,14 +112,13 @@ function RoomSetupScreen(): React.JSX.Element {
         color: block.color,
       } ),
     );
-    // addRoom은 실패해도 reject하지 않고 false로 끝나므로, Promise.all은 모든
-    // 저장이 끝날 때까지 기다린다.
+
     return Promise.all( ps )
-    .then( results => {
-      if (results.includes( false )) {
-        setSubmitError( useRoomStore.getState().error );
+    .then( results =>
+      {
+        if (results.includes( false )) setSubmitError( useRoomStore.getState().error );
       }
-    } )
+    )
     .finally( () => setIsSaving( false ) );
   };
 
