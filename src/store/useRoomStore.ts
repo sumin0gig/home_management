@@ -102,9 +102,6 @@ export function findNextRoomPlacement(
   }
 }
 
-// FloorPlanCanvas/DraggableRoomBlock이 실제로 필요로 하는 필드만 뽑은 최소
-// 형태 — 아직 서버에 저장되지 않은 온보딩 draft 방(진짜 RoomRow가 아님)도
-// 같은 캔버스로 미리보기 렌더링할 수 있도록 RoomRow보다 느슨하게 잡는다.
 export interface FloorPlanRoom {
   id: string;
   roomType?: RoomType;
@@ -115,6 +112,14 @@ export interface FloorPlanRoom {
   width: number;
   height: number;
 }
+
+export interface DraftableFloorPlanRoom
+  extends Omit<FloorPlanRoom, 'roomType' | 'label' | 'color'> {
+  roomType: NonNullable<RoomType>;
+  label: string;
+  color: string;
+}
+// 추후 FloorPlanRoom과 통합한다. 2026/10/15
 
 export function roomDisplayName(room: {
   label?: string | null;

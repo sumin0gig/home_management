@@ -15,8 +15,8 @@ import {
   ROOM_TYPE_LABELS,
   ROOM_TYPE_DEFAULT_DIMENSIONS,
   findNextRoomPlacement,
-  type FloorPlanRoom,
   type RoomType,
+  DraftableFloorPlanRoom,
 } from "../../store/useRoomStore";
 import { signOutUser } from "../../../actions";
 import { randomRoomColor } from "../../utils/commonUtils";
@@ -25,20 +25,14 @@ import FloorPlanCanvas from "../FloorPlan/FloorPlanCanvas";
 import RoomEditModal from "../FloorPlan/RoomEditModal";
 import { colors, commonColor } from "../../styles/commonStyle";
 
-type DraftRoom = FloorPlanRoom & {
-  roomType: NonNullable<RoomType>;
-  label: string;
-  color: string;
-};
-
 function RoomSetupScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const family = useFamilyStore( state => state.family );
   const error = useRoomStore( state => state.error );
   const addRoom = useRoomStore( state => state.addRoom );
 
-  const [ blocks, setBlocks ] = useState<DraftRoom[]>( [] );
-  const [ editingBlock, setEditingBlock ] = useState<DraftRoom | null>(
+  const [ blocks, setBlocks ] = useState<DraftableFloorPlanRoom[]>( [] );
+  const [ editingBlock, setEditingBlock ] = useState<DraftableFloorPlanRoom | null>(
     null,
   );
   const [ isSaving, setIsSaving ] = useState( false );
@@ -92,7 +86,7 @@ function RoomSetupScreen(): React.JSX.Element {
 
   const onUpdateBlock = (
     id: string,
-    updates: Omit<DraftRoom, "id" | "x" | "y">,
+    updates: Omit<DraftableFloorPlanRoom, "id" | "x" | "y">,
   ) => {
     setBlocks( prev => prev.map( b => ( b.id === id ? { ...b, ...updates } : b ) ) );
   };
@@ -178,7 +172,7 @@ function RoomSetupScreen(): React.JSX.Element {
             <FloorPlanCanvas
               rooms={ blocks }
               editable
-              onRoomPress={ block => setEditingBlock( block as DraftRoom ) }
+              onRoomPress={ block => setEditingBlock( block as DraftableFloorPlanRoom ) }
               onRoomMove={ onMoveBlock }
             />
           </ScrollView>
