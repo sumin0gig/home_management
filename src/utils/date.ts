@@ -336,6 +336,19 @@ export function computeFirstDueDate(
   return toDateString(firstOccurrenceOnOrAfter(task, start, start, 1) ?? start);
 }
 
+// 저장하면 새로 잡히는 기한. 새 일이거나 반복 설정을 바꿨으면 새 설정의 첫 차례,
+// 기존 일의 반복이 그대로면(이름·방법만 고친 수정) null — 기한을 건드리지 않는다.
+// 수정 화면의 미리보기와 updateTask가 같은 판단을 하도록 여기 한 곳에 둔다.
+export function dueDateOnSave(
+  existing: RecurrenceInput | undefined,
+  next: RecurrenceInput,
+  today: Date,
+): string | null {
+  return existing && isSameRecurrence(existing, next)
+    ? null
+    : computeFirstDueDate(next, today);
+}
+
 function formatMonthDay(monthDay: number): string {
   return monthDay === LAST_DAY_OF_MONTH ? '말일' : `${monthDay}일`;
 }

@@ -5,6 +5,7 @@ import TaskFormScreen from "../../../src/screens/home/TaskFormScreen";
 import { listTaskItems, listTaskLogs } from "../../../actions";
 import { useTaskStore } from "../../../src/store/useTaskStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
+import { dueDateOnSave } from "../../../src/utils/date";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
@@ -99,10 +100,11 @@ describe( "TaskFormScreen", () => {
       expect( mockedCreateTask ).not.toHaveBeenCalled();
     } );
 
-    test( "간격이 0이면 에러를 표시한다", () => {
-      const { getByText, getAllByDisplayValue, getByDisplayValue } =
+    test( "직접 설정에서 간격이 0이면 에러를 표시한다", () => {
+      const { getByText, getByRole, getAllByDisplayValue, getByDisplayValue } =
         renderCreate( "r1" );
       fireEvent.changeText( getAllByDisplayValue( "" )[0], "새 집안일" );
+      fireEvent.press( getByRole( "radio", { name: "직접 설정" } ) );
       fireEvent.changeText( getByDisplayValue( "1" ), "0" );
       fireEvent.press( getByText( "저장" ) );
       expect(
@@ -298,6 +300,39 @@ describe( "TaskFormScreen", () => {
       jest.restoreAllMocks();
     } );
 
+    test( "기존 3일 간격을 불러오면 직접 설정이 선택되어 있다", () => {
+      useTaskStore.setState( {
+        tasks: [{ ...existingTask, intervalValue: 3, intervalUnit: "DAY" }],
+      } );
+      const { getByRole, getByDisplayValue } = renderEdit();
+
+      expect( getByRole( "radio", { name: "직접 설정" } ) ).toBeChecked();
+      expect( getByDisplayValue( "3" ) ).toBeTruthy();
+      expect( getByRole( "radio", { name: "일" } ) ).toBeChecked();
+    } );
+
+    test( "요일이 있으면 매주에 요일 정하기를 켠 채로 불러온다", () => {
+      useTaskStore.setState( { tasks: [{ ...existingTask, weekdays: [2, 5] }] } );
+      const { getByRole, getByLabelText } = renderEdit();
+
+      expect( getByRole( "radio", { name: "매주" } ) ).toBeChecked();
+      expect( getByLabelText( "요일 정하기" ) ).toBeChecked();
+      expect( getByRole( "checkbox", { name: "화요일" } ) ).toBeChecked();
+      expect( getByRole( "checkbox", { name: "금요일" } ) ).toBeChecked();
+      expect( getByRole( "checkbox", { name: "수요일" } ) ).not.toBeChecked();
+    } );
+
+    test( "날짜가 있으면 매달에 날짜 정하기를 켠 채로 불러온다", () => {
+      useTaskStore.setState( {
+        tasks: [{ ...existingTask, intervalUnit: "MONTH", monthDay: 15 }],
+      } );
+      const { getByRole, getByLabelText } = renderEdit();
+
+      expect( getByRole( "radio", { name: "매달" } ) ).toBeChecked();
+      expect( getByLabelText( "날짜 정하기" ) ).toBeChecked();
+      expect( getByRole( "radio", { name: "15일" } ) ).toBeChecked();
+    } );
+
     test( "삭제 취소를 누르면 deleteTask가 호출되지 않는다", () => {
       jest.spyOn( Alert, "alert" ).mockImplementation( (_t, _m, buttons) => {
         buttons?.find( b => b.style === "cancel" )?.onPress?.();
@@ -314,6 +349,178 @@ describe( "TaskFormScreen", () => {
       expect( mockedDeleteTask ).not.toHaveBeenCalled();
       expect( navigation.goBack ).not.toHaveBeenCalled();
       jest.restoreAllMocks();
+    } );
+  } );
+
+  describe( "반복 설정", () => {
+    afterEach( () => {
+      jest.useRealTimers();
+    } );
+
+    // 미리보기가 쓰는 "오늘"을 그 날 오전 9시로 고정한다.
+    function setToday(date: string) {
+      jest.useFakeTimers( {
+        now: new Date( `${date}T09:00:00` ),
+        doNotFake: ["nextTick", "queueMicrotask"],
+      } );
+    }
+
+    function renderCreateWithTitle() {
+      const utils = renderCreate( "r1" );
+      fireEvent.changeText( utils.getAllByDisplayValue( "" )[0], "분리수거" );
+      return utils;
+    }
+
+    test( "매주에서 요일 정하기를 켜고 화·금을 고르면 weekdays로 저장한다", async () => {
+      mockedCreateTask.mockResolvedValue( true );
+      const { getByRole, getByLabelText, getByText } = renderCreateWithTitle();
+      fireEvent.press( getByRole( "radio", { name: "매주" } ) );
+      fireEvent( getByLabelText( "요일 정하기" ), "valueChange", true );
+      fireEvent.press( getByRole( "checkbox", { name: "화요일" } ) );
+      fireEvent.press( getByRole( "checkbox", { name: "금요일" } ) );
+      fireEvent.press( getByText( "저장" ) );
+
+      await waitFor( () =>
+        expect( mockedCreateTask ).toHaveBeenCalledWith(
+          "r1",
+          expect.objectContaining( {
+            recurrenceType: "INTERVAL",
+            intervalValue: 1,
+            intervalUnit: "WEEK",
+            weekdays: [2, 5],
+          } ),
+        ),
+      );
+    } );
+
+    test( "2주마다를 고르면 요일 정하기가 보이지 않는다", () => {
+      const { getByRole, queryByLabelText } = renderCreateWithTitle();
+      expect( queryByLabelText( "요일 정하기" ) ).toBeTruthy();
+
+      fireEvent.press( getByRole( "radio", { name: "2주마다" } ) );
+
+      expect( queryByLabelText( "요일 정하기" ) ).toBeNull();
+      expect( queryByLabelText( "날짜 정하기" ) ).toBeNull();
+    } );
+
+    test( "매달에서 날짜 정하기를 켜고 말일을 고르면 monthDay -1로 저장한다", async () => {
+      mockedCreateTask.mockResolvedValue( true );
+      const { getByRole, getByLabelText, getByText } = renderCreateWithTitle();
+      fireEvent.press( getByRole( "radio", { name: "매달" } ) );
+      fireEvent( getByLabelText( "날짜 정하기" ), "valueChange", true );
+      fireEvent.press( getByRole( "radio", { name: "말일" } ) );
+      fireEvent.press( getByText( "저장" ) );
+
+      await waitFor( () =>
+        expect( mockedCreateTask ).toHaveBeenCalledWith(
+          "r1",
+          expect.objectContaining( {
+            recurrenceType: "INTERVAL",
+            intervalValue: 1,
+            intervalUnit: "MONTH",
+            monthDay: -1,
+          } ),
+        ),
+      );
+    } );
+
+    test( "요일 정하기를 켜고 아무 요일도 고르지 않으면 저장하지 않고 안내한다", () => {
+      const { getByLabelText, getByText } = renderCreateWithTitle();
+      fireEvent( getByLabelText( "요일 정하기" ), "valueChange", true );
+      fireEvent.press( getByText( "저장" ) );
+
+      expect( getByText( "요일을 하나 이상 골라주세요." ) ).toBeTruthy();
+      expect( mockedCreateTask ).not.toHaveBeenCalled();
+    } );
+
+    test( "날짜 정하기를 켜고 날짜를 고르지 않으면 저장하지 않고 안내한다", () => {
+      const { getByRole, getByLabelText, getByText } = renderCreateWithTitle();
+      fireEvent.press( getByRole( "radio", { name: "매달" } ) );
+      fireEvent( getByLabelText( "날짜 정하기" ), "valueChange", true );
+      fireEvent.press( getByText( "저장" ) );
+
+      expect( getByText( "날짜를 골라주세요." ) ).toBeTruthy();
+      expect( mockedCreateTask ).not.toHaveBeenCalled();
+    } );
+
+    test( "29~31일을 고르면 그 날이 없는 달은 말일에 한다고 안내한다", () => {
+      const { getByRole, getByLabelText, queryByText } =
+        renderCreateWithTitle();
+      fireEvent.press( getByRole( "radio", { name: "매달" } ) );
+      fireEvent( getByLabelText( "날짜 정하기" ), "valueChange", true );
+      fireEvent.press( getByRole( "radio", { name: "28일" } ) );
+      expect( queryByText( "날짜가 없는 달은 그 달 말일에 해요" ) ).toBeNull();
+
+      fireEvent.press( getByRole( "radio", { name: "31일" } ) );
+      expect( queryByText( "날짜가 없는 달은 그 달 말일에 해요" ) ).toBeTruthy();
+    } );
+
+    test( "특정 달에서 날짜 정하기를 끄면 날짜 없이(1일) 저장한다", async () => {
+      mockedCreateTask.mockResolvedValue( true );
+      const { getByRole, getByText } = renderCreateWithTitle();
+      fireEvent.press( getByRole( "radio", { name: "특정 달" } ) );
+      fireEvent.press( getByRole( "checkbox", { name: "9월" } ) );
+      fireEvent.press( getByRole( "checkbox", { name: "3월" } ) );
+      fireEvent.press( getByText( "저장" ) );
+
+      await waitFor( () => expect( mockedCreateTask ).toHaveBeenCalled() );
+      const input = mockedCreateTask.mock.calls[0][1];
+      expect( input ).toMatchObject( {
+        recurrenceType: "YEARLY_MONTHS",
+        months: [3, 9],
+      } );
+      expect( input.monthDay ).toBeUndefined();
+    } );
+
+    test( "추가할 때 다음 예정과 주기를 미리 보여준다", () => {
+      setToday( "2026-10-27" );
+      const { getByRole, getByLabelText, getByText } = renderCreateWithTitle();
+      expect( getByText( "다음 예정: 10월 27일 (화)" ) ).toBeTruthy();
+
+      fireEvent( getByLabelText( "요일 정하기" ), "valueChange", true );
+      fireEvent.press( getByRole( "checkbox", { name: "금요일" } ) );
+
+      expect( getByText( "매주 금" ) ).toBeTruthy();
+      expect( getByText( "다음 예정: 10월 30일 (금)" ) ).toBeTruthy();
+    } );
+
+    describe( "수정", () => {
+      // 화·금 분리수거. 화요일(10-27) 기한을 넘긴 수요일(10-28)에 연다.
+      const recycling = {
+        ...existingTask,
+        weekdays: [2, 5],
+        nextDueDate: "2026-10-27",
+      } as TaskRow;
+
+      beforeEach( () => {
+        setToday( "2026-10-28" );
+        useTaskStore.setState( { tasks: [recycling] } );
+      } );
+
+      test( "반복을 바꾸지 않고 이름만 바꿔 저장하면 기한이 바뀌지 않는다", async () => {
+        mockedUpdateTask.mockResolvedValue( true );
+        const { getByText, getByDisplayValue, queryByText } = renderEdit();
+        expect( getByText( "다음 예정: 10월 27일 (화)" ) ).toBeTruthy();
+        expect( queryByText( "저장하면 기한이 이 날짜로 바뀌어요" ) ).toBeNull();
+
+        fireEvent.changeText( getByDisplayValue( "침구 햇빛살균" ), "분리수거" );
+        fireEvent.press( getByText( "저장" ) );
+
+        await waitFor( () => expect( mockedUpdateTask ).toHaveBeenCalled() );
+        const input = mockedUpdateTask.mock.calls[0][1];
+        expect( input ).toMatchObject( { title: "분리수거", weekdays: [2, 5] } );
+        // updateTask는 이 판단으로 기한을 다시 잡을지 정한다 (null = 그대로)
+        expect( dueDateOnSave( recycling, input, new Date() ) ).toBeNull();
+      } );
+
+      test( "반복을 바꾸면 새 기한과 함께 저장하면 바뀐다고 안내한다", () => {
+        const { getByRole, getByText } = renderEdit();
+        fireEvent.press( getByRole( "checkbox", { name: "화요일" } ) );
+
+        expect( getByText( "매주 금" ) ).toBeTruthy();
+        expect( getByText( "다음 예정: 10월 30일 (금)" ) ).toBeTruthy();
+        expect( getByText( "저장하면 기한이 이 날짜로 바뀌어요" ) ).toBeTruthy();
+      } );
     } );
   } );
 } );

@@ -12,27 +12,25 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
-import { toDateString } from "../../utils/date";
+import { dueDateOnSave, toDateString } from "../../utils/date";
 import { listTaskItems, listTaskLogs } from "../../../actions";
 import {
   type TaskInput,
   type TaskItemInput,
   type TaskLogRow,
-  type IntervalUnit,
 } from "../../store/useTaskStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 import TaskItemListEditor from "../../components/TaskItemListEditor/TaskItemListEditor";
+import RecurrencePicker from "../../components/RecurrencePicker/RecurrencePicker";
+import RecurrencePreview from "../../components/RecurrencePicker/RecurrencePreview";
+import {
+  buildRecurrence,
+  draftFromTask,
+  type RecurrenceDraft,
+} from "../../components/RecurrencePicker/recurrenceDraft";
 
 type Props = NativeStackScreenProps<MainStackParamList, "TaskForm">;
-
-const INTERVAL_UNIT_LABELS: Record<"DAY" | "WEEK" | "MONTH", string> = {
-  DAY: "일",
-  WEEK: "주",
-  MONTH: "개월",
-};
-
-const MONTHS = Array.from( { length: 12 }, (_, i) => i + 1 );
 
 // 빈 칸으로 남겨둔 항목은 저장하지 않는다.
 function toTaskItemInputs(
@@ -61,17 +59,8 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
 
   const roomId = existingTask?.roomId ?? route.params?.roomId ?? null;
   const [title, setTitle] = React.useState( existingTask?.title ?? "" );
-  const [recurrenceType, setRecurrenceType] = React.useState<
-    "INTERVAL" | "YEARLY_MONTHS"
-  >( existingTask?.recurrenceType ?? "INTERVAL" );
-  const [intervalValue, setIntervalValue] = React.useState(
-    String( existingTask?.intervalValue ?? 1 ),
-  );
-  const [intervalUnit, setIntervalUnit] = React.useState<
-    "DAY" | "WEEK" | "MONTH"
-  >( (existingTask?.intervalUnit as IntervalUnit) ?? "WEEK" );
-  const [months, setMonths] = React.useState<number[]>(
-    existingTask?.months?.filter( (m): m is number => m !== null ) ?? [],
+  const [recurrenceDraft, setRecurrenceDraft] = React.useState<RecurrenceDraft>(
+    () => draftFromTask( existingTask ),
   );
   const [isSaving, setIsSaving] = React.useState( false );
   const [error, setError] = React.useState<string | null>( null );
@@ -110,13 +99,21 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
     }
   }, [taskId] );
 
-  const toggleMonth = (month: number) => {
-    setMonths( prev =>
-      prev.includes( month )
-        ? prev.filter( m => m !== month )
-        : [...prev, month].sort( (a, b) => a - b ),
-    );
-  };
+  // 저장할 반복 설정. 아직 저장할 수 없는 입력이면 recurrence 대신 안내 문구(error)
+  const built = buildRecurrence( recurrenceDraft );
+
+  // 다음 예정 미리보기: 추가는 오늘 포함 첫 차례, 수정은 저장될 기한
+  // (반복 설정을 바꿨을 때만 새 기한, 아니면 지금 기한 그대로)
+  const newDueDate = built.recurrence
+    ? dueDateOnSave( existingTask, built.recurrence, new Date() )
+    : null;
+  const previewDueDate = built.recurrence
+    ? newDueDate ?? existingTask?.nextDueDate ?? null
+    : null;
+  const willChangeDueDate =
+    existingTask !== undefined &&
+    newDueDate !== null &&
+    newDueDate !== existingTask.nextDueDate;
 
   // 저장/삭제 결과: 성공하면 이전 화면으로, 실패하면 store에 남은 에러를 보여준다
   const goBackOrShowError = (ok: boolean) =>
@@ -131,25 +128,13 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       setError( "집안일 명을 입력해주세요." );
       return;
     }
-    if (recurrenceType === "YEARLY_MONTHS" && months.length === 0) {
-      setError( "최소 한 달을 선택해주세요." );
-      return;
-    }
-    const parsedIntervalValue = Number( intervalValue );
-    if (
-      recurrenceType === "INTERVAL" &&
-      (!Number.isInteger( parsedIntervalValue ) || parsedIntervalValue < 1)
-    ) {
-      setError( "간격은 1 이상의 정수로 입력해주세요." );
+    if (!built.recurrence) {
+      setError( built.error );
       return;
     }
     const input: TaskInput = {
       title: title.trim(),
-      recurrenceType,
-      intervalValue:
-        recurrenceType === "INTERVAL" ? parsedIntervalValue : undefined,
-      intervalUnit: recurrenceType === "INTERVAL" ? intervalUnit : undefined,
-      months: recurrenceType === "YEARLY_MONTHS" ? months : undefined,
+      ...built.recurrence,
       items: itemsLoaded
         ? [
             ...toTaskItemInputs( steps, "DEFAULT" ),
@@ -203,107 +188,15 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
         onChangeText={ setTitle }
       />
 
-      <Text style={ styles.label }> 반복 방식 </Text>
-      <View style={ styles.chipRow }>
-        <Pressable
-          style={ [
-            styles.chip,
-            recurrenceType === "INTERVAL" && styles.chipSelected,
-          ] }
-          onPress={ () => setRecurrenceType( "INTERVAL" ) }
-        >
-          <Text
-            style={
-              recurrenceType === "INTERVAL"
-                ? styles.chipTextSelected
-                : styles.chipText
-            }
-          >
-            간격 반복
-          </Text>
-        </Pressable>
-        <Pressable
-          style={ [
-            styles.chip,
-            recurrenceType === "YEARLY_MONTHS" && styles.chipSelected,
-          ] }
-          onPress={ () => setRecurrenceType( "YEARLY_MONTHS" ) }
-        >
-          <Text
-            style={
-              recurrenceType === "YEARLY_MONTHS"
-                ? styles.chipTextSelected
-                : styles.chipText
-            }
-          >
-            특정 달 반복
-          </Text>
-        </Pressable>
-      </View>
-
-      {
-        recurrenceType === "INTERVAL"
-        ? <View>
-            <Text style={ styles.label }> 간격 </Text>
-            <View style={ styles.intervalRow }>
-              <TextInput
-                style={ [styles.input, {flex: 1}] }
-                value={ intervalValue }
-                onChangeText={ setIntervalValue }
-                keyboardType="number-pad"
-              />
-              { (
-                Object.keys( INTERVAL_UNIT_LABELS ) as Array<
-                  "DAY" | "WEEK" | "MONTH"
-                >
-              ).map( unit => (
-                <Pressable
-                  key={ unit }
-                  style={ [
-                    styles.chip,
-                    intervalUnit === unit && styles.chipSelected,
-                  ] }
-                  onPress={ () => setIntervalUnit( unit ) }
-                >
-                  <Text
-                    style={
-                      intervalUnit === unit
-                        ? styles.chipTextSelected
-                        : styles.chipText
-                    }
-                  >
-                    { INTERVAL_UNIT_LABELS[unit] }
-                  </Text>
-                </Pressable>
-              ) ) }
-            </View>
-          </View>
-        : <View>
-            <Text style={ styles.label }> 해당 달 선택 </Text>
-            <View style={ styles.chipRow }>
-              { MONTHS.map( month => (
-                <Pressable
-                  key={ month }
-                  style={ [
-                    styles.monthChip,
-                    months.includes( month ) && styles.chipSelected,
-                  ] }
-                  onPress={ () => toggleMonth( month ) }
-                >
-                  <Text
-                    style={
-                      months.includes( month )
-                        ? styles.chipTextSelected
-                        : styles.chipText
-                    }
-                  >
-                    { month }월
-                  </Text>
-                </Pressable>
-              ) ) }
-            </View>
-          </View>
-      }
+      <RecurrencePicker
+        draft={ recurrenceDraft }
+        onChange={ setRecurrenceDraft }
+      />
+      <RecurrencePreview
+        recurrence={ built.recurrence }
+        dueDate={ previewDueDate }
+        willChangeDueDate={ willChangeDueDate }
+      />
 
       <TaskItemListEditor
         label="방법"
@@ -388,44 +281,6 @@ const styles = StyleSheet.create( {
     paddingVertical: 10,
     paddingHorizontal: 12,
     fontSize: 16,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  intervalRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: commonColor.border,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  monthChip: {
-    borderWidth: 1,
-    borderColor: commonColor.border,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    minWidth: 52,
-    alignItems: "center",
-  },
-  chipSelected: {
-    backgroundColor: commonColor.touchable,
-    borderColor: commonColor.touchable,
-  },
-  chipText: {
-    color: colors.darkGray,
-  },
-  chipTextSelected: {
-    color: colors.white,
-    fontWeight: "600",
   },
   error: {
     color: commonColor.error,

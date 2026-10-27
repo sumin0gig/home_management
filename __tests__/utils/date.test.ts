@@ -1,6 +1,7 @@
 import {
   computeFirstDueDate,
   computeNextDueDate,
+  dueDateOnSave,
   formatDateWithWeekday,
   formatRecurrence,
   isCalendarAnchored,
@@ -148,6 +149,22 @@ describe( "computeFirstDueDate", () => {
       expect( computeFirstDueDate( task, tuesday ) ).toBe( expected );
     },
   );
+} );
+
+describe( "dueDateOnSave", () => {
+  const wednesday = on( "2026-10-28" );
+
+  test( "새 일이면 오늘 포함 첫 차례", () => {
+    expect( dueDateOnSave( undefined, everyTueFri, wednesday ) ).toBe( "2026-10-30" );
+  } );
+
+  test( "반복이 그대로면 null (기한 유지)", () => {
+    expect( dueDateOnSave( weekly( [5, 2] ), everyTueFri, wednesday ) ).toBeNull();
+  } );
+
+  test( "반복을 바꾸면 새 설정의 오늘 포함 첫 차례", () => {
+    expect( dueDateOnSave( everyTue, everyTueFri, wednesday ) ).toBe( "2026-10-30" );
+  } );
 } );
 
 describe( "isCalendarAnchored", () => {
