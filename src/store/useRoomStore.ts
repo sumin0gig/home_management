@@ -232,18 +232,9 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       const now = new Date();
       await Promise.all(
         templates.map(async template => {
-          const nextDueDate = computeNextDueDate(
-            {
-              title: template.title,
-              recurrenceType: template.recurrenceType ?? 'INTERVAL',
-              intervalValue: template.intervalValue ?? undefined,
-              intervalUnit: template.intervalUnit ?? undefined,
-              months:
-                template.months?.filter((m): m is number => m !== null) ??
-                undefined,
-            },
-            now,
-          );
+          // 기본 집안일은 요일·날짜 없이 만들고, 지금처럼 오늘 한 번 한 것으로
+          // 보고 기한을 잡는다.
+          const nextDueDate = computeNextDueDate(template, now);
           const { data: task, errors: taskErrors } =
             await client.models.Task.create({
               roomId: room.id,

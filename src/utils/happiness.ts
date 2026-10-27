@@ -1,20 +1,23 @@
-import type { TaskRow } from '../store/useTaskStore';
+import { getMonths, getWeekdays, type RecurrenceInput } from './date';
 
 const BASE_LEVEL_CAP = 100;
 const LEVEL_CAP_GROWTH = 1.2;
 
 // Mirrors the day-count approximation computeNextDueDate (src/utils/date.ts)
 // already uses for interval math: DAY=1, WEEK=7, MONTH=30 days.
-export function computeHappinessGain(task: TaskRow): number {
+// 매주 요일을 k개 지정하면 일주일에 k번 하므로 회당 7/k일 치를 준다.
+// 날짜 지정(매달 15일 등)은 점수에 영향이 없다.
+export function computeHappinessGain(task: RecurrenceInput): number {
   if (task.recurrenceType === 'YEARLY_MONTHS') {
-    const monthCount =
-      task.months?.filter((m): m is number => m !== null).length ?? 0;
+    const monthCount = getMonths(task).length;
     return monthCount > 0 ? Math.round(365 / monthCount) : 30;
   }
   const value = task.intervalValue ?? 1;
   switch (task.intervalUnit) {
-    case 'WEEK':
-      return value * 7;
+    case 'WEEK': {
+      const weekdayCount = getWeekdays(task).length;
+      return weekdayCount > 0 ? Math.round(7 / weekdayCount) : value * 7;
+    }
     case 'MONTH':
       return value * 30;
     case 'DAY':

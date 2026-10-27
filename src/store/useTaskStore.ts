@@ -12,8 +12,9 @@ import {
   deleteTaskWithChildren,
 } from '../../actions';
 import {
-  toDateString,
+  computeFirstDueDate,
   computeNextDueDate,
+  isSameRecurrence,
   type TaskInput,
   type TaskItemInput,
 } from '../utils/date';
@@ -83,7 +84,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         intervalValue: input.intervalValue,
         intervalUnit: input.intervalUnit,
         months: input.months,
-        nextDueDate: toDateString(new Date()),
+        weekdays: input.weekdays,
+        monthDay: input.monthDay,
+        nextDueDate: computeFirstDueDate(input, new Date()),
       });
       throwIfErrors(errors, '집안일 생성에 실패했습니다.');
       if (!task) {
@@ -103,6 +106,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   updateTask: async (taskId: string, input: TaskInput, roomId?: string) => {
     set({ error: null });
     try {
+      // 반복 설정을 바꿨을 때만 기한을 새 설정의 첫 차례로 다시 잡는다. 이름·방법만
+      // 고친 수정은 기한을 건드리지 않는다 (지난 일의 반복을 바꾸면 "지남"이 풀린다).
+      const existing = get().tasks.find(t => t.id === taskId);
+      const recurrenceChanged = !existing || !isSameRecurrence(existing, input);
       const { errors } = await client.models.Task.update({
         id: taskId,
         roomId,
@@ -111,6 +118,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         intervalValue: input.intervalValue ?? null,
         intervalUnit: input.intervalUnit ?? null,
         months: input.months ?? null,
+        weekdays: input.weekdays ?? null,
+        monthDay: input.monthDay ?? null,
+        ...(recurrenceChanged
+          ? { nextDueDate: computeFirstDueDate(input, new Date()) }
+          : {}),
       });
       throwIfErrors(errors, '집안일 수정에 실패했습니다.');
       if (input.items) {
@@ -157,17 +169,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       });
       throwIfErrors(logErrors, '완료 처리에 실패했습니다.');
 
-      const nextDueDate = computeNextDueDate(
-        {
-          title: task.title,
-          recurrenceType: task.recurrenceType ?? 'INTERVAL',
-          intervalValue: task.intervalValue ?? undefined,
-          intervalUnit: task.intervalUnit ?? undefined,
-          months:
-            task.months?.filter((m): m is number => m !== null) ?? undefined,
-        },
-        now,
-      );
+      const nextDueDate = computeNextDueDate(task, now, task.nextDueDate);
 
       const { errors: updateErrors } = await client.models.Task.update({
         id: task.id,
