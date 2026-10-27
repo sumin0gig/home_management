@@ -150,6 +150,9 @@ const schema = a
         intervalValue: a.integer(),
         intervalUnit: a.enum(['DAY', 'WEEK', 'MONTH']),
         months: a.integer().array(),
+        // 요일·날짜를 지정하면 다음 기한을 완료한 날이 아니라 달력 기준으로 계산한다.
+        weekdays: a.integer().array(), // 0=일 … 6=토. INTERVAL + WEEK + intervalValue 1일 때만 사용
+        monthDay: a.integer(), // 1~31, 말일은 -1. INTERVAL + MONTH 또는 YEARLY_MONTHS일 때만 사용
         nextDueDate: a.date().required(),
         logs: a.hasMany('TaskLog', 'taskId'),
         items: a.hasMany('TaskItem', 'taskId'),
