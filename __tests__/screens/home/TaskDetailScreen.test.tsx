@@ -112,6 +112,14 @@ describe( "TaskDetailScreen", () => {
     expect( getByText( "냉장고 정리정돈" ) ).toBeTruthy();
   } );
 
+  test( "제목 아래에 반복 주기를 보여준다", async () => {
+    useTaskStore.setState( { tasks: [{ ...task, weekdays: [5, 2] }] } );
+    mockedListTaskItems.mockResolvedValue( [] );
+    const { findByText } = renderTaskDetailScreen();
+
+    expect( await findByText( "매주 화·금" ) ).toBeTruthy();
+  } );
+
   test( "방 배지의 배경색은 방 색을 따른다", async () => {
     mockedListTaskItems.mockResolvedValue( [] );
     const { findByTestId } = renderTaskDetailScreen();

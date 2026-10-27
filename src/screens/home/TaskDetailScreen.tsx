@@ -14,7 +14,11 @@ import { listTaskItems } from "../../../actions";
 import { useTaskStore, type TaskItemRow } from "../../store/useTaskStore";
 import { roomDisplayName, useRoomStore } from "../../store/useRoomStore";
 import { useMascotStore } from "../../store/useMascotStore";
-import { formatDueLabel, toDateString } from "../../utils/date";
+import {
+  formatDueLabel,
+  formatRecurrence,
+  toDateString,
+} from "../../utils/date";
 import { splitTaskItemContent } from "../../utils/taskItem";
 import { colors, commonColor } from "../../styles/commonStyle";
 import Icon from "../../components/common/Icon";
@@ -126,6 +130,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         </View>
 
         <Text style={ styles.title }> { task.title } </Text>
+        <Text style={ styles.recurrence }> { formatRecurrence( task ) } </Text>
 
         {
           error
@@ -237,6 +242,11 @@ const styles = StyleSheet.create( {
     fontSize: 26,
     fontWeight: "700",
     color: commonColor.textDefault,
+    marginBottom: 4,
+  },
+  recurrence: {
+    fontSize: 14,
+    color: commonColor.textMuted,
     marginBottom: 20,
   },
   error: {
