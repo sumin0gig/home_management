@@ -17,6 +17,7 @@ import MascotCollectionScreen from '../screens/home/MascotCollectionScreen';
 import FamilyScreen from '../screens/family/FamilyScreen';
 import AddFamilyMemberScreen from '../screens/family/AddFamilyMemberScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import AccountDeleteScreen from '../screens/settings/AccountDeleteScreen';
 import WidgetPromptScreen from '../screens/home/WidgetPromptScreen';
 import { ScreenHeader, SettingsShortcutButton } from './ScreenHeader';
 import { FamilyAvatarStack } from './FamilyAvatarStack';
@@ -73,6 +74,11 @@ function MainNavigator(): React.JSX.Element {
         name="SettingsMain"
         component={SettingsScreen}
         options={{ title: '설정' }}
+      />
+      <Stack.Screen
+        name="AccountDelete"
+        component={AccountDeleteScreen}
+        options={{ title: '회원 탈퇴' }}
       />
     </Stack.Navigator>
   );

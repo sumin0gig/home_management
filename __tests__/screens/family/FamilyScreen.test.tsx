@@ -229,4 +229,23 @@ describe( "FamilyScreen", () => {
     } );
     expect( mockedRename ).toHaveBeenCalledWith( "새 이름" );
   } );
+
+  test( "탈퇴 화면에서 '관리자 넘기기'로 오면 넘길 사람 고르기 시트가 바로 열리고, 넘기기만 한다", async () => {
+    mockTransferEnabled = true;
+    mockedTransfer.mockResolvedValue( true );
+    setFamily( owner, [owner, partner] );
+    const navigation = createMockNavigation<"FamilyMain">();
+    const { getByText, getAllByRole, getByTestId } = render(
+      <FamilyScreen navigation={ navigation } route={ { params: { transfer: true } } as never } />,
+    );
+
+    expect( getByText( "누구에게 관리자를 넘길까요?" ) ).toBeTruthy();
+    fireEvent.press( getAllByRole( "radio" )[0] );
+    await act( async () => {
+      fireEvent.press( getByTestId( "confirm-sheet-confirm" ) );
+    } );
+
+    expect( mockedTransfer ).toHaveBeenCalledWith( "m2" );
+    expect( mockedLeaveFamily ).not.toHaveBeenCalled();
+  } );
 } );

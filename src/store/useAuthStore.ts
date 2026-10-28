@@ -10,12 +10,17 @@ type AuthStatus = 'loading' | 'signedIn' | 'signedOut';
 
 interface AuthState {
   status: AuthStatus;
+  // 회원 탈퇴로 로그아웃됐는지 (메모리에만). 로그인 화면이 완료 안내를 한 번 보여준다.
+  accountDeleted: boolean;
+  setAccountDeleted: (deleted: boolean) => void;
   checkAuthStatus: () => Promise<void>;
   subscribeToAuthEvents: () => () => void;
 }
 
 export const useAuthStore = create<AuthState>(set => ({
   status: 'loading',
+  accountDeleted: false,
+  setAccountDeleted: (deleted: boolean) => set({ accountDeleted: deleted }),
 
   checkAuthStatus: () =>
     getCurrentAuthUser()

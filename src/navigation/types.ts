@@ -21,7 +21,9 @@ export type MainStackParamList = {
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
   MascotCollection: undefined;
-  FamilyMain: undefined;
+  // transfer: 회원 탈퇴 화면의 "관리자 넘기기"에서 왔으면 넘길 사람 고르기 시트를 바로 연다
+  FamilyMain: { transfer?: boolean } | undefined;
   AddFamilyMember: undefined;
   SettingsMain: undefined;
+  AccountDelete: undefined;
 };

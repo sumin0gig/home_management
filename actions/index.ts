@@ -39,6 +39,28 @@ export function throwIfErrors(errors: unknown, fallbackMessage: string): void {
   }
 }
 
+// 지우기 요청용: 이미 지워진 기록(조건 검사 실패)은 성공으로 본다. 탈퇴·방 삭제를
+// 중간에 실패한 뒤 다시 불렀을 때, 그 사이 지워진 기록 때문에 멈추지 않게 한다.
+export function throwIfDeleteErrors(
+  errors: unknown,
+  fallbackMessage: string,
+): void {
+  if (!errors || !Array.isArray(errors) || errors.length === 0) {
+    return;
+  }
+  const remaining = errors.filter(error => {
+    const { errorType, message } = (error ?? {}) as {
+      errorType?: string;
+      message?: string;
+    };
+    return !(
+      errorType?.includes('ConditionalCheckFailed') ||
+      message?.includes('conditional request failed')
+    );
+  });
+  throwIfErrors(remaining, fallbackMessage);
+}
+
 // ─── 인증 ────────────────────────────────────────────────────────────────
 
 export async function signInWithGoogle(): Promise<void> {
@@ -223,7 +245,7 @@ export async function deleteRoomWithChildren(roomId: string): Promise<void> {
   const taskIds = await listAllTaskIdsForRoom(roomId);
   await Promise.all(taskIds.map(taskId => deleteTaskWithChildren(taskId)));
   const { errors } = await client.models.Room.delete({ id: roomId });
-  throwIfErrors(errors, '방 삭제에 실패했습니다.');
+  throwIfDeleteErrors(errors, '방 삭제에 실패했습니다.');
 }
 
 export async function listTaskTemplatesForRoomType(
@@ -320,7 +342,7 @@ export async function deleteAllTaskItemsForTask(taskId: string): Promise<void> {
     items.map(item => client.models.TaskItem.delete({ id: item.id })),
   );
   deleteResults.forEach(result =>
-    throwIfErrors(result.errors, '집안일 안내 항목 삭제에 실패했습니다.'),
+    throwIfDeleteErrors(result.errors, '집안일 안내 항목 삭제에 실패했습니다.'),
   );
 }
 
@@ -340,7 +362,7 @@ export async function deleteAllTaskLogsForTask(taskId: string): Promise<void> {
       logs.map(log => client.models.TaskLog.delete({ id: log.id })),
     );
     deleteResults.forEach(result =>
-      throwIfErrors(result.errors, '완료 기록 삭제에 실패했습니다.'),
+      throwIfDeleteErrors(result.errors, '완료 기록 삭제에 실패했습니다.'),
     );
     nextToken = token;
   } while (nextToken);
@@ -353,22 +375,25 @@ export async function deleteTaskWithChildren(taskId: string): Promise<void> {
     deleteAllTaskItemsForTask(taskId),
   ]);
   const { errors } = await client.models.Task.delete({ id: taskId });
-  throwIfErrors(errors, '집안일 삭제에 실패했습니다.');
+  throwIfDeleteErrors(errors, '집안일 삭제에 실패했습니다.');
 }
 
 // ─── 회원 탈퇴 ───────────────────────────────────────────────────────────
 
 // 내 데이터를 서버에서 지운 뒤 Cognito 계정까지 삭제한다. 스토어는 건드리지
 // 않는다 — 마지막 deleteUser가 signOut까지 하므로 useAuthStore의 'signedOut'
-// Hub 이벤트에서 모든 스토어가 초기화된다. 지울 대상은 매번 서버에서 다시
-// 조회하므로, 중간에 실패해도 다시 호출하면 남은 것부터 이어서 지운다.
-export async function deleteAccount(): Promise<void> {
+// Hub 이벤트에서 모든 스토어가 초기화된다.
+//
+// 다시 불러도 안전하다: 지울 대상은 매번 서버에서 다시 조회하고, 이미 지워진
+// 기록은 성공으로 보며(throwIfDeleteErrors), 소유한 가족은 가족을 먼저 지우고
+// 내 구성원 기록을 나중에 지워서 중간에 실패해도 다시 찾을 수 있게 한다.
+// onBeforeDeleteUser는 계정을 지우기 직전에 불린다 (완료 안내 표시용).
+export async function deleteAccount(options?: {
+  onBeforeDeleteUser?: () => void;
+}): Promise<void> {
   const user = await getCurrentAuthUser();
 
-  const { data: memberships, errors } = await client.models.FamilyMember.list({
-    filter: { userId: { eq: user.userId } },
-  });
-  throwIfErrors(errors, '가족 정보를 불러오지 못했습니다.');
+  const memberships = await listMyFamilyMemberships(user.userId);
 
   // 아무것도 지우기 전에 확인: 소유한 가족에 다른 구성원이 남아 있으면 탈퇴할 수
   // 없다 (가족을 지우면 그 구성원들의 방·집안일까지 사라지므로).
@@ -385,29 +410,26 @@ export async function deleteAccount(): Promise<void> {
   );
   if (ownedFamilyMembers.flat().some(m => m.userId !== user.userId)) {
     throw new Error(
-      '다른 구성원이 있는 가족의 소유자는 탈퇴할 수 없습니다. 가족 관리에서 구성원을 먼저 내보내 주세요.',
+      '다른 구성원이 있는 가족의 관리자는 탈퇴할 수 없어요. 관리자를 넘기거나 구성원을 내보낸 뒤 다시 시도해주세요.',
     );
   }
 
-  // 소유한 가족은 방(집안일 포함)과 가족 자체까지 지우고, 참여한 가족에서는 내
-  // 멤버 기록만 지운다 (useFamilyStore.leaveFamily와 같은 순서).
+  // 소유한 가족은 방(집안일 포함) → 가족 → 내 구성원 기록 순서로 지운다. 참여한
+  // 가족에서는 내 구성원 기록만 지운다.
   await Promise.all(
     memberships.map(async membership => {
-      const isOwner = membership.role === 'OWNER';
-      if (isOwner) {
+      if (membership.role === 'OWNER') {
         const rooms = await listAllRoomsForFamily(membership.familyId);
         await Promise.all(rooms.map(room => deleteRoomWithChildren(room.id)));
+        const { errors: familyErrors } = await client.models.Family.delete({
+          id: membership.familyId,
+        });
+        throwIfDeleteErrors(familyErrors, '가족 삭제에 실패했습니다.');
       }
       const { errors: memberErrors } = await client.models.FamilyMember.delete({
         id: membership.id,
       });
-      throwIfErrors(memberErrors, '가족을 떠나지 못했습니다.');
-      if (isOwner) {
-        const { errors: familyErrors } = await client.models.Family.delete({
-          id: membership.familyId,
-        });
-        throwIfErrors(familyErrors, '가족 삭제에 실패했습니다.');
-      }
+      throwIfDeleteErrors(memberErrors, '가족을 떠나지 못했습니다.');
     }),
   );
 
@@ -430,8 +452,9 @@ export async function deleteAccount(): Promise<void> {
       : []),
   ]);
   deleteResults.forEach(result =>
-    throwIfErrors(result.errors, '회원 정보 삭제에 실패했습니다.'),
+    throwIfDeleteErrors(result.errors, '회원 정보 삭제에 실패했습니다.'),
   );
 
+  options?.onBeforeDeleteUser?.();
   await deleteUser();
 }

@@ -2,6 +2,7 @@ import React from "react";
 import { Linking } from "react-native";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import LoginScreen from "../../src/screens/LoginScreen";
+import { useAuthStore } from "../../src/store/useAuthStore";
 import {
   getAuthErrorMessage,
   PRIVACY_POLICY_URL,
@@ -60,5 +61,18 @@ describe( "LoginScreen", () => {
     const { getByText } = render( <LoginScreen /> );
     fireEvent.press( getByText( "개인정보처리방침" ) );
     expect( openURL ).toHaveBeenCalledWith( PRIVACY_POLICY_URL );
+  } );
+
+  test( "회원 탈퇴 직후에는 완료 안내를 한 번 보여주고, '처음 화면으로'를 누르면 로그인 화면", () => {
+    useAuthStore.setState( { accountDeleted: true } );
+    const { getByText, queryByText } = render( <LoginScreen /> );
+
+    expect( getByText( "탈퇴가 끝났어요" ) ).toBeTruthy();
+    expect( getByText( "그동안 함께해줘서 고마워요." ) ).toBeTruthy();
+    expect( queryByText( "Google로 계속하기" ) ).toBeNull();
+
+    fireEvent.press( getByText( "처음 화면으로" ) );
+    expect( useAuthStore.getState().accountDeleted ).toBe( false );
+    expect( getByText( "Google로 계속하기" ) ).toBeTruthy();
   } );
 } );

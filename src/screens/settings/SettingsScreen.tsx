@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Alert,
   Linking,
   Platform,
   Pressable,
@@ -15,7 +14,6 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DeviceInfo from "react-native-device-info";
 import {
-  deleteAccount,
   getAuthErrorMessage,
   openPrivacyPolicy,
   signOutUser,
@@ -56,7 +54,6 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
   const widgetInstalled = useWidgetInstalled( navigation );
 
   const [error, setError] = React.useState<string | null>( null );
-  const [isDeleting, setIsDeleting] = React.useState( false );
 
   // 이름 바꾸기
   const [isRenaming, setIsRenaming] = React.useState( false );
@@ -121,26 +118,6 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
   const onToggleWidgetMascot = (value: boolean) => {
     setShowMascotOnWidget( value );
     return saveWidgetShowMascot( value );
-  };
-
-  const onDeleteAccount = () => {
-    Alert.alert(
-      "회원 탈퇴",
-      "탈퇴하면 계정과 마스코트가 삭제되며 되돌릴 수 없어요. 혼자 있는 가족의 소유자라면 가족과 방, 집안일도 함께 삭제돼요. 정말 탈퇴하시겠어요?",
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "탈퇴",
-          style: "destructive",
-          onPress: () => {
-            setIsDeleting( true );
-            return deleteAccount()
-            .catch( err => setError( getAuthErrorMessage( err ) ) )
-            .finally( () => setIsDeleting( false ) );
-          },
-        },
-      ],
-    );
   };
 
   return (
@@ -256,13 +233,10 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
       { /* 6. 회원 탈퇴 */ }
       <Pressable
         style={ styles.deleteAccountButton }
-        onPress={ onDeleteAccount }
-        disabled={ isDeleting }
+        onPress={ () => navigation.navigate( "AccountDelete" ) }
         accessibilityRole="button"
       >
-        <Text style={ styles.deleteAccountText }>
-          { isDeleting ? "탈퇴 처리 중…" : "회원 탈퇴" }
-        </Text>
+        <Text style={ styles.deleteAccountText }> 회원 탈퇴 </Text>
       </Pressable>
 
       <ConfirmSheet
