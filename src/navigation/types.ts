@@ -23,7 +23,5 @@ export type MainStackParamList = {
   MascotCollection: undefined;
   FamilyMain: undefined;
   AddFamilyMember: undefined;
-  ScanFamilyQr: undefined;
-  EnterFamilyCode: undefined;
   SettingsMain: undefined;
 };

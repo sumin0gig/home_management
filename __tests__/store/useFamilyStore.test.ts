@@ -4,7 +4,11 @@ import {
   useFamilyStore,
   type FamilyMemberRow,
 } from "../../src/store/useFamilyStore";
-import { fetchDisplayName, getCurrentAuthUser } from "../../actions";
+import {
+  fetchDisplayName,
+  getCurrentAuthUser,
+  listRoomsForFamily,
+} from "../../actions";
 
 const mockFamilyMemberList = jest.fn();
 const mockFamilyMemberCreate = jest.fn();
@@ -31,6 +35,7 @@ jest.mock( "../../actions", () => ( {
   ...jest.requireActual( "../../actions" ),
   getCurrentAuthUser: jest.fn(),
   fetchDisplayName: jest.fn(),
+  listRoomsForFamily: jest.fn(),
 } ) );
 
 function member(overrides: Partial<FamilyMemberRow>): FamilyMemberRow {
@@ -68,37 +73,59 @@ describe( "useFamilyStore", () => {
     mockFamilyMemberCreate.mockResolvedValue( { data: {}, errors: undefined } );
   } );
 
+  describe( "lookupFamilyByCode", () => {
+    test( "코드를 대문자·영문숫자로 바꿔 찾고, 관리자 이름·구성원 수·방 수를 돌려준다 (참여는 하지 않는다)", async () => {
+      mockListFamilyByInviteCode.mockResolvedValue( {
+        data: [{ id: "f2", name: "민수네", ownerId: "u2" }],
+        errors: undefined,
+      } );
+      mockMemberships( [], [
+        member( { id: "o", userId: "u2", displayName: "민수", role: "OWNER", familyId: "f2" } ),
+        member( { id: "x", userId: "u3", displayName: "지수", familyId: "f2" } ),
+      ] );
+      ( listRoomsForFamily as jest.Mock ).mockResolvedValue( [{ id: "r1" }, { id: "r2" }] );
+
+      const result = await useFamilyStore.getState().lookupFamilyByCode( " k7q2-mx " );
+
+      expect( mockListFamilyByInviteCode ).toHaveBeenCalledWith( { inviteCode: "K7Q2MX" } );
+      expect( result ).toEqual( {
+        family: { id: "f2", name: "민수네", ownerId: "u2" },
+        ownerName: "민수",
+        memberCount: 2,
+        roomCount: 2,
+      } );
+      expect( mockFamilyMemberCreate ).not.toHaveBeenCalled();
+    } );
+
+    test( "없는 코드면 null", async () => {
+      mockListFamilyByInviteCode.mockResolvedValue( { data: [], errors: undefined } );
+      await expect( useFamilyStore.getState().lookupFamilyByCode( "AAAAAA" ) ).resolves.toBeNull();
+      expect( useFamilyStore.getState().error ).toBeNull();
+    } );
+  } );
+
   describe( "joinFamily", () => {
     test( "이미 가족이 있으면 구성원을 만들지 않고 false와 안내 문구를 남긴다", async () => {
       mockMemberships( [member( {} )] );
-      mockListFamilyByInviteCode.mockResolvedValue( {
-        data: [{ id: "f2", ownerId: "u2" }],
-        errors: undefined,
-      } );
+      mockFamilyGet.mockResolvedValue( { data: { id: "f2", ownerId: "u2" }, errors: undefined } );
 
       await expect(
-        useFamilyStore.getState().joinFamily( "K7Q2MX" ),
+        useFamilyStore.getState().joinFamily( "f2" ),
       ).resolves.toBe( false );
 
       expect( mockFamilyMemberCreate ).not.toHaveBeenCalled();
       expect( useFamilyStore.getState().error ).toBe( ALREADY_IN_FAMILY_MESSAGE );
     } );
 
-    test( "가족이 없으면 초대 코드의 가족에 구성원으로 참여한다", async () => {
+    test( "가족이 없으면 그 가족에 구성원으로 참여한다", async () => {
       mockMemberships( [] );
-      mockListFamilyByInviteCode.mockResolvedValue( {
-        data: [{ id: "f2", ownerId: "u2" }],
-        errors: undefined,
-      } );
-      mockFamilyGet.mockResolvedValue( { data: null, errors: undefined } );
+      mockFamilyGet.mockResolvedValue( { data: { id: "f2", ownerId: "u2" }, errors: undefined } );
 
       await expect(
-        useFamilyStore.getState().joinFamily( " k7q2mx " ),
+        useFamilyStore.getState().joinFamily( "f2" ),
       ).resolves.toBe( true );
 
-      expect( mockListFamilyByInviteCode ).toHaveBeenCalledWith( {
-        inviteCode: "K7Q2MX",
-      } );
+      expect( mockFamilyGet ).toHaveBeenCalledWith( { id: "f2" } );
       expect( mockFamilyMemberCreate ).toHaveBeenCalledWith( {
         familyId: "f2",
         userId: "u1",
