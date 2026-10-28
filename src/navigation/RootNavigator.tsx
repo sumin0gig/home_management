@@ -37,6 +37,9 @@ function RootNavigator(): React.JSX.Element {
   const family = useFamilyStore( state => state.family );
   const membership = useFamilyStore( state => state.membership );
 
+  // 참여자가 집을 기다리는 동안 마스코트를 먼저 만들러 갔는지
+  const [makeMascotWhileWaiting, setMakeMascotWhileWaiting] = React.useState( false );
+
   const roomStatus = useRoomStore( state => state.status );
   const rooms = useRoomStore( state => state.rooms );
   const houseSetupPending = useRoomStore( state => state.houseSetupPending );
@@ -101,8 +104,15 @@ function RootNavigator(): React.JSX.Element {
     return <RoomSetupScreen />;
   }
 
+  // 참여자이고 방이 아직 없을 때: 마스코트가 없고 카드에서 "마스코트 만들기"를
+  // 눌렀으면 마스코트부터, 아니면(마스코트를 만든 뒤 포함) 대기 화면.
   if (rooms.length === 0) {
-    return <RoomWaitingScreen />;
+    if (mascotStatus === 'none' && makeMascotWhileWaiting) {
+      return <MascotSetup />;
+    }
+    return (
+      <RoomWaitingScreen onMakeMascot={() => setMakeMascotWhileWaiting(true)} />
+    );
   }
 
   if (mascotStatus === 'none') {
