@@ -13,7 +13,8 @@ interface Props {
   removable?: boolean;
   onRoomPress?: (room: FloorPlanRoom) => void;
   onRoomMove?: (roomId: string, x: number, y: number) => void;
-  hasDueToday?: (room: FloorPlanRoom) => boolean;
+  // 방마다 기한이 오늘이거나 지난 일의 개수 (홈에서만 넘긴다)
+  getDueCount?: (room: FloorPlanRoom) => number;
   mascotRoomId?: string | null;
 }
 
@@ -23,7 +24,7 @@ function FloorPlanCanvas( {
   removable = false,
   onRoomPress,
   onRoomMove,
-  hasDueToday,
+  getDueCount,
   mascotRoomId,
 }: Props ): React.JSX.Element {
   const [containerWidth, setContainerWidth] = React.useState( 0 );
@@ -81,7 +82,7 @@ function FloorPlanCanvas( {
             onMove={
               onRoomMove ? (x, y) => onRoomMove( room.id, x, y ) : undefined
             }
-            hasDueToday={ hasDueToday ? hasDueToday( room ) : false }
+            dueCount={ getDueCount ? getDueCount( room ) : 0 }
             hasMascot={ room.id === mascotRoomId }
             isRemovable={ removable }
           />

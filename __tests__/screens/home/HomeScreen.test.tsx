@@ -75,7 +75,21 @@ describe( "HomeScreen", () => {
     const { getByText, getByTestId } = renderHomeScreen();
 
     expect( getByText( "침실" ) ).toBeTruthy();
-    expect( getByTestId( "due-badge-r1" ) ).toBeTruthy();
+    expect( getByTestId( "due-badge-r1" ) ).toHaveTextContent( "1" );
+    expect( getByText( "숫자는 그 방의 할 일 개수" ) ).toBeTruthy();
+  } );
+
+  test( "평면도 배지는 그 방에서 기한이 오늘이거나 지난 일의 개수다", () => {
+    const later = { ...task, id: "c3", nextDueDate: "2999-01-01" } as TaskRow;
+    useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
+    useTaskStore.setState( {
+      status: "loaded",
+      tasks: [task, { ...task, id: "c2" } as TaskRow, later],
+    } );
+
+    const { getByTestId } = renderHomeScreen();
+
+    expect( getByTestId( "due-badge-r1" ) ).toHaveTextContent( "2" );
   } );
 
   test( "오늘 해야 할 집안일이 없으면 표시를 남기지 않는다", () => {
@@ -254,7 +268,7 @@ describe( "HomeScreen", () => {
         ],
       } );
 
-      const { getByText, queryByText, getAllByTestId } = renderHomeScreen();
+      const { getByText, getByLabelText, queryByText, getAllByTestId } = renderHomeScreen();
 
       expect( getByText( "할 일" ) ).toBeTruthy();
       expect( getByText( "이번 주" ) ).toBeTruthy();
@@ -268,8 +282,7 @@ describe( "HomeScreen", () => {
       expect( getByText( "4일 지남" ) ).toBeTruthy();
       expect( getByText( "D-5" ) ).toBeTruthy();
       // 요약: 기한이 오늘이거나 지난 일 2개
-      expect( getByText( "2" ) ).toBeTruthy();
-      expect( getByText( "오늘까지 할 일" ) ).toBeTruthy();
+      expect( getByLabelText( "오늘까지 할 일 2개" ) ).toBeTruthy();
     } );
 
     test( "같은 기한이면 이름 가나다순", () => {

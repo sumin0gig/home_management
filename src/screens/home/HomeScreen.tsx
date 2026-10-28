@@ -109,10 +109,10 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
 
   const today = toDateString( new Date() );
 
-  const hasDueToday = (room: FloorPlanRoom): boolean =>
-    tasks.some(
+  const getDueCount = (room: FloorPlanRoom): number =>
+    tasks.filter(
       t => t.roomId === room.id && isDueByToday( t.nextDueDate, today ),
-    );
+    ).length;
 
   return (
     <ScrollView
@@ -161,9 +161,14 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
               hasMascot: room.id === mascotRoomId,
             } )
           }
-          hasDueToday={ hasDueToday }
+          getDueCount={ getDueCount }
           mascotRoomId={ mascotRoomId }
         />
+      }
+      {
+        rooms.length > 0
+        ? <Text style={ styles.legend }> 숫자는 그 방의 할 일 개수 </Text>
+        : null
       }
 
       <HomeTaskList
@@ -192,6 +197,12 @@ const styles = StyleSheet.create( {
     alignItems: "center",
     padding: 24,
     backgroundColor: colors.default,
+  },
+  legend: {
+    fontSize: 12,
+    color: commonColor.textMuted,
+    marginTop: 6,
+    marginBottom: 20,
   },
   emptySection: {
     fontSize: 14,
