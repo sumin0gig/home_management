@@ -1,6 +1,8 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { taskReminder } from '../functions/taskReminder/resource';
 import { createUserOnLogin } from '../functions/createUserOnLogin/resource';
+import { transferFamilyOwnership } from '../functions/transferFamilyOwnership/resource';
+import { joinFamilyByCode } from '../functions/joinFamilyByCode/resource';
 
 const schema = a
   .schema({
@@ -191,6 +193,26 @@ const schema = a
         allow.group('Admin').to(['create', 'read', 'update', 'delete']),
       ]),
 
+    // 관리자 넘기기. 관리자는 다른 사람의 구성원 기록과 남이 만든 Family를 고칠 수
+    // 없어서 서버 함수가 대신 바꾼다 (검증·순서는 functions/transferFamilyOwnership/logic.ts).
+    transferFamilyOwnership: a
+      .mutation()
+      .arguments({
+        familyId: a.id().required(),
+        newOwnerMemberId: a.id().required(),
+      })
+      .returns(a.ref('Family'))
+      .authorization(allow => [allow.authenticated()])
+      .handler(a.handler.function(transferFamilyOwnership)),
+
+    // 서버에서 초대 코드로 참여하기. role·familyOwnerId를 서버가 정한다.
+    joinFamilyByCode: a
+      .mutation()
+      .arguments({ inviteCode: a.string().required() })
+      .returns(a.ref('Family'))
+      .authorization(allow => [allow.authenticated()])
+      .handler(a.handler.function(joinFamilyByCode)),
+
     DeviceToken: a
       .model({
         userId: a.string().required(),
@@ -209,6 +231,8 @@ const schema = a
   .authorization(allow => [
     allow.resource(taskReminder).to(['query']),
     allow.resource(createUserOnLogin).to(['query', 'mutate']),
+    allow.resource(transferFamilyOwnership).to(['query', 'mutate']),
+    allow.resource(joinFamilyByCode).to(['query', 'mutate']),
   ]);
 
 export type Schema = ClientSchema<typeof schema>;

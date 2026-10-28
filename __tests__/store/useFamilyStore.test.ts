@@ -13,11 +13,15 @@ import {
 const mockFamilyMemberList = jest.fn();
 const mockFamilyMemberCreate = jest.fn();
 const mockFamilyMemberUpdate = jest.fn();
+const mockTransferMutation = jest.fn();
 const mockFamilyGet = jest.fn();
 const mockListFamilyByInviteCode = jest.fn();
 
 jest.mock( "aws-amplify/data", () => ( {
   generateClient: () => ( {
+    mutations: {
+      transferFamilyOwnership: (...args: unknown[]) => mockTransferMutation( ...args ),
+    },
     models: {
       FamilyMember: {
         list: (...args: unknown[]) => mockFamilyMemberList( ...args ),
@@ -153,6 +157,31 @@ describe( "useFamilyStore", () => {
       expect( mockFamilyMemberUpdate ).toHaveBeenCalledWith( { id: "me", displayName: "수민2" } );
       expect( useFamilyStore.getState().membership?.displayName ).toBe( "수민2" );
       expect( useFamilyStore.getState().members.map( m => m.displayName ) ).toEqual( ["수민2", "민수"] );
+    } );
+  } );
+
+  describe( "transferOwnership", () => {
+    test( "서버 함수를 부르고 성공하면 가족을 다시 읽는다", async () => {
+      useFamilyStore.setState( { family: { id: "f1" } as never } );
+      mockTransferMutation.mockResolvedValue( { data: { id: "f1" }, errors: undefined } );
+      mockMemberships( [] );
+
+      await expect( useFamilyStore.getState().transferOwnership( "m2" ) ).resolves.toBe( true );
+
+      expect( mockTransferMutation ).toHaveBeenCalledWith( { familyId: "f1", newOwnerMemberId: "m2" } );
+      // fetchMyFamily가 내 구성원 기록을 다시 읽었다
+      expect( mockFamilyMemberList ).toHaveBeenCalled();
+    } );
+
+    test( "서버가 거절하면 false와 메시지", async () => {
+      useFamilyStore.setState( { family: { id: "f1" } as never } );
+      mockTransferMutation.mockResolvedValue( {
+        data: null,
+        errors: [{ message: "관리자만 넘길 수 있어요." }],
+      } );
+
+      await expect( useFamilyStore.getState().transferOwnership( "m2" ) ).resolves.toBe( false );
+      expect( useFamilyStore.getState().error ).toBe( "관리자만 넘길 수 있어요." );
     } );
   } );
 
