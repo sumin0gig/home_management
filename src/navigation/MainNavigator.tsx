@@ -51,7 +51,7 @@ function MainNavigator(): React.JSX.Element {
       <Stack.Screen
         name="CompleteCheck"
         component={CompleteCheckScreen}
-        options={{ headerShown: false }}
+        options={completeCheckOptions}
       />
       <Stack.Screen name="MascotDetail" component={MascotDetailScreen} />
       <Stack.Screen
@@ -80,6 +80,14 @@ export default MainNavigator;
 
 // 아래에서 올라오는 시트. 올라오는 움직임은 화면 안에서 reanimated로 준다.
 const taskSheetOptions: NativeStackNavigationOptions = {
+  presentation: 'transparentModal',
+  headerShown: false,
+  animation: 'fade',
+};
+
+// 가벼운 축하는 아래에서 올라오는 시트, 마지막 할 일 축하는 불투명한 전체 화면.
+// 둘 다 같은 화면이 variant에 따라 그린다.
+const completeCheckOptions: NativeStackNavigationOptions = {
   presentation: 'transparentModal',
   headerShown: false,
   animation: 'fade',

@@ -45,6 +45,11 @@ interface Props {
    * 반복 행동(idle/walk)에서는 호출되지 않는다.
    */
   onActionEnd?: () => void;
+  /**
+   * 보이는 영역 (SVG viewBox 좌표). 기본은 전신 `0 0 280 200`. 축하 화면의
+   * 동그란 초상처럼 상반신만 잘라 보여줄 때 쓴다. 높이는 이 비율을 따른다.
+   */
+  viewBox?: { x: number; y: number; width: number; height: number };
 }
 
 const Mascot = ({
@@ -52,7 +57,9 @@ const Mascot = ({
   action,
   size = 200,
   onActionEnd,
+  viewBox,
 }: Props): React.JSX.Element => {
+  const box = viewBox ?? { x: 0, y: 0, ...VIEW_BOX };
   const fill = config.fillColor ?? colors.yellow;
   const TailComponent = TAIL_VARIANTS[config.tailStyle];
   const tailPivot = TAIL_PIVOTS[config.tailStyle];
@@ -149,8 +156,8 @@ const Mascot = ({
   return (
     <Svg
       width={ size }
-      height={ size * (VIEW_BOX.height / VIEW_BOX.width) }
-      viewBox={ `0 0 ${VIEW_BOX.width} ${VIEW_BOX.height}` }
+      height={ size * (box.height / box.width) }
+      viewBox={ `${box.x} ${box.y} ${box.width} ${box.height}` }
     >
       <AnimatedG
         origin={ `${ROOT_PIVOT.x}, ${ROOT_PIVOT.y}` }

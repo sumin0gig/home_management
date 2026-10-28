@@ -12,10 +12,10 @@ export type MainStackParamList = {
   CompleteCheck: {
     taskId: string;
     happinessBefore?: number;
-    // 완료 전 기한 (05에서 축하 문구에 쓴다)
-    previousDueDate?: string;
-    // light: 가볍게 축하, full: 오늘의 마지막 할 일 (05에서 모양을 만든다)
-    variant?: CompleteVariant;
+    // 완료 전 기한
+    previousDueDate: string;
+    // light: 가벼운 시트, full: 오늘의 마지막 할 일 (전체 화면 + 폭죽)
+    variant: CompleteVariant;
   };
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
