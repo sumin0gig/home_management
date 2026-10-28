@@ -1,0 +1,5 @@
+<resources>
+    <!-- colors.default (src/styles/commonStyle.ts)와 같은 값. 앱이 뜰 때 시작 화면과
+         첫 JS 화면(StartupScreen)의 배경색이 바뀌지 않게 한다. -->
+    <color name="app_background">#FFF9F2</color>
+</resources>

@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import FamilyOnboarding from '../components/FamilyOnboarding/FamilyOnboarding';
@@ -7,6 +6,10 @@ import ForceUpdateScreen from '../components/ForceUpdate/ForceUpdateScreen';
 import MascotSetup from '../components/MascotSetup/MascotSetup';
 import RoomSetupScreen from '../components/RoomSetupScreen/RoomSetupScreen';
 import RoomWaitingScreen from '../components/RoomWaitingScreen/RoomWaitingScreen';
+import StartupScreen from '../components/Onboarding/StartupScreen';
+import WelcomeScreen from '../components/Onboarding/WelcomeScreen';
+import { useWelcomeGate } from '../components/Onboarding/useWelcomeGate';
+import { setPendingRoute } from './pendingNavigation';
 import { useAppUpdateStore } from '../store/useAppUpdateStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useFamilyStore } from '../store/useFamilyStore';
@@ -77,14 +80,21 @@ function RootNavigator(): React.JSX.Element {
   ;
   const isRoomsLoading = familyStatus === 'joined' && roomStatus === 'idle';
 
+  const isOwner = membership?.role === 'OWNER';
+  // 집과 마스코트가 모두 준비돼 홈으로 들어갈 수 있는 상태
+  const isReadyForHome =
+    authStatus === 'signedIn' &&
+    familyStatus === 'joined' &&
+    !isRoomsLoading &&
+    rooms.length > 0 &&
+    !(isOwner && houseSetupPending) &&
+    mascotStatus === 'created';
+  const welcome = useWelcomeGate(isReadyForHome, mascotStatus);
+
   if (updateStatus === 'updateRequired') return <ForceUpdateScreen />;
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <StartupScreen />;
   }
 
   if (authStatus !== 'signedIn') return <AuthNavigator />;
@@ -92,15 +102,11 @@ function RootNavigator(): React.JSX.Element {
   if (familyStatus === 'none') return <FamilyOnboarding />;
 
   if (isRoomsLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <StartupScreen />;
   }
 
   // 관리자가 집을 만드는 중이면 첫 방이 생겨도 다 만들 때까지 집 만들기에 남는다.
-  if (membership?.role === 'OWNER' && (rooms.length === 0 || houseSetupPending)) {
+  if (isOwner && (rooms.length === 0 || houseSetupPending)) {
     return <RoomSetupScreen />;
   }
 
@@ -119,15 +125,24 @@ function RootNavigator(): React.JSX.Element {
     return <MascotSetup />;
   }
 
+  if (welcome.state === 'checking') {
+    return <StartupScreen />;
+  }
+
+  if (welcome.state === 'show') {
+    return (
+      <WelcomeScreen
+        isOwner={isOwner}
+        onStart={welcome.finish}
+        onInvite={() => {
+          setPendingRoute('AddFamilyMember');
+          welcome.finish();
+        }}
+      />
+    );
+  }
+
   return <MainNavigator />;
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
 
 export default RootNavigator;
