@@ -12,6 +12,7 @@ import {
 
 const mockFamilyMemberList = jest.fn();
 const mockFamilyMemberCreate = jest.fn();
+const mockFamilyMemberUpdate = jest.fn();
 const mockFamilyGet = jest.fn();
 const mockListFamilyByInviteCode = jest.fn();
 
@@ -21,6 +22,7 @@ jest.mock( "aws-amplify/data", () => ( {
       FamilyMember: {
         list: (...args: unknown[]) => mockFamilyMemberList( ...args ),
         create: (...args: unknown[]) => mockFamilyMemberCreate( ...args ),
+        update: (...args: unknown[]) => mockFamilyMemberUpdate( ...args ),
       },
       Family: {
         get: (...args: unknown[]) => mockFamilyGet( ...args ),
@@ -133,6 +135,24 @@ describe( "useFamilyStore", () => {
         displayName: "나",
         role: "MEMBER",
       } );
+    } );
+  } );
+
+  describe( "updateMyDisplayName", () => {
+    test( "내 구성원 기록의 이름을 바꾸고 membership·members를 갱신한다", async () => {
+      const mine = member( { id: "me", displayName: "수민" } );
+      const other = member( { id: "o", userId: "u2", displayName: "민수" } );
+      useFamilyStore.setState( { membership: mine, members: [mine, other] } );
+      mockFamilyMemberUpdate.mockResolvedValue( {
+        data: { ...mine, displayName: "수민2" },
+        errors: undefined,
+      } );
+
+      await expect( useFamilyStore.getState().updateMyDisplayName( "수민2" ) ).resolves.toBe( true );
+
+      expect( mockFamilyMemberUpdate ).toHaveBeenCalledWith( { id: "me", displayName: "수민2" } );
+      expect( useFamilyStore.getState().membership?.displayName ).toBe( "수민2" );
+      expect( useFamilyStore.getState().members.map( m => m.displayName ) ).toEqual( ["수민2", "민수"] );
     } );
   } );
 
