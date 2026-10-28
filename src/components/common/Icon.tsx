@@ -10,6 +10,7 @@ import PersonPlusIcon from "bootstrap-icons/icons/person-plus.svg";
 import PlusIcon from "bootstrap-icons/icons/plus-lg.svg";
 import LightbulbIcon from "bootstrap-icons/icons/lightbulb.svg";
 import CheckCircleIcon from "bootstrap-icons/icons/check-circle-fill.svg";
+import CloseIcon from "bootstrap-icons/icons/x-lg.svg";
 import { colors } from "../../styles/commonStyle";
 
 const IconSet = {
@@ -23,16 +24,27 @@ const IconSet = {
   Plus: PlusIcon,
   Lightbulb: LightbulbIcon,
   CheckCircle: CheckCircleIcon,
+  Close: CloseIcon,
 } as const;
 
 export type IconName = keyof typeof IconSet;
 
-interface Props {
+interface BaseProps {
   name: IconName;
   size?: number;
   color?: string;
-  onPress?: () => void;
   style?: StyleProp<ViewStyle>;
+}
+
+// 누를 수 있는 아이콘은 화면 읽기 프로그램이 읽을 이름이 꼭 있어야 한다.
+type Props =
+  | (BaseProps & { onPress?: undefined; accessibilityLabel?: undefined })
+  | (BaseProps & { onPress: () => void; accessibilityLabel: string });
+
+// 터치 영역이 최소 44가 되도록 아이콘 둘레에 더하는 여유 (최소 12)
+const MIN_TOUCH_SIZE = 44;
+function touchSlop(size: number): number {
+  return Math.max( 12, Math.ceil( (MIN_TOUCH_SIZE - size) / 2 ) );
 }
 
 const SimpleIcon = ({
@@ -40,7 +52,7 @@ const SimpleIcon = ({
   size = 20,
   color = colors.black,
   style,
-}: Omit<Props, "onPress">): React.JSX.Element => {
+}: BaseProps): React.JSX.Element => {
   const IconComponent = IconSet[name];
   return (
     <IconComponent
@@ -54,11 +66,21 @@ const SimpleIcon = ({
 
 const TouchableIcon = ({
   onPress,
+  accessibilityLabel,
   style,
   ...rest
-}: Props): React.JSX.Element => {
+}: BaseProps & {
+  onPress: () => void;
+  accessibilityLabel: string;
+}): React.JSX.Element => {
   return (
-    <Pressable onPress={ onPress } hitSlop={ 12 } style={ style }>
+    <Pressable
+      onPress={ onPress }
+      hitSlop={ touchSlop( rest.size ?? 20 ) }
+      style={ style }
+      accessibilityRole="button"
+      accessibilityLabel={ accessibilityLabel }
+    >
       <SimpleIcon { ...rest } />
     </Pressable>
   );

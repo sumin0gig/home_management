@@ -30,7 +30,7 @@ const TaskCard = ( { task }: Props ): React.JSX.Element => {
   return (
     <Pressable
       style={ [styles.card, isDue ? styles.dueCard : styles.notDueCard] }
-      onPress={ () => navigation.navigate( "TaskDetail", { taskId: task.id } ) }
+      onPress={ () => navigation.navigate( "TaskSheet", { taskId: task.id } ) }
     >
       <Text style={ styles.title }> { task.title } </Text>
       <Text style={ [styles.due, { color: dueStatusColor( dueStatus.kind ) }] }>
