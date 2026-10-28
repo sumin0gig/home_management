@@ -49,9 +49,16 @@ function RoomEditScreen(): React.JSX.Element {
     .finally( () => setIsRemoving( false ) );
   };
 
-  const onAddRoom = (roomType: NonNullable<RoomType>, label: string) => {
+  const onAddRoom = (
+    roomType: NonNullable<RoomType>,
+    label: string,
+    templateIds: string[],
+  ) => {
     if (!family) return Promise.resolve( false );
-    return addRoom( family.id, roomType, label.trim() || undefined ).then( ok => {
+    return addRoom( family.id, roomType, label.trim() || undefined, undefined, {
+      templateIds,
+    } )
+    .then( ok => {
       if (ok) setIsAddingRoom( false );
       return ok;
     } );

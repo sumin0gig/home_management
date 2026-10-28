@@ -13,6 +13,26 @@ import { resetAllStores } from "../../../src/test-utils/resetStores";
 import type { FamilyRow } from "../../../src/store/useFamilyStore";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 import { useTaskStore, type TaskRow } from "../../../src/store/useTaskStore";
+import { listTaskTemplatesForRoomType } from "../../../actions";
+import { clearTemplateCache } from "../../../src/components/Onboarding/TemplateChoreList";
+
+jest.mock( "../../../actions", () => ( {
+  ...jest.requireActual( "../../../actions" ),
+  listTaskTemplatesForRoomType: jest.fn(),
+} ) );
+
+( listTaskTemplatesForRoomType as jest.Mock ).mockImplementation( ( roomType: string ) =>
+  Promise.resolve(
+    ["a", "b"].map( key => ( {
+      id: `${roomType}-${key}`,
+      roomType,
+      title: `${roomType} 일 ${key}`,
+      recurrenceType: "INTERVAL",
+      intervalValue: 1,
+      intervalUnit: "WEEK",
+    } ) ),
+  ),
+);
 
 const mockedAddRoom = jest.fn();
 const mockedUpdateRoomDetails = jest.fn();
@@ -65,6 +85,7 @@ describe( "RoomEditScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
+    clearTemplateCache();
     useFamilyStore.setState( { status: "joined", family } );
     useRoomStore.setState( {
       status: "loaded",
@@ -76,19 +97,24 @@ describe( "RoomEditScreen", () => {
     } );
   } );
 
-  test( "+ 방 추가로 방을 만들면 addRoom이 호출된다", async () => {
+  test( "+ 방 추가: 종류를 고르면 기본 집안일이 모두 선택되고, 끈 것을 뺀 templateIds로 addRoom", async () => {
     mockedAddRoom.mockResolvedValue( true );
 
-    const { getByText } = renderRoomEdit();
+    const { getByText, findByText, getByTestId } = renderRoomEdit();
     fireEvent.press( getByText( "+ 방 추가" ) );
     fireEvent.press( getByText( "거실" ) );
-    fireEvent.press( getByText( "추가" ) );
+
+    await findByText( "추가 · 집안일 2개" );
+    fireEvent.press( getByTestId( "chore-new-room-LIVING_ROOM-a" ) );
+    fireEvent.press( getByText( "추가 · 집안일 1개" ) );
 
     await waitFor( () =>
       expect( mockedAddRoom ).toHaveBeenCalledWith(
         "f1",
         "LIVING_ROOM",
         undefined,
+        undefined,
+        { templateIds: ["LIVING_ROOM-b"] },
       ),
     );
   } );
