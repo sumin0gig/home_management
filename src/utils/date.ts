@@ -12,18 +12,48 @@ export function parseDateString(value: string): Date {
   return new Date(year, month - 1, day);
 }
 
-export function formatDueLabel(
-  nextDueDate: string,
-  today: string,
-): string | null {
-  if (nextDueDate > today) {
-    const diffDays = Math.round(
-      (new Date(nextDueDate).getTime() - new Date(today).getTime()) /
-        (1000 * 60 * 60 * 24),
-    );
-    return `D-${diffDays}`;
+export type DueStatus =
+  | { kind: 'past'; days: number }
+  | { kind: 'today' }
+  | { kind: 'upcoming'; days: number };
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+// 두 'YYYY-MM-DD' 사이의 날 수 (to - from). 로컬 0시끼리 빼고 반올림해서
+// 서머타임처럼 하루가 23·25시간인 날에도 정확한 일수가 나온다.
+function daysBetween(from: string, to: string): number {
+  return Math.round(
+    (parseDateString(to).getTime() - parseDateString(from).getTime()) /
+      MS_PER_DAY,
+  );
+}
+
+export function getDueStatus(nextDueDate: string, today: string): DueStatus {
+  const days = daysBetween(today, nextDueDate);
+  if (days < 0) {
+    return { kind: 'past', days: -days };
   }
-  return null;
+  if (days === 0) {
+    return { kind: 'today' };
+  }
+  return { kind: 'upcoming', days };
+}
+
+// past → "4일 지남", today → "오늘", upcoming 1일 → "내일", 그 외 → "D-5"
+export function formatDueStatus(status: DueStatus): string {
+  switch (status.kind) {
+    case 'past':
+      return `${status.days}일 지남`;
+    case 'today':
+      return '오늘';
+    case 'upcoming':
+      return status.days === 1 ? '내일' : `D-${status.days}`;
+  }
+}
+
+// 기한이 오늘이거나 이미 지난 일
+export function isDueByToday(nextDueDate: string, today: string): boolean {
+  return nextDueDate <= today;
 }
 
 export const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];

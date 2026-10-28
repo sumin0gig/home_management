@@ -15,7 +15,8 @@ import { useTaskStore, type TaskItemRow } from "../../store/useTaskStore";
 import { roomDisplayName, useRoomStore } from "../../store/useRoomStore";
 import { useMascotStore } from "../../store/useMascotStore";
 import {
-  formatDueLabel,
+  formatDueStatus,
+  getDueStatus,
   formatRecurrence,
   toDateString,
 } from "../../utils/date";
@@ -81,7 +82,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   }
 
   const today = toDateString( new Date() );
-  const dueLabel = formatDueLabel( task.nextDueDate, today );
+  const dueLabel = formatDueStatus( getDueStatus( task.nextDueDate, today ) );
   const steps = items.filter( item => item.type === "DEFAULT" );
   const tips = items.filter( item => item.type === "TIP" );
 
@@ -122,11 +123,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
               </View>
             : null
           }
-          {
-            dueLabel
-            ? <Text style={ styles.dueLabel }> { dueLabel } </Text>
-            : null
-          }
+          <Text style={ styles.dueLabel }> { dueLabel } </Text>
         </View>
 
         <Text style={ styles.title }> { task.title } </Text>

@@ -3,7 +3,10 @@ import {
   computeNextDueDate,
   dueDateOnSave,
   formatDateWithWeekday,
+  formatDueStatus,
   formatRecurrence,
+  getDueStatus,
+  isDueByToday,
   isCalendarAnchored,
   isSameRecurrence,
   type RecurrenceInput,
@@ -251,5 +254,52 @@ describe( "formatDateWithWeekday", () => {
     expect( formatDateWithWeekday( "2027-03-01", on( "2026-10-27" ) ) ).toBe(
       "2027년 3월 1일 (월)",
     );
+  } );
+} );
+
+describe( "getDueStatus / formatDueStatus", () => {
+  function label(nextDueDate: string, today: string): string {
+    return formatDueStatus( getDueStatus( nextDueDate, today ) );
+  }
+
+  it( "3일 전은 3일 지남", () => {
+    expect( getDueStatus( "2026-10-25", "2026-10-28" ) ).toEqual( { kind: "past", days: 3 } );
+    expect( label( "2026-10-25", "2026-10-28" ) ).toBe( "3일 지남" );
+  } );
+
+  it( "어제는 1일 지남", () => {
+    expect( label( "2026-10-27", "2026-10-28" ) ).toBe( "1일 지남" );
+  } );
+
+  it( "오늘", () => {
+    expect( getDueStatus( "2026-10-28", "2026-10-28" ) ).toEqual( { kind: "today" } );
+    expect( label( "2026-10-28", "2026-10-28" ) ).toBe( "오늘" );
+  } );
+
+  it( "내일", () => {
+    expect( getDueStatus( "2026-10-29", "2026-10-28" ) ).toEqual( { kind: "upcoming", days: 1 } );
+    expect( label( "2026-10-29", "2026-10-28" ) ).toBe( "내일" );
+  } );
+
+  it( "5일 뒤는 D-5", () => {
+    expect( label( "2026-11-02", "2026-10-28" ) ).toBe( "D-5" );
+  } );
+
+  it( "월말에서 월초로 넘어가도 일수를 센다", () => {
+    expect( label( "2026-03-02", "2026-02-27" ) ).toBe( "D-3" );
+    expect( label( "2026-02-27", "2026-03-02" ) ).toBe( "3일 지남" );
+  } );
+
+  it( "연말에서 연초로 넘어가도 일수를 센다", () => {
+    expect( label( "2027-01-01", "2026-12-31" ) ).toBe( "내일" );
+    expect( label( "2026-12-30", "2027-01-02" ) ).toBe( "3일 지남" );
+  } );
+} );
+
+describe( "isDueByToday", () => {
+  it( "오늘이거나 지난 일만 참", () => {
+    expect( isDueByToday( "2026-10-27", "2026-10-28" ) ).toBe( true );
+    expect( isDueByToday( "2026-10-28", "2026-10-28" ) ).toBe( true );
+    expect( isDueByToday( "2026-10-29", "2026-10-28" ) ).toBe( false );
   } );
 } );
