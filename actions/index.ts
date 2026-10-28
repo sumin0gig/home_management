@@ -23,6 +23,7 @@ import type { TaskItemInput } from '../src/utils/date';
 const client = generateClient<Schema>();
 const inAppUpdates = new SpInAppUpdates(false);
 
+type FamilyMemberRow = Schema['FamilyMember']['type'];
 type RoomRow = Schema['Room']['type'];
 type RoomType = NonNullable<RoomRow['roomType']>;
 type TaskRow = Schema['Task']['type'];
@@ -158,6 +159,31 @@ export async function checkStoreUpdateAvailable(): Promise<boolean> {
 
 export function startImmediateUpdate(): Promise<void> {
   return inAppUpdates.startUpdate({ updateType: IAUUpdateKind.IMMEDIATE });
+}
+
+// ─── 가족 ────────────────────────────────────────────────────────────────
+
+// 내 FamilyMember 기록 전부. userId로 찾는 인덱스가 없어 filter로 훑기 때문에
+// (scan) 첫 페이지에 내 기록이 안 나올 수 있으므로 nextToken을 끝까지 따라간다.
+export async function listMyFamilyMemberships(
+  userId: string,
+): Promise<FamilyMemberRow[]> {
+  const results: FamilyMemberRow[] = [];
+  let nextToken: string | null | undefined;
+  do {
+    const {
+      data,
+      nextToken: token,
+      errors,
+    } = await client.models.FamilyMember.list({
+      filter: { userId: { eq: userId } },
+      nextToken,
+    });
+    throwIfErrors(errors, '가족 정보를 불러오지 못했습니다.');
+    results.push(...data);
+    nextToken = token;
+  } while (nextToken);
+  return results;
 }
 
 // ─── 방 ──────────────────────────────────────────────────────────────────

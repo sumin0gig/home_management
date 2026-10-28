@@ -5,6 +5,7 @@ import {
   throwIfErrors,
   getCurrentAuthUser,
   fetchDisplayName,
+  listMyFamilyMemberships,
 } from '../../actions';
 import { useRoomStore } from './useRoomStore';
 
@@ -20,6 +21,22 @@ function generateInviteCode(): string {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
+}
+
+export const ALREADY_IN_FAMILY_MESSAGE =
+  '이미 가족에 속해 있어요. 다른 가족에 참여하려면 먼저 지금 가족을 떠나주세요.';
+
+// 구성원 기록이 여러 개면(예전 버그로 가족이 두 개가 된 사용자) 매번 같은 가족을
+// 보여주도록 가장 먼저 만든 기록을 고른다.
+export function pickPrimaryMembership(
+  memberships: FamilyMemberRow[],
+): FamilyMemberRow | null {
+  if (memberships.length === 0) {
+    return null;
+  }
+  return [...memberships].sort((a, b) =>
+    (a.createdAt ?? '').localeCompare(b.createdAt ?? ''),
+  )[0];
 }
 
 type FamilyStatus = 'loading' | 'none' | 'joined';
@@ -55,13 +72,9 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
     set({ status: 'loading', error: null });
     try {
       const user = await getCurrentAuthUser();
-      const { data: memberships, errors } =
-        await client.models.FamilyMember.list({
-          filter: { userId: { eq: user.userId } },
-        });
-      throwIfErrors(errors, '가족 정보를 불러오지 못했습니다.');
+      const memberships = await listMyFamilyMemberships(user.userId);
 
-      const membership = memberships[0];
+      const membership = pickPrimaryMembership(memberships);
       if (!membership) {
         set({ status: 'none', family: null, membership: null, members: [] });
         return;
@@ -128,6 +141,14 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
         fetchDisplayName(),
         getCurrentAuthUser(),
       ]);
+
+      // 이미 가족이 있으면 아무것도 만들지 않는다 (구성원 기록이 두 개가 되면
+      // 어느 가족이 보일지 알 수 없게 된다).
+      const memberships = await listMyFamilyMemberships(user.userId);
+      if (memberships.length > 0) {
+        throw new Error(ALREADY_IN_FAMILY_MESSAGE);
+      }
+
       const normalizedCode = inviteCode.trim().toUpperCase();
 
       const { data: families, errors } =
