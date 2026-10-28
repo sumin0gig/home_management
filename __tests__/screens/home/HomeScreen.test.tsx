@@ -1,5 +1,6 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react-native";
+import { render, fireEvent, act } from "@testing-library/react-native";
+import { AppState, type AppStateStatus } from "react-native";
 import HomeScreen from "../../../src/screens/home/HomeScreen";
 import { useFamilyStore } from "../../../src/store/useFamilyStore";
 import { useRoomStore } from "../../../src/store/useRoomStore";
@@ -139,5 +140,86 @@ describe( "HomeScreen", () => {
     fireEvent.press( getByText( "편집" ) );
 
     expect( navigation.navigate ).toHaveBeenCalledWith( "RoomEdit" );
+  } );
+
+  describe( "조용한 새로고침", () => {
+    function focusableNavigation() {
+      const navigation = createMockNavigation<"HomeMain">();
+      const focusListeners: Array<() => void> = [];
+      ( navigation.addListener as jest.Mock ).mockImplementation(
+        ( event: string, listener: () => void ) => {
+          if (event === "focus") {
+            focusListeners.push( listener );
+          }
+          return jest.fn();
+        },
+      );
+      ( navigation as unknown as { isFocused: jest.Mock } ).isFocused = jest.fn( () => true );
+      const focus = () => act( () => focusListeners.forEach( listener => listener() ) );
+      return { navigation, focus };
+    }
+
+    let refreshTasksForFamily: jest.Mock;
+    let onAppStateChange: ( state: AppStateStatus ) => void;
+    let appStateSpy: jest.SpyInstance;
+    beforeEach( () => {
+      onAppStateChange = () => {};
+      appStateSpy = jest.spyOn( AppState, "addEventListener" ).mockImplementation( ( _, listener ) => {
+        onAppStateChange = listener;
+        return { remove: jest.fn() } as never;
+      } );
+      refreshTasksForFamily = jest.fn( () => Promise.resolve() );
+      useTaskStore.setState( { refreshTasksForFamily } );
+      useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
+      useTaskStore.setState( { status: "loaded", tasks: [task] } );
+    } );
+
+    afterEach( () => {
+      appStateSpy.mockRestore();
+    } );
+
+    test( "다시 포커스되면 스피너 없이 새로고침한다", () => {
+      const { navigation, focus } = focusableNavigation();
+      const { getByText } = renderHomeScreen( navigation );
+
+      focus();
+
+      expect( refreshTasksForFamily ).toHaveBeenCalledWith( "f1" );
+      expect( getByText( "침실" ) ).toBeTruthy();
+    } );
+
+    test( "첫 불러오기 중('loading')의 포커스는 새로고침을 겹쳐 부르지 않는다", () => {
+      const { navigation, focus } = focusableNavigation();
+      renderHomeScreen( navigation );
+      act( () => useTaskStore.setState( { status: "loading" } ) );
+
+      focus();
+
+      expect( refreshTasksForFamily ).not.toHaveBeenCalled();
+    } );
+
+    test( "앱이 다시 활성화되면 홈이 포커스 상태일 때만 새로고침한다", () => {
+      const { navigation } = focusableNavigation();
+      renderHomeScreen( navigation );
+
+      act( () => onAppStateChange( "active" ) );
+      expect( refreshTasksForFamily ).toHaveBeenCalledTimes( 1 );
+
+      ( navigation as unknown as { isFocused: jest.Mock } ).isFocused.mockReturnValue( false );
+      act( () => onAppStateChange( "active" ) );
+      expect( refreshTasksForFamily ).toHaveBeenCalledTimes( 1 );
+    } );
+
+    test( "당겨서 새로고침하면 새로고침하고, 새로고침 중에도 목록을 그대로 보여준다", () => {
+      const { UNSAFE_getByType, getByTestId } = renderHomeScreen();
+      const { RefreshControl } = jest.requireActual( "react-native" );
+
+      act( () => UNSAFE_getByType( RefreshControl ).props.onRefresh() );
+      expect( refreshTasksForFamily ).toHaveBeenCalledWith( "f1" );
+
+      act( () => useTaskStore.setState( { isRefreshing: true } ) );
+      expect( UNSAFE_getByType( RefreshControl ).props.refreshing ).toBe( true );
+      expect( getByTestId( "due-badge-r1" ) ).toBeTruthy();
+    } );
   } );
 } );

@@ -36,10 +36,13 @@ type TaskStatus = 'idle' | 'loading' | 'loaded';
 
 interface TaskState {
   status: TaskStatus;
+  // 화면을 스피너로 바꾸지 않는 새로고침이 도는 중인지 (당겨서 새로고침 표시용)
+  isRefreshing: boolean;
   tasks: TaskRow[];
   currentFamilyId: string | null;
   error: string | null;
   fetchTasksForFamily: (familyId: string) => Promise<void>;
+  refreshTasksForFamily: (familyId: string) => Promise<void>;
   createTask: (roomId: string, input: TaskInput) => Promise<boolean>;
   updateTask: (
     taskId: string,
@@ -51,8 +54,18 @@ interface TaskState {
   reset: () => void;
 }
 
+// 가족의 모든 방에 있는 집안일. fetch와 refresh가 같이 쓴다.
+async function listTasksForFamily(familyId: string): Promise<TaskRow[]> {
+  const rooms = await listRoomsForFamily(familyId);
+  const tasksByRoom = await Promise.all(
+    rooms.map(room => listTasksForRoom(room.id)),
+  );
+  return tasksByRoom.flat();
+}
+
 const initialState = {
   status: 'idle' as TaskStatus,
+  isRefreshing: false,
   tasks: [] as TaskRow[],
   currentFamilyId: null as string | null,
   error: null as string | null,
@@ -64,13 +77,26 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   fetchTasksForFamily: async (familyId: string) => {
     set({ status: 'loading', error: null, currentFamilyId: familyId });
     try {
-      const rooms = await listRoomsForFamily(familyId);
-      const tasksByRoom = await Promise.all(
-        rooms.map(room => listTasksForRoom(room.id)),
-      );
-      set({ status: 'loaded', tasks: tasksByRoom.flat() });
+      const tasks = await listTasksForFamily(familyId);
+      set({ status: 'loaded', tasks });
     } catch (err) {
       set({ status: 'loaded', error: (err as Error).message });
+    }
+  },
+
+  // fetchTasksForFamily와 같은 데이터를 받지만 status를 'loading'으로 바꾸지 않는다.
+  // HomeScreen은 'loading'이면 화면 전체를 스피너로 바꾸므로, 포커스·당겨서
+  // 새로고침·완료 뒤에는 이걸 불러야 홈이 깜빡이지 않는다. 실패하면 지금 목록은
+  // 그대로 두고 error만 채운다.
+  refreshTasksForFamily: async (familyId: string) => {
+    set({ isRefreshing: true, currentFamilyId: familyId });
+    try {
+      const tasks = await listTasksForFamily(familyId);
+      set({ tasks, error: null });
+    } catch (err) {
+      set({ error: (err as Error).message });
+    } finally {
+      set({ isRefreshing: false });
     }
   },
 
@@ -129,7 +155,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       }
       const { currentFamilyId } = get();
       if (currentFamilyId) {
-        await get().fetchTasksForFamily(currentFamilyId);
+        await get().refreshTasksForFamily(currentFamilyId);
       }
       return true;
     } catch (err) {
@@ -175,11 +201,20 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       });
       throwIfErrors(updateErrors, '완료 처리에 실패했습니다.');
 
+      // 축하·"오늘 마지막 할 일" 판단이 네트워크를 기다리지 않도록 스토어의 기한을
+      // 바로 고친다. 다른 가족이 바꾼 것까지 맞추는 전체 새로고침은 뒤에서 돌린다
+      // (refreshTasksForFamily는 실패해도 error만 채우고 reject하지 않는다).
+      set({
+        tasks: get().tasks.map(t =>
+          t.id === task.id ? { ...t, nextDueDate } : t,
+        ),
+      });
+      await useMascotStore.getState().addHappiness(computeHappinessGain(task));
+
       const { currentFamilyId } = get();
       if (currentFamilyId) {
-        await get().fetchTasksForFamily(currentFamilyId);
+        get().refreshTasksForFamily(currentFamilyId);
       }
-      await useMascotStore.getState().addHappiness(computeHappinessGain(task));
       return true;
     } catch (err) {
       set({ error: (err as Error).message });

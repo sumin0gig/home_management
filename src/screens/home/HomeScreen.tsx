@@ -1,7 +1,9 @@
 import React from "react";
 import {
   ActivityIndicator,
+  AppState,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -12,7 +14,7 @@ import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import { useTaskStore } from "../../store/useTaskStore";
 import { useRoomStore } from "../../store/useRoomStore";
-import { toDateString } from "../../utils/date";
+import { isDueByToday, toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
 import { type FloorPlanRoom } from "../../store/useRoomStore";
@@ -40,6 +42,10 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const fetchTasksForFamily = useTaskStore(
     state => state.fetchTasksForFamily,
   );
+  const refreshTasksForFamily = useTaskStore(
+    state => state.refreshTasksForFamily,
+  );
+  const isRefreshing = useTaskStore( state => state.isRefreshing );
 
   // 마스코트가 "있는" 방 — 방 목록이 바뀌거나(불러오기 완료, 방 삭제 등)
   // 홈에 포커스될 때마다 새로 뽑는다.
@@ -63,6 +69,35 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     }
   }, [family?.id, roomIds, fetchTasksForFamily] );
 
+  // 다른 가족이 완료한 일을 반영하는 조용한 새로고침 (스피너 화면으로 바꾸지 않는다).
+  const familyId = family?.id;
+  const refresh = React.useCallback( () => {
+    if (familyId) {
+      refreshTasksForFamily( familyId );
+    }
+  }, [familyId, refreshTasksForFamily] );
+
+  // 1) 화면 포커스. 첫 진입 때는 위 useEffect의 fetchTasksForFamily가 이미
+  //    불러오는 중('loading')이므로 겹쳐 부르지 않는다. (마스코트 방 다시
+  //    뽑기와 같은 focus 리스너 방식)
+  React.useEffect( () => {
+    return navigation.addListener( "focus", () => {
+      if (useTaskStore.getState().status === "loaded") {
+        refresh();
+      }
+    } );
+  }, [navigation, refresh] );
+
+  // 2) 앱이 백그라운드에서 돌아올 때. 홈이 포커스 상태일 때만.
+  React.useEffect( () => {
+    const subscription = AppState.addEventListener( "change", state => {
+      if (state === "active" && navigation.isFocused()) {
+        refresh();
+      }
+    } );
+    return () => subscription.remove();
+  }, [navigation, refresh] );
+
   if (roomStatus === "loading" || taskStatus === "loading") {
     return (
       <View style={ styles.centerContainer }>
@@ -74,56 +109,59 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
   const today = toDateString( new Date() );
 
   const hasDueToday = (room: FloorPlanRoom): boolean =>
-    tasks.some( t => t.roomId === room.id && t.nextDueDate <= today );
+    tasks.some(
+      t => t.roomId === room.id && isDueByToday( t.nextDueDate, today ),
+    );
 
   return (
-    <View style={ styles.root }>
-      <View style={ styles.container }>
-        { roomError && <Text style={ styles.error }> { roomError } </Text> }
-        { taskError && <Text style={ styles.error }> { taskError } </Text> }
+    <ScrollView
+      style={ styles.root }
+      contentContainerStyle={ styles.container }
+      showsVerticalScrollIndicator={ false }
+      // 3) 당겨서 새로고침
+      refreshControl={
+        <RefreshControl refreshing={ isRefreshing } onRefresh={ refresh } />
+      }
+    >
+      { roomError && <Text style={ styles.error }> { roomError } </Text> }
+      { taskError && <Text style={ styles.error }> { taskError } </Text> }
 
-        <Pressable
-          style={ styles.editLink }
-          onPress={ () => navigation.navigate( "RoomEdit" ) }
-        >
-          <Text style={ styles.editLinkText }> 편집 </Text>
-        </Pressable>
+      <Pressable
+        style={ styles.editLink }
+        onPress={ () => navigation.navigate( "RoomEdit" ) }
+      >
+        <Text style={ styles.editLinkText }> 편집 </Text>
+      </Pressable>
 
-        {
-          rooms.length === 0
-          ? <Text style={ styles.emptySection }>
-            등록된 방이 없습니다. 편집에서 방을 추가해주세요.
-          </Text>
-          : <ScrollView
-            style={ styles.floorPlanScroll }
-            showsVerticalScrollIndicator={ false }
-          >
-            <FloorPlanCanvas
-              rooms={ rooms }
-              onRoomPress={ room =>
-                navigation.navigate( "RoomDetail", {
-                  roomId: room.id,
-                  hasMascot: room.id === mascotRoomId,
-                } )
-              }
-              hasDueToday={ hasDueToday }
-              mascotRoomId={ mascotRoomId }
-            />
-          </ScrollView>
-        }
-      </View>
-    </View>
+      {
+        rooms.length === 0
+        ? <Text style={ styles.emptySection }>
+          등록된 방이 없습니다. 편집에서 방을 추가해주세요.
+        </Text>
+        : <FloorPlanCanvas
+          rooms={ rooms }
+          onRoomPress={ room =>
+            navigation.navigate( "RoomDetail", {
+              roomId: room.id,
+              hasMascot: room.id === mascotRoomId,
+            } )
+          }
+          hasDueToday={ hasDueToday }
+          mascotRoomId={ mascotRoomId }
+        />
+      }
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create( {
   root: {
     flex: 1,
+    backgroundColor: commonColor.backgroundColor,
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 24,
-    backgroundColor: commonColor.backgroundColor,
   },
   centerContainer: {
     flex: 1,
@@ -149,9 +187,6 @@ const styles = StyleSheet.create( {
   editLinkText: {
     color: commonColor.touchable,
     fontWeight: "600",
-  },
-  floorPlanScroll: {
-    flex: 1,
   },
 } );
 

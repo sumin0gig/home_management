@@ -199,3 +199,61 @@ describe( "useTaskStore 반복 기한", () => {
     } );
   } );
 } );
+
+describe( "useTaskStore 조용한 새로고침", () => {
+  beforeEach( () => {
+    jest.clearAllMocks();
+    useTaskStore.getState().reset();
+    useMascotStore.setState( { addHappiness: mockAddHappiness } );
+    mockTaskUpdate.mockResolvedValue( { data: {}, errors: undefined } );
+    mockTaskLogCreate.mockResolvedValue( { data: {}, errors: undefined } );
+    ( getCurrentAuthUser as jest.Mock ).mockResolvedValue( { userId: "u1" } );
+    ( fetchDisplayName as jest.Mock ).mockResolvedValue( "테스트유저" );
+    ( listRoomsForFamily as jest.Mock ).mockResolvedValue( [{ id: "r1" }] );
+  } );
+
+  afterEach( () => {
+    jest.useRealTimers();
+  } );
+
+  test( "refreshTasksForFamily는 status를 loading으로 바꾸지 않는다", async () => {
+    useTaskStore.setState( { status: "loaded", tasks: [] } );
+    const statuses: string[] = [];
+    const unsubscribe = useTaskStore.subscribe( state => statuses.push( state.status ) );
+    ( listTasksForRoom as jest.Mock ).mockResolvedValue( [recycling] );
+
+    const pending = useTaskStore.getState().refreshTasksForFamily( "f1" );
+    expect( useTaskStore.getState().isRefreshing ).toBe( true );
+    await pending;
+    unsubscribe();
+
+    expect( statuses ).not.toContain( "loading" );
+    expect( useTaskStore.getState().isRefreshing ).toBe( false );
+    expect( useTaskStore.getState().tasks ).toEqual( [recycling] );
+  } );
+
+  test( "새로고침이 실패해도 목록은 그대로 두고 error만 채운다", async () => {
+    useTaskStore.setState( { status: "loaded", tasks: [recycling] } );
+    ( listTasksForRoom as jest.Mock ).mockRejectedValue( new Error( "네트워크 오류" ) );
+
+    await expect( useTaskStore.getState().refreshTasksForFamily( "f1" ) ).resolves.toBeUndefined();
+
+    expect( useTaskStore.getState().tasks ).toEqual( [recycling] );
+    expect( useTaskStore.getState().error ).toBe( "네트워크 오류" );
+    expect( useTaskStore.getState().isRefreshing ).toBe( false );
+  } );
+
+  test( "completeTask가 true를 돌려준 시점에 스토어의 기한이 이미 새 값이다", async () => {
+    setToday( "2026-10-28" );
+    useTaskStore.setState( { status: "loaded", tasks: [recycling], currentFamilyId: "f1" } );
+    // 뒤에서 도는 전체 새로고침은 끝나지 않게 둔다 — 그래도 기한은 바뀌어 있어야 한다.
+    ( listRoomsForFamily as jest.Mock ).mockReturnValue( new Promise( () => {} ) );
+
+    await expect( useTaskStore.getState().completeTask( recycling ) ).resolves.toBe( true );
+
+    expect( useTaskStore.getState().tasks[0].nextDueDate ).toBe( "2026-10-30" );
+    expect( useTaskStore.getState().status ).toBe( "loaded" );
+    expect( mockAddHappiness ).toHaveBeenCalled();
+    expect( listRoomsForFamily ).toHaveBeenCalledWith( "f1" );
+  } );
+} );
