@@ -68,32 +68,6 @@ function AddFamilyMemberScreen( { navigation }: Props ): React.JSX.Element {
         </View>
         <Text style={ styles.codeValue }> { family.inviteCode } </Text>
       </View>
-
-      <AddFamilySection navigation={ navigation } />
-    </View>
-  );
-}
-
-type AddFamilySectionProps = {
-  navigation: Props["navigation"];
-};
-
-function AddFamilySection({ navigation, }: AddFamilySectionProps): React.JSX.Element {
-  return (
-    <View style={ styles.addFamilySection }>
-      <Text style={ styles.sectionTitle }> 가족 추가 </Text>
-      <Pressable
-        style={ styles.optionButton }
-        onPress={ () => navigation.navigate( "ScanFamilyQr" ) }
-      >
-        <Text style={ styles.optionButtonText }> QR 코드를 스캔한다 </Text>
-      </Pressable>
-      <Pressable
-        style={ styles.optionButton }
-        onPress={ () => navigation.navigate( "EnterFamilyCode" ) }
-      >
-        <Text style={ styles.optionButtonText }> 가족 코드 입력 </Text>
-      </Pressable>
     </View>
   );
 }
@@ -147,29 +121,6 @@ const styles = StyleSheet.create( {
     letterSpacing: 4,
     marginTop: 12,
     textAlign: "center",
-  },
-  addFamilySection: {
-    borderTopWidth: 1,
-    borderTopColor: commonColor.divider,
-    paddingTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  optionButton: {
-    borderWidth: 1,
-    borderColor: commonColor.border,
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  optionButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.darkGray,
   },
 } );
 
