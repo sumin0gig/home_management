@@ -12,6 +12,7 @@ import Clipboard from "@react-native-clipboard/clipboard";
 import QRCode from "react-native-qrcode-svg";
 import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
+import { buildInviteMessage } from "../../utils/invite";
 import { colors, commonColor } from "../../styles/commonStyle";
 
 type Props = NativeStackScreenProps<MainStackParamList, "AddFamilyMember">;
@@ -40,7 +41,7 @@ function AddFamilyMemberScreen( { navigation }: Props ): React.JSX.Element {
 
   const onShare = () => {
     Share.share( {
-      message: `${family.name} 가족에 참여해보세요! 초대 코드: ${family.inviteCode}`,
+      message: buildInviteMessage( family.name, family.inviteCode ),
     } );
   };
 
@@ -57,11 +58,11 @@ function AddFamilyMemberScreen( { navigation }: Props ): React.JSX.Element {
           <View style={ styles.codeActions }>
             <Pressable onPress={ onCopy } style={ styles.iconButton }>
               <Text style={ styles.iconButtonText }>
-                📋 { copied ? "복사됨" : "복사" }
+                { copied ? "복사했어요" : "코드 복사" }
               </Text>
             </Pressable>
             <Pressable onPress={ onShare } style={ styles.iconButton }>
-              <Text style={ styles.iconButtonText }> 📤 공유 </Text>
+              <Text style={ styles.iconButtonText }> 공유 </Text>
             </Pressable>
           </View>
 
