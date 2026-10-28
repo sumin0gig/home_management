@@ -11,6 +11,7 @@ import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { FamilyRow } from "../../../src/store/useFamilyStore";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 import type { TaskRow } from "../../../src/store/useTaskStore";
+import { toDateString } from "../../../src/utils/date";
 
 const family: FamilyRow = {
   id: "f1",
@@ -161,12 +162,16 @@ describe( "HomeScreen", () => {
 
     let refreshTasksForFamily: jest.Mock;
     let onAppStateChange: ( state: AppStateStatus ) => void;
-    let appStateSpy: jest.SpyInstance;
+    // react-native의 jest 설정에서 AppState.addEventListener는 이미 jest.fn이라,
+    // spyOn().mockRestore()를 쓰면 원래 구현까지 지워진다. 구현만 바꿨다가 되돌린다.
+    const addEventListener = AppState.addEventListener as jest.Mock;
+    let originalImplementation: ( ( ...args: never[] ) => unknown ) | undefined;
     beforeEach( () => {
       onAppStateChange = () => {};
-      appStateSpy = jest.spyOn( AppState, "addEventListener" ).mockImplementation( ( _, listener ) => {
+      originalImplementation = addEventListener.getMockImplementation();
+      addEventListener.mockImplementation( ( _: string, listener: ( state: AppStateStatus ) => void ) => {
         onAppStateChange = listener;
-        return { remove: jest.fn() } as never;
+        return { remove: jest.fn() };
       } );
       refreshTasksForFamily = jest.fn( () => Promise.resolve() );
       useTaskStore.setState( { refreshTasksForFamily } );
@@ -175,7 +180,7 @@ describe( "HomeScreen", () => {
     } );
 
     afterEach( () => {
-      appStateSpy.mockRestore();
+      addEventListener.mockImplementation( originalImplementation );
     } );
 
     test( "다시 포커스되면 스피너 없이 새로고침한다", () => {
@@ -220,6 +225,135 @@ describe( "HomeScreen", () => {
       act( () => useTaskStore.setState( { isRefreshing: true } ) );
       expect( UNSAFE_getByType( RefreshControl ).props.refreshing ).toBe( true );
       expect( getByTestId( "due-badge-r1" ) ).toBeTruthy();
+    } );
+  } );
+
+  describe( "할 일 목록", () => {
+    function daysFromToday( days: number ): string {
+      const date = new Date();
+      date.setDate( date.getDate() + days );
+      return toDateString( date );
+    }
+    function makeTask( id: string, title: string, days: number ): TaskRow {
+      return { ...task, id, title, nextDueDate: daysFromToday( days ) } as TaskRow;
+    }
+
+    beforeEach( () => {
+      useRoomStore.setState( { status: "loaded", rooms: [bedroom] } );
+    } );
+
+    test( "기한이 섞여 있으면 '할 일'과 '이번 주'로 나누고 기한 순으로 놓는다", () => {
+      useTaskStore.setState( {
+        status: "loaded",
+        tasks: [
+          makeTask( "t10", "10일 뒤 일", 10 ),
+          makeTask( "t1", "내일 일", 1 ),
+          makeTask( "t0", "오늘 일", 0 ),
+          makeTask( "t5", "5일 뒤 일", 5 ),
+          makeTask( "t-4", "4일 지난 일", -4 ),
+        ],
+      } );
+
+      const { getByText, queryByText, getAllByTestId } = renderHomeScreen();
+
+      expect( getByText( "할 일" ) ).toBeTruthy();
+      expect( getByText( "이번 주" ) ).toBeTruthy();
+      expect( getAllByTestId( /^home-task-/ ).map( row => row.props.testID ) ).toEqual( [
+        "home-task-t-4",
+        "home-task-t0",
+        "home-task-t1",
+        "home-task-t5",
+      ] );
+      expect( queryByText( "10일 뒤 일" ) ).toBeNull();
+      expect( getByText( "4일 지남" ) ).toBeTruthy();
+      expect( getByText( "D-5" ) ).toBeTruthy();
+      // 요약: 기한이 오늘이거나 지난 일 2개
+      expect( getByText( "2" ) ).toBeTruthy();
+      expect( getByText( "오늘까지 할 일" ) ).toBeTruthy();
+    } );
+
+    test( "같은 기한이면 이름 가나다순", () => {
+      useTaskStore.setState( {
+        status: "loaded",
+        tasks: [makeTask( "b", "빨래", 0 ), makeTask( "a", "걸레질", 0 )],
+      } );
+
+      const { getAllByTestId } = renderHomeScreen();
+
+      expect( getAllByTestId( /^home-task-/ ).map( row => row.props.testID ) ).toEqual( [
+        "home-task-a",
+        "home-task-b",
+      ] );
+    } );
+
+    test( "행을 누르면 TaskSheet로 이동하고 completeTask는 부르지 않는다", () => {
+      const completeTask = jest.fn();
+      useTaskStore.setState( {
+        status: "loaded",
+        tasks: [makeTask( "t0", "오늘 일", 0 )],
+        completeTask,
+      } );
+
+      const { getByTestId, navigation } = renderHomeScreen();
+      fireEvent.press( getByTestId( "home-task-t0" ) );
+
+      expect( navigation.navigate ).toHaveBeenCalledWith( "TaskSheet", { taskId: "t0" } );
+      expect( completeTask ).not.toHaveBeenCalled();
+    } );
+
+    test( "행은 이름·방·상태를 읽어 주는 버튼이다", () => {
+      useTaskStore.setState( { status: "loaded", tasks: [makeTask( "t0", "오늘 일", 0 )] } );
+
+      const { getByTestId } = renderHomeScreen();
+
+      expect( getByTestId( "home-task-t0" ).props.accessibilityLabel ).toBe( "오늘 일, 침실, 오늘" );
+      expect( getByTestId( "home-task-t0" ).props.accessibilityHint ).toBe( "집안일 상세 열기" );
+    } );
+
+    test( "'할 일'이 0개면 빈 상태 문구를 보이고 '이번 주'는 그대로 둔다", () => {
+      useTaskStore.setState( { status: "loaded", tasks: [makeTask( "t1", "내일 일", 1 )] } );
+
+      const { getByText, queryByText } = renderHomeScreen();
+
+      expect( getByText( "오늘 할 일을 모두 마쳤어요" ) ).toBeTruthy();
+      expect( queryByText( "할 일" ) ).toBeNull();
+      expect( getByText( "이번 주" ) ).toBeTruthy();
+    } );
+
+    test( "비어 있는 '이번 주' 묶음은 제목째 숨긴다", () => {
+      useTaskStore.setState( { status: "loaded", tasks: [makeTask( "t0", "오늘 일", 0 )] } );
+
+      const { queryByText } = renderHomeScreen();
+
+      expect( queryByText( "이번 주" ) ).toBeNull();
+    } );
+
+    test( "화면 어디에도 '밀린'이라는 글자가 없다", () => {
+      useTaskStore.setState( {
+        status: "loaded",
+        tasks: [makeTask( "t-4", "4일 지난 일", -4 ), makeTask( "t1", "내일 일", 1 )],
+      } );
+
+      const { queryAllByText, queryAllByLabelText } = renderHomeScreen();
+
+      // 보이는 글자와 화면 읽기 라벨 모두
+      expect( queryAllByText( /밀린/, { includeHiddenElements: true } ) ).toHaveLength( 0 );
+      expect( queryAllByLabelText( /밀린/, { includeHiddenElements: true } ) ).toHaveLength( 0 );
+    } );
+
+    test( "오류가 나면 '다시 시도'로 조용히 새로고침한다", () => {
+      const refreshTasksForFamily = jest.fn( () => Promise.resolve() );
+      useTaskStore.setState( {
+        status: "loaded",
+        tasks: [],
+        error: "집안일 목록을 불러오지 못했습니다.",
+        refreshTasksForFamily,
+      } );
+
+      const { getByText } = renderHomeScreen();
+      fireEvent.press( getByText( "다시 시도" ) );
+
+      expect( refreshTasksForFamily ).toHaveBeenCalledWith( "f1" );
     } );
   } );
 } );
