@@ -4,7 +4,30 @@ Guidance for Claude Code when working in this repo.
 
 ## Project
 
-React Native (0.79) app with AWS Amplify Gen 2 backend (`amplify/`). Screens live under `src/screens`, shared/family-flow components under `src/components`, navigation under `src/navigation`, Zustand stores under `src/store`, API calls under `src/api`.
+React Native (0.79) app with AWS Amplify Gen 2 backend (`amplify/`). Screens live under `src/screens`, shared/family-flow components under `src/components`, navigation under `src/navigation`, Zustand stores under `src/store`, API functions in `actions/index.ts` (project root).
+
+## API functions: `actions/index.ts`
+
+Every function that talks to the server (Amplify `client` reads/deletes that
+aren't a store action on their own), auth (`aws-amplify/auth`) or an external
+link lives in the single file `actions/index.ts` at the project root, grouped
+by section comments (공통 / 인증 / 사용자 / 푸시 알림 토큰 / 외부 링크 / 앱 업데이트 /
+방 / 집안일 / 회원 탈퇴) — modeled on the user's company codebase (`spacenorm/actions/index.js`),
+but kept as `.ts` for types. There is no `src/api/` anymore.
+
+- Stores and screens import from it directly (`'../../actions'` from
+  `src/store`, `"../../../actions"` from `src/screens/home` etc.).
+- It must not import from `src/store/*` — stores import it, not the other
+  way round. Row types it needs are declared locally from `Schema`.
+- Shared multi-step helpers live here too, so two stores never duplicate
+  them (e.g. `deleteTaskWithChildren`, used by both `useTaskStore.deleteTask`
+  and `useRoomStore.removeRoom`; `deleteRoomWithChildren`, used by both
+  `useRoomStore.removeRoom` and `deleteAccount`).
+- Store actions that call the API *and* update state (`addRoom`,
+  `createTask`, …) stay in their store; only the pure API calls move here.
+- In tests, mock it partially so the rest (e.g. `throwIfErrors`,
+  `openPrivacyPolicy`, `PRIVACY_POLICY_URL`) stays real:
+  `jest.mock( "../../actions", () => ( { ...jest.requireActual( "../../actions" ), signOutUser: jest.fn() } ) );`
 
 ## Commands
 
@@ -39,7 +62,7 @@ indented to match the opening `<Tag`:
 ```
 
 This is enforced by Prettier config, not just convention — run
-`npx prettier --write "src/**/*.{ts,tsx}" "__tests__/**/*.{ts,tsx}" App.tsx "amplify/**/*.ts"`
+`npx prettier --write "src/**/*.{ts,tsx}" "__tests__/**/*.{ts,tsx}" App.tsx "amplify/**/*.ts" "actions/**/*.ts"`
 after any JSX edit if you're not sure the formatting is correct, rather than
 hand-aligning brackets.
 
@@ -52,7 +75,7 @@ containers like `style={styles.x}`; those are padded manually, see below),
 ## Quote style: double quotes under components/screens/__tests__
 
 `.prettierrc.js`'s top-level `singleQuote` is `true` (single quotes — the
-project default everywhere: `store/`, `api/`, `navigation/`, `widget/`,
+project default everywhere: `store/`, `actions/`, `navigation/`, `widget/`,
 `amplify/`, etc.), but an `overrides` entry flips it to `singleQuote: false`
 (double quotes) specifically for `src/components/**`, `src/screens/**`, and
 `__tests__/**`. `.eslintrc.js` has a matching scoped `overrides` entry so the
@@ -187,6 +210,38 @@ straight back to the default `? (` / `) : (` shape. That conflicts with the
 ternaries, re-apply this manual shape to it after formatting instead of
 trusting the formatter's output for that block.
 
+## Formatting: multi-line promise chains (NOT enforced by Prettier — manual only, all directories)
+
+When a chain is broken across lines, the `.then` / `.catch` / `.finally`
+links sit at the **same indent as the line the chain starts on** — not
+indented one level deeper the way Prettier does it. Callback bodies inside a
+link are indented one level from that link:
+
+```ts
+// Correct
+getCurrentAuthUser()
+.then(() => set({ status: 'signedIn' }))
+.catch(() => set({ status: 'signedOut' }));
+
+return completeTask( task )
+.then( () => {
+  navigation.goBack();
+} )
+.finally( () => setIsCompleting( false ) );
+
+// Wrong (Prettier's default)
+getCurrentAuthUser()
+  .then(() => set({ status: 'signedIn' }))
+  .catch(() => set({ status: 'signedOut' }));
+```
+
+This applies everywhere (store, api, amplify, … as well as
+components/screens/__tests__). Line breaking itself still follows Prettier (a
+short chain that fits on one line stays on one line); only the indentation of
+the broken links is manual. `npx prettier --write` re-indents these links, so
+re-apply this shape after formatting. ESLint doesn't check formatting, so it
+won't flag either shape.
+
 ## Async handlers: prefer Promise chains over `try { await } catch {}`
 
 When code fires a single promise-returning call (a store action, an API call)
@@ -196,34 +251,98 @@ and only needs to react to its success / failure / completion, chain
 
 ```tsx
 // Preferred
-const onRoomMove = (roomId: string, x: number, y: number) =>
-  updateRoomPosition( roomId, x, y ).catch( () => {
-    // 에러는 store의 error 상태로 표시됨
-  } );
+const onJoin = () => {
+  setIsJoining( true );
+  return joinFamily( inviteCode.trim() )
+  .then( ok => ok && navigation.popToTop() )
+  .finally( () => setIsJoining( false ) );
+};
 
 // Avoid
-const onRoomMove = async (roomId: string, x: number, y: number) => {
+const onJoin = async () => {
+  setIsJoining( true );
   try {
-    await updateRoomPosition( roomId, x, y );
-  } catch {}
+    await joinFamily( inviteCode.trim() );
+    navigation.popToTop();
+  } catch {
+  } finally {
+    setIsJoining( false );
+  }
 };
 ```
 
-- Don't add no-op links — no `.then( () => {} )` when there's nothing to do on
-  success.
+### Who handles a failure: api throws, store actions swallow, screens branch
+
+Errors are handled in exactly one place, decided by layer — so a caller
+never needs an empty `.catch`, and a promise never rejects without someone
+handling it:
+
+1. **api functions** (`actions/index.ts`): throw on
+   failure. A screen that calls one directly (`signInWithGoogle`,
+   `signOutUser`, `deleteAccount`, `openPrivacyPolicy`, `listTaskItems`, `listTaskLogs`,
+   `ensureUserExists`, `startImmediateUpdate`, `openPlayStore`) ends the chain with a `.catch` that actually does
+   something (`setError( ... )`). Exception: `registerDeviceToken` — its only
+   caller has nothing to do on failure, so it handles the error itself and
+   resolves `true`/`false` like a store action.
+2. **store actions** (`addRoom`, `removeRoom`, `updateRoomPosition`,
+   `updateRoomDetails`, `clearRoomsForFamily`, `createFamily`, `joinFamily`,
+   `renameFamily`, `removeMember`, `leaveFamily`, `createMascot`,
+   `updateMascot`, `createTask`, `updateTask`, `deleteTask`, `completeTask`):
+   catch their own failure, record it in the store's `error`, and **resolve
+   `false` — never reject**. Success resolves `true`. Early-return guards
+   (`if (!family)`) return `false` too. `fetch*` actions, `checkAuthStatus` and
+   `checkForUpdate` also never reject (they resolve `void`; nothing branches on
+   them).
+3. **screens/components**: never `.catch` a store action. Branch on the
+   result instead:
+   - nothing to do either way → just return the call:
+     `const onRoomMove = (...) => updateRoomPosition( roomId, x, y );`
+   - something only on success → `.then( ok => ok && navigation.popToTop() )`
+   - something on failure too → `.then( ok => ok ? goBack() : setScanStatus( "error" ) )`;
+     when the failure message is needed, read it from the store:
+     `setError( useTaskStore.getState().error )`.
+
+A store action that calls another store action checks its `boolean` and, if
+it needs to abort, `throw`s inside its own `try` so its own `catch` turns it
+into `false` (see `leaveFamily` → `clearRoomsForFamily`).
+
+- Don't add no-op links — no `.then( () => {} )`, and no `.catch` whose body
+  calls nothing.
 - Return the chain (as above) so a caller or a test can still wait for it to
   settle; a Promise-returning function is still assignable to a
   `(...) => void` prop type.
-- An intentionally empty `.catch` (or `catch`) body must say why, usually
-  `// 에러는 store의 error 상태로 표시됨`, so it doesn't read as an
-  accidentally swallowed error.
+- An empty `catch` that is the function's *own* internal handling — where
+  swallowing the error is the behavior (e.g. `useMascotStore`'s happiness
+  update must not fail task completion, or the reminder Lambda's per-token
+  `.catch` so one bad token doesn't stop the other sends) — is not a
+  caller-side no-op; keep it, with a comment saying why.
 - `async`/`await` with `try/catch` is still the right choice when a function
   awaits several dependent calls in sequence or uses an awaited result in
   later statements (e.g. store actions like `addRoom`, which create the room
   and then seed its tasks) — chaining those reads worse than straight-line
   code.
-- Existing `try/catch` handlers aren't being retrofitted wholesale — apply
-  this to new code and to handlers you're already changing.
+
+### Independent calls: `Promise.all`, not one-by-one `await`
+
+A promise starts running the moment the function is *called*;
+`Promise.all` doesn't start anything, it only waits. So:
+
+- When several calls don't depend on each other's results, start them all
+  and wait on `Promise.all` (destructure the results if needed) instead of
+  awaiting them one at a time — e.g.
+  `const [user, displayName] = await Promise.all([getCurrentAuthUser(), fetchDisplayName()]);`
+  in store actions, or `Promise.all( blocks.map( block => addRoom( ... ) ) )`
+  chained with `.then` / `.catch` / `.finally` in a handler.
+- `Promise.all` rejects on the *first* rejection while the other calls are
+  still in flight. Store actions never reject, so `Promise.all` over them
+  waits for every call and you check the results
+  (`results.includes( false )`, see `RoomSetupScreen`'s `onSubmit`). Over
+  calls that can reject (api functions), use `Promise.allSettled` if
+  cleanup must wait for all of them.
+- Pushing promises into an array and then `Promise.all`-ing it is *parallel*,
+  not sequential. When a call really needs the previous one's result (e.g.
+  `Family.create` → `FamilyMember.create` with `family.id`), keep plain
+  `await` in order.
 
 ## Colors
 
