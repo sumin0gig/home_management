@@ -57,7 +57,7 @@ export function TaskWidget({ tasks }: TaskWidgetProps): React.JSX.Element {
               text={task.dueLabel}
               style={{
                 fontSize: 12,
-                color: commonColor.info,
+                color: commonColor.dueUpcoming,
                 fontWeight: '600',
               }}
             />
