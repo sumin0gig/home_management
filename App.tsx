@@ -10,6 +10,8 @@ import { StatusBar, StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
+// react-native-root-toast(react-native-root-siblings v5)는 앱을 이 부모로 감싸야 토스트가 뜬다.
+import { RootSiblingParent } from 'react-native-root-siblings';
 
 import { Amplify } from 'aws-amplify';
 import outputs from './amplify_outputs.json';
@@ -50,10 +52,12 @@ function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
-        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-        <NavigationContainer linking={linking}>
-          <RootNavigator />
-        </NavigationContainer>
+        <RootSiblingParent>
+          <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+          <NavigationContainer linking={linking}>
+            <RootNavigator />
+          </NavigationContainer>
+        </RootSiblingParent>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
