@@ -9,5 +9,7 @@
     android:previewImage="@drawable/task_widget_preview"
     android:description="@string/task_widget_description"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen">
+    android:widgetCategory="home_screen"
+    android:configure="com.homemanagement.widget.WidgetConfigurationActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional">
 </appwidget-provider>

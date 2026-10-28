@@ -31,6 +31,15 @@
         </intent-filter>
       </activity>
 
+      <!-- 런처의 "위젯 설정" (react-native-android-widget의 설정 화면) -->
+      <activity
+        android:name=".widget.WidgetConfigurationActivity"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+        </intent-filter>
+      </activity>
+
       <receiver
         android:name=".widget.TaskWidget"
         android:exported="false"

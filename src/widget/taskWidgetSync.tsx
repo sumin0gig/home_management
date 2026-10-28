@@ -9,24 +9,17 @@ import { useMascotStore } from '../store/useMascotStore';
 import { TaskWidget } from './TaskWidget';
 import {
   WIDGET_NAME,
-  WIDGET_SHOW_MASCOT_STORAGE_KEY,
   WIDGET_SNAPSHOT_STORAGE_KEY,
   buildWidgetSnapshot,
   type WidgetSnapshot,
 } from './widgetSnapshot';
+import { loadWidgetShowMascot, storeWidgetShowMascot } from './widgetSettings';
 
-// 위젯에 마스코트를 보일지 (앱 전체에 하나, 기본 true)
-export async function loadWidgetShowMascot(): Promise<boolean> {
-  return (
-    (await AsyncStorage.getItem(WIDGET_SHOW_MASCOT_STORAGE_KEY)) !== 'false'
-  );
-}
+export { loadWidgetShowMascot };
 
+// 앱 설정에서 바꿨을 때: 저장하고 바로 다시 그린다.
 export async function saveWidgetShowMascot(showMascot: boolean): Promise<void> {
-  await AsyncStorage.setItem(
-    WIDGET_SHOW_MASCOT_STORAGE_KEY,
-    showMascot ? 'true' : 'false',
-  );
+  await storeWidgetShowMascot(showMascot);
   await syncTaskWidget();
 }
 
