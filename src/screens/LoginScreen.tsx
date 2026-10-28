@@ -1,14 +1,17 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getAuthErrorMessage,
   openPrivacyPolicy,
   signInWithGoogle,
 } from "../../actions";
+import { HOUSE_PRESETS } from "../store/housePresets";
+import FloorPlanIllustration from "../components/Onboarding/FloorPlanIllustration";
 import { colors, commonColor } from "../styles/commonStyle";
-import DefaultButton from "../components/common/DefaultButton";
 
 function LoginScreen(): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const [error, setError] = React.useState<string | null>( null );
 
   const onGoogleSignIn = () => {
@@ -22,70 +25,103 @@ function LoginScreen(): React.JSX.Element {
     );
 
   return (
-    <View style={ styles.container }>
-      <Text style={ styles.title }> HomeManagement </Text>
-      <Text style={ styles.description }> Google 계정으로 로그인해주세요. </Text>
+    <View style={ [styles.screen, { paddingTop: insets.top + 40 }] }>
+      <Text style={ styles.title } accessibilityRole="header">
+        집안일을 정리해요
+      </Text>
+      <Text style={ styles.description }>
+        방마다 할 일을 정리하고 가족과 나눠서 해요. 하나씩 끝낼 때마다 마스코트와
+        추억이 쌓여요.
+      </Text>
 
-      {
-        error
-        ? <Text style={ styles.error }> { error } </Text>
-        : null
-      }
+      <View style={ styles.illustration }>
+        <FloorPlanIllustration rooms={ HOUSE_PRESETS.two.rooms } fill="white" />
+      </View>
 
-      <DefaultButton
-        text="Google로 로그인"
-        onPress={ onGoogleSignIn }
-        style={ styles.button }
-        textStyle={ styles.buttonText }
-      />
-
-      <Pressable onPress={ onOpenPrivacyPolicy } style={ styles.policyLink }>
-        <Text style={ styles.policyLinkText }> 개인정보처리방침 </Text>
-      </Pressable>
+      <View style={ [styles.footer, { paddingBottom: insets.bottom + 16 }] }>
+        {
+          error
+          ? <Text style={ styles.error }> { error } </Text>
+          : null
+        }
+        { /* Google 공식 로고 리소스를 넣기 전까지는 글자만 있는 흰 버튼 */ }
+        <Pressable
+          style={ ({ pressed }) => [
+            styles.googleButton,
+            pressed && styles.googleButtonPressed,
+          ] }
+          onPress={ onGoogleSignIn }
+          accessibilityRole="button"
+        >
+          <Text style={ styles.googleButtonText }> Google로 계속하기 </Text>
+        </Pressable>
+        <Text style={ styles.policy }>
+          계속하면{ " " }
+          <Text
+            style={ styles.policyLink }
+            onPress={ onOpenPrivacyPolicy }
+            accessibilityRole="link"
+          >
+            개인정보처리방침
+          </Text>
+          에 동의하게 돼요
+        </Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create( {
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    backgroundColor: commonColor.backgroundColor,
+    paddingHorizontal: 18,
+    backgroundColor: colors.default,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 8,
+    fontSize: 28,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+    marginBottom: 10,
   },
   description: {
-    fontSize: 14,
-    color: colors.darkGray,
-    marginBottom: 24,
+    fontSize: 13.5,
+    lineHeight: 20,
+    color: commonColor.textMuted,
+  },
+  illustration: {
+    marginTop: 32,
+  },
+  footer: {
+    marginTop: "auto",
+    gap: 12,
   },
   error: {
     color: commonColor.error,
-    marginBottom: 12,
+    textAlign: "center",
   },
-  button: {
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+  googleButton: {
+    minHeight: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: "#747775",
   },
-  buttonText: {
-    color: colors.white,
+  googleButtonPressed: {
+    backgroundColor: colors.lightGray,
+  },
+  googleButtonText: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#1F1F1F",
+  },
+  policy: {
+    fontSize: 12,
+    color: commonColor.textMuted,
+    textAlign: "center",
   },
   policyLink: {
-    marginTop: 16,
-    padding: 8,
-  },
-  policyLinkText: {
-    fontSize: 13,
-    color: colors.darkGray,
     textDecorationLine: "underline",
   },
 } );

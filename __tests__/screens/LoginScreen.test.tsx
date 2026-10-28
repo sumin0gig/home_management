@@ -23,16 +23,24 @@ describe( "LoginScreen", () => {
     mockedGetAuthErrorMessage.mockImplementation( (err: Error) => err.message );
   } );
 
-  test( "제목과 로그인 버튼을 표시한다", () => {
-    const { getByText } = render( <LoginScreen /> );
-    expect( getByText( "HomeManagement" ) ).toBeTruthy();
-    expect( getByText( "Google로 로그인" ) ).toBeTruthy();
+  test( "무슨 앱인지 알려주는 제목·설명과 로그인 버튼을 표시한다 (앱 이름·마스코트 없음)", () => {
+    const { getByText, queryByText, toJSON, getByTestId } = render( <LoginScreen /> );
+    expect( getByText( "집안일을 정리해요" ) ).toBeTruthy();
+    expect( getByText( /방마다 할 일을 정리하고/ ) ).toBeTruthy();
+    expect( getByText( "Google로 계속하기" ) ).toBeTruthy();
+    expect( getByTestId( "floor-plan-illustration", { includeHiddenElements: true } ) ).toBeTruthy();
+    expect( queryByText( /HomeManagement/ ) ).toBeNull();
+    expect( JSON.stringify( toJSON() ) ).not.toMatch( /mascot/i );
+
+    // 제목이 설명보다 위
+    const texts = JSON.stringify( toJSON() );
+    expect( texts.indexOf( "집안일을 정리해요" ) ).toBeLessThan( texts.indexOf( "방마다 할 일을" ) );
   } );
 
   test( "버튼을 탭하면 signInWithGoogle을 호출한다", () => {
     mockedSignInWithGoogle.mockResolvedValueOnce( undefined );
     const { getByText } = render( <LoginScreen /> );
-    fireEvent.press( getByText( "Google로 로그인" ) );
+    fireEvent.press( getByText( "Google로 계속하기" ) );
     expect( mockedSignInWithGoogle ).toHaveBeenCalledTimes( 1 );
   } );
 
@@ -41,7 +49,7 @@ describe( "LoginScreen", () => {
       new Error( "로그인에 실패했습니다." ),
     );
     const { getByText } = render( <LoginScreen /> );
-    fireEvent.press( getByText( "Google로 로그인" ) );
+    fireEvent.press( getByText( "Google로 계속하기" ) );
     await waitFor( () =>
       expect( getByText( "로그인에 실패했습니다." ) ).toBeTruthy(),
     );
