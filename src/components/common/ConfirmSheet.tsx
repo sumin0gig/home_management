@@ -19,6 +19,8 @@ interface Props {
   // danger면 확인 버튼이 commonColor.error
   confirmTone?: "default" | "danger";
   cancelText?: string;
+  // 알림처럼 확인 버튼 하나만 둘 때
+  hideCancel?: boolean;
   confirmDisabled?: boolean;
   // 버튼에 스피너, 두 번 눌리지 않고 닫히지도 않는다
   isConfirming?: boolean;
@@ -35,6 +37,7 @@ function ConfirmSheet( {
   confirmText,
   confirmTone = "default",
   cancelText = "취소",
+  hideCancel = false,
   confirmDisabled = false,
   isConfirming = false,
   onConfirm,
@@ -58,14 +61,18 @@ function ConfirmSheet( {
       }
       { children }
       <View style={ styles.buttons }>
-        <Pressable
-          style={ [styles.button, styles.cancelButton] }
-          onPress={ onCancel }
-          disabled={ isConfirming }
-          accessibilityRole="button"
-        >
-          <Text style={ styles.cancelText }> { cancelText } </Text>
-        </Pressable>
+        {
+          hideCancel
+          ? null
+          : <Pressable
+              style={ [styles.button, styles.cancelButton] }
+              onPress={ onCancel }
+              disabled={ isConfirming }
+              accessibilityRole="button"
+            >
+              <Text style={ styles.cancelText }> { cancelText } </Text>
+            </Pressable>
+        }
         <Pressable
           style={ [
             styles.button,
