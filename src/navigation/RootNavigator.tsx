@@ -39,6 +39,7 @@ function RootNavigator(): React.JSX.Element {
 
   const roomStatus = useRoomStore( state => state.status );
   const rooms = useRoomStore( state => state.rooms );
+  const houseSetupPending = useRoomStore( state => state.houseSetupPending );
   const fetchRooms = useRoomStore( state => state.fetchRooms );
 
   useEffect(() => {
@@ -95,12 +96,13 @@ function RootNavigator(): React.JSX.Element {
     );
   }
 
+  // 관리자가 집을 만드는 중이면 첫 방이 생겨도 다 만들 때까지 집 만들기에 남는다.
+  if (membership?.role === 'OWNER' && (rooms.length === 0 || houseSetupPending)) {
+    return <RoomSetupScreen />;
+  }
+
   if (rooms.length === 0) {
-    return (
-      membership?.role === 'OWNER'
-      ? <RoomSetupScreen />
-      : <RoomWaitingScreen />
-    );
+    return <RoomWaitingScreen />;
   }
 
   if (mascotStatus === 'none') {

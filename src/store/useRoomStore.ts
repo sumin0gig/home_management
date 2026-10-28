@@ -133,10 +133,19 @@ export function roomDisplayName(room: {
 
 type RoomStatus = 'idle' | 'loading' | 'loaded';
 
+export interface AddRoomOptions {
+  // 주어지면 이 템플릿만 집안일로 만든다. 없으면 그 방 종류의 템플릿을 모두 만든다.
+  templateIds?: string[];
+}
+
 interface RoomState {
   status: RoomStatus;
   rooms: RoomRow[];
   error: string | null;
+  // 처음 집을 만드는 중(방 여러 개를 만드는 동안). 첫 방이 생겨도 다 만들 때까지
+  // 집 만들기 화면에 남아 있게 한다 (RootNavigator).
+  houseSetupPending: boolean;
+  setHouseSetupPending: (pending: boolean) => void;
   fetchRooms: (familyId: string) => Promise<void>;
   addRoom: (
     familyId: string,
@@ -149,6 +158,7 @@ interface RoomState {
       height?: number;
       color?: string;
     },
+    options?: AddRoomOptions,
   ) => Promise<boolean>;
   removeRoom: (roomId: string) => Promise<boolean>;
   updateRoomPosition: (
@@ -174,10 +184,14 @@ const initialState = {
   status: 'idle' as RoomStatus,
   rooms: [] as RoomRow[],
   error: null as string | null,
+  houseSetupPending: false,
 };
 
 export const useRoomStore = create<RoomState>((set, get) => ({
   ...initialState,
+
+  setHouseSetupPending: (pending: boolean) =>
+    set({ houseSetupPending: pending }),
 
   fetchRooms: async (familyId: string) => {
     set({ status: 'loading', error: null });
@@ -200,6 +214,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       height?: number;
       color?: string;
     },
+    options?: AddRoomOptions,
   ) => {
     set({ error: null });
     try {
@@ -228,7 +243,10 @@ export const useRoomStore = create<RoomState>((set, get) => ({
         throw new Error('방 생성에 실패했습니다.');
       }
 
-      const templates = await listTaskTemplatesForRoomType(roomType);
+      const allTemplates = await listTaskTemplatesForRoomType(roomType);
+      const templates = options?.templateIds
+        ? allTemplates.filter(t => options.templateIds?.includes(t.id))
+        : allTemplates;
       const now = new Date();
       await Promise.all(
         templates.map(async template => {
