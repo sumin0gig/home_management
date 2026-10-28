@@ -19,6 +19,7 @@ import AddFamilyMemberScreen from '../screens/family/AddFamilyMemberScreen';
 import ScanFamilyQrScreen from '../screens/family/ScanFamilyQrScreen';
 import EnterFamilyCodeScreen from '../screens/family/EnterFamilyCodeScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import WidgetPromptScreen from '../screens/home/WidgetPromptScreen';
 import { ScreenHeader, SettingsShortcutButton } from './ScreenHeader';
 import { FamilyAvatarStack } from './FamilyAvatarStack';
 
@@ -52,6 +53,11 @@ function MainNavigator(): React.JSX.Element {
         name="CompleteCheck"
         component={CompleteCheckScreen}
         options={completeCheckOptions}
+      />
+      <Stack.Screen
+        name="WidgetPrompt"
+        component={WidgetPromptScreen}
+        options={widgetPromptOptions}
       />
       <Stack.Screen name="MascotDetail" component={MascotDetailScreen} />
       <Stack.Screen
@@ -91,6 +97,13 @@ const completeCheckOptions: NativeStackNavigationOptions = {
   presentation: 'transparentModal',
   headerShown: false,
   animation: 'fade',
+};
+
+// 위젯 설치 안내: 아래에서 올라오는 화면 전체 모달
+const widgetPromptOptions: NativeStackNavigationOptions = {
+  presentation: 'fullScreenModal',
+  headerShown: false,
+  animation: 'slide_from_bottom',
 };
 
 const homeOptions = ({

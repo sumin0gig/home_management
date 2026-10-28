@@ -12,7 +12,20 @@ const launch = {
   startedAt: Date.now(),
   shown: false,
   openedFromWidget: false,
+  // 설치 안내에서 위젯 추가가 확인됐을 때, 홈이 짧게 알려줄 때까지 켜 둔다.
+  widgetAddedNotice: false,
 };
+
+export function announceWidgetAdded(): void {
+  launch.widgetAddedNotice = true;
+}
+
+// 알릴 게 있으면 true를 돌려주고 지운다 (한 번만 보여준다).
+export function takeWidgetAddedNotice(): boolean {
+  const notice = launch.widgetAddedNotice;
+  launch.widgetAddedNotice = false;
+  return notice;
+}
 
 export function markOpenedFromWidget(): void {
   launch.openedFromWidget = true;
@@ -31,6 +44,7 @@ export function resetWidgetPromptLaunchState(): void {
   launch.startedAt = Date.now();
   launch.shown = false;
   launch.openedFromWidget = false;
+  launch.widgetAddedNotice = false;
 }
 
 // 설치 여부·화면 조건을 뺀 나머지(이번 실행·7일·딥링크·온보딩) 조건.

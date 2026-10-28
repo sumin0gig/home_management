@@ -2,6 +2,7 @@ import React from "react";
 import {
   ActivityIndicator,
   AppState,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -18,6 +19,12 @@ import { isDueByToday, toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
 import HomeTaskList from "../../components/HomeTaskList/HomeTaskList";
+import { useWidgetInstalled } from "../../widget/useWidgetInstalled";
+import {
+  canShowWidgetPrompt,
+  markWidgetPromptShown,
+  takeWidgetAddedNotice,
+} from "../../widget/widgetPromptState";
 import { type FloorPlanRoom } from "../../store/useRoomStore";
 
 type Props = NativeStackScreenProps<MainStackParamList, "HomeMain">;
@@ -99,6 +106,44 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     return () => subscription.remove();
   }, [navigation, refresh] );
 
+  // 위젯 설치 안내: Android, 위젯 미설치, 첫 불러오기가 끝남, 홈이 맨 위일 때.
+  // 이번 실행·7일·위젯으로 열림·온보딩 조건은 canShowWidgetPrompt가 본다.
+  const widgetInstalled = useWidgetInstalled( navigation );
+  const isFirstLoadDone = roomStatus === "loaded" && taskStatus === "loaded";
+  React.useEffect( () => {
+    if (
+      Platform.OS !== "android" ||
+      widgetInstalled !== false ||
+      !isFirstLoadDone ||
+      !navigation.isFocused()
+    ) {
+      return;
+    }
+    canShowWidgetPrompt().then( ok => {
+      if (ok && navigation.isFocused()) {
+        markWidgetPromptShown();
+        navigation.navigate( "WidgetPrompt" );
+      }
+    } );
+  }, [widgetInstalled, isFirstLoadDone, navigation] );
+
+  // 설치 안내에서 위젯 추가가 확인되면 홈에서 짧게 알려준다.
+  const [showWidgetAdded, setShowWidgetAdded] = React.useState( false );
+  React.useEffect( () => {
+    return navigation.addListener( "focus", () => {
+      if (takeWidgetAddedNotice()) {
+        setShowWidgetAdded( true );
+      }
+    } );
+  }, [navigation] );
+  React.useEffect( () => {
+    if (!showWidgetAdded) {
+      return;
+    }
+    const timer = setTimeout( () => setShowWidgetAdded( false ), 2500 );
+    return () => clearTimeout( timer );
+  }, [showWidgetAdded] );
+
   if (roomStatus === "loading" || taskStatus === "loading") {
     return (
       <View style={ styles.centerContainer }>
@@ -124,6 +169,13 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
         <RefreshControl refreshing={ isRefreshing } onRefresh={ refresh } />
       }
     >
+      {
+        showWidgetAdded
+        ? <View style={ styles.notice } accessibilityLiveRegion="polite">
+            <Text style={ styles.noticeText }> 위젯을 추가했어요 </Text>
+          </View>
+        : null
+      }
       { roomError && <Text style={ styles.error }> { roomError } </Text> }
       {
         taskError
@@ -213,6 +265,19 @@ const styles = StyleSheet.create( {
     color: commonColor.error,
     marginBottom: 12,
     textAlign: "center",
+  },
+  notice: {
+    alignSelf: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: commonColor.textDefault,
+    marginBottom: 12,
+  },
+  noticeText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "600",
   },
   errorRow: {
     flexDirection: "row",
