@@ -2,6 +2,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +16,12 @@ import {
 import { colors, commonColor } from "../../styles/commonStyle";
 import ModalView from "../common/ModalView";
 import DefaultButton from "../common/DefaultButton";
+import TemplateChoreList, {
+  useTaskTemplates,
+} from "../Onboarding/TemplateChoreList";
+
+// 기본 집안일 목록에서 이 방을 가리키는 임시 id
+const NEW_ROOM_ID = "new-room";
 
 interface Props {
   visible: boolean;
@@ -22,6 +29,7 @@ interface Props {
   onSubmit: (
     roomType: NonNullable<RoomType>,
     label: string,
+    templateIds: string[],
   ) => Promise<boolean>;
 }
 
@@ -35,10 +43,36 @@ function AddRoomModal( {
   );
   const [newRoomLabel, setNewRoomLabel] = React.useState( "" );
   const [isSaving, setIsSaving] = React.useState( false );
+  // 고른 종류의 기본 집안일 (종류를 바꾸면 다시 모두 선택)
+  const [selected, setSelected] = React.useState<string[] | null>( null );
+  const { templates, isLoading } = useTaskTemplates(
+    visible ? [newRoomType] : [],
+  );
+  const typeTemplates = templates[newRoomType];
+
+  React.useEffect( () => {
+    setSelected( null );
+  }, [newRoomType] );
+  React.useEffect( () => {
+    if (selected === null && typeTemplates) {
+      setSelected( typeTemplates.map( t => t.id ) );
+    }
+  }, [selected, typeTemplates] );
+
+  const selectedIds = selected ?? [];
+
+  const onToggle = (_roomId: string, templateId: string) =>
+    setSelected( prev => {
+      const current = prev ?? [];
+      return current.includes( templateId )
+        ? current.filter( id => id !== templateId )
+        : [...current, templateId];
+    } );
 
   const resetForm = () => {
     setNewRoomType( "GENERAL_ROOM" );
     setNewRoomLabel( "" );
+    setSelected( null );
   };
 
   const onClose = () => {
@@ -48,7 +82,7 @@ function AddRoomModal( {
 
   const onSubmit = () => {
     setIsSaving( true );
-    return onSubmitRoom( newRoomType, newRoomLabel )
+    return onSubmitRoom( newRoomType, newRoomLabel, selectedIds )
     .then( ok => ok && resetForm() )
     .finally( () => setIsSaving( false ) );
   };
@@ -84,6 +118,15 @@ function AddRoomModal( {
         value={ newRoomLabel }
         onChangeText={ setNewRoomLabel }
       />
+      <Text style={ styles.sectionLabel }> 기본 집안일 </Text>
+      <ScrollView style={ styles.choreScroll } nestedScrollEnabled>
+        <TemplateChoreList
+          rooms={ [{ id: NEW_ROOM_ID, roomType: newRoomType, label: newRoomLabel }] }
+          templates={ templates }
+          selection={ { [NEW_ROOM_ID]: selectedIds } }
+          onToggle={ onToggle }
+        />
+      </ScrollView>
       <View style={ styles.modalButtonRow }>
         <DefaultButton
           text="취소"
@@ -94,12 +137,15 @@ function AddRoomModal( {
         <Pressable
           style={ styles.saveButton }
           onPress={ onSubmit }
-          disabled={ isSaving }
+          disabled={ isSaving || isLoading }
+          accessibilityRole="button"
         >
           {
             isSaving
             ? <ActivityIndicator color={ colors.white } />
-            : <Text style={ styles.saveButtonText }> 추가 </Text>
+            : <Text style={ styles.saveButtonText }>
+                { `추가 · 집안일 ${selectedIds.length}개` }
+              </Text>
           }
         </Pressable>
       </View>
@@ -120,6 +166,16 @@ const styles = StyleSheet.create( {
     paddingVertical: 10,
     paddingHorizontal: 12,
     fontSize: 16,
+    marginBottom: 12,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: commonColor.textMuted,
+    marginBottom: 8,
+  },
+  choreScroll: {
+    maxHeight: 260,
     marginBottom: 12,
   },
   chipRow: {

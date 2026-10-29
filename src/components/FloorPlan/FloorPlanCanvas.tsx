@@ -10,7 +10,6 @@ const CANVAS_BOTTOM_PADDING_ROWS = 1;
 interface Props {
   rooms: FloorPlanRoom[];
   editable?: boolean;
-  removable?: boolean;
   onRoomPress?: (room: FloorPlanRoom) => void;
   onRoomMove?: (roomId: string, x: number, y: number) => void;
   // 방마다 기한이 오늘이거나 지난 일의 개수 (홈에서만 넘긴다)
@@ -21,7 +20,6 @@ interface Props {
 function FloorPlanCanvas( {
   rooms,
   editable = false,
-  removable = false,
   onRoomPress,
   onRoomMove,
   getDueCount,
@@ -84,7 +82,6 @@ function FloorPlanCanvas( {
             }
             dueCount={ getDueCount ? getDueCount( room ) : 0 }
             hasMascot={ room.id === mascotRoomId }
-            isRemovable={ removable }
           />
         ) )
       }

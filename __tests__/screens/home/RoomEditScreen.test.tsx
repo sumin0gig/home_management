@@ -12,10 +12,32 @@ import { useRoomStore } from "../../../src/store/useRoomStore";
 import { resetAllStores } from "../../../src/test-utils/resetStores";
 import type { FamilyRow } from "../../../src/store/useFamilyStore";
 import type { RoomRow } from "../../../src/store/useRoomStore";
+import { useTaskStore, type TaskRow } from "../../../src/store/useTaskStore";
+import { listTaskTemplatesForRoomType } from "../../../actions";
+import { clearTemplateCache } from "../../../src/components/Onboarding/TemplateChoreList";
+
+jest.mock( "../../../actions", () => ( {
+  ...jest.requireActual( "../../../actions" ),
+  listTaskTemplatesForRoomType: jest.fn(),
+} ) );
+
+( listTaskTemplatesForRoomType as jest.Mock ).mockImplementation( ( roomType: string ) =>
+  Promise.resolve(
+    ["a", "b"].map( key => ( {
+      id: `${roomType}-${key}`,
+      roomType,
+      title: `${roomType} 일 ${key}`,
+      recurrenceType: "INTERVAL",
+      intervalValue: 1,
+      intervalUnit: "WEEK",
+    } ) ),
+  ),
+);
 
 const mockedAddRoom = jest.fn();
 const mockedUpdateRoomDetails = jest.fn();
 const mockedUpdateRoomPosition = jest.fn();
+const mockedRemoveRoom = jest.fn();
 
 const family: FamilyRow = {
   id: "f1",
@@ -63,6 +85,7 @@ describe( "RoomEditScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
+    clearTemplateCache();
     useFamilyStore.setState( { status: "joined", family } );
     useRoomStore.setState( {
       status: "loaded",
@@ -70,22 +93,28 @@ describe( "RoomEditScreen", () => {
       addRoom: mockedAddRoom,
       updateRoomDetails: mockedUpdateRoomDetails,
       updateRoomPosition: mockedUpdateRoomPosition,
+      removeRoom: mockedRemoveRoom,
     } );
   } );
 
-  test( "+ 방 추가로 방을 만들면 addRoom이 호출된다", async () => {
+  test( "+ 방 추가: 종류를 고르면 기본 집안일이 모두 선택되고, 끈 것을 뺀 templateIds로 addRoom", async () => {
     mockedAddRoom.mockResolvedValue( true );
 
-    const { getByText } = renderRoomEdit();
+    const { getByText, findByText, getByTestId } = renderRoomEdit();
     fireEvent.press( getByText( "+ 방 추가" ) );
     fireEvent.press( getByText( "거실" ) );
-    fireEvent.press( getByText( "추가" ) );
+
+    await findByText( "추가 · 집안일 2개" );
+    fireEvent.press( getByTestId( "chore-new-room-LIVING_ROOM-a" ) );
+    fireEvent.press( getByText( "추가 · 집안일 1개" ) );
 
     await waitFor( () =>
       expect( mockedAddRoom ).toHaveBeenCalledWith(
         "f1",
         "LIVING_ROOM",
         undefined,
+        undefined,
+        { templateIds: ["LIVING_ROOM-b"] },
       ),
     );
   } );
@@ -127,14 +156,54 @@ describe( "RoomEditScreen", () => {
     );
   } );
 
-  test( "수정 모달에서 취소를 탭하면 updateRoomDetails가 호출되지 않는다", () => {
-    const { getByText, getByPlaceholderText, queryByPlaceholderText } =
+  test( "수정 시트의 막을 누르면 저장하지 않고 닫힌다", () => {
+    const { getByText, getByPlaceholderText, queryByPlaceholderText, getByTestId } =
       renderRoomEdit();
     fireEvent.press( getByText( "침실" ) );
     fireEvent.changeText( getByPlaceholderText( "이름(선택)" ), "안방" );
-    fireEvent.press( getByText( "취소" ) );
+    fireEvent.press( getByTestId( "sheet-overlay" ) );
 
     expect( mockedUpdateRoomDetails ).not.toHaveBeenCalled();
     expect( queryByPlaceholderText( "이름(선택)" ) ).toBeNull();
+  } );
+
+  test( "방 편집 도면에 삭제 버튼이 없다", () => {
+    const { queryByTestId, queryByText } = renderRoomEdit();
+    expect( queryByTestId( "delete-button-r1" ) ).toBeNull();
+    expect( queryByText( "-" ) ).toBeNull();
+  } );
+
+  test( "수정 시트의 '방 삭제' → 집안일 수가 들어간 확인 → '삭제'면 removeRoom이 불리고 닫힌다", async () => {
+    mockedRemoveRoom.mockResolvedValue( true );
+    useTaskStore.setState( {
+      tasks: [
+        { id: "t1", roomId: "r1" },
+        { id: "t2", roomId: "r1" },
+        { id: "t3", roomId: "other" },
+      ] as TaskRow[],
+    } );
+    const { getByText, queryByText } = renderRoomEdit();
+
+    fireEvent.press( getByText( "침실" ) );
+    fireEvent.press( getByText( "방 삭제" ) );
+
+    expect( getByText( "침실을 삭제할까요?" ) ).toBeTruthy();
+    expect( getByText( "집안일 2개와 완료 기록이 함께 삭제돼요." ) ).toBeTruthy();
+    // 수정 시트는 닫혀 있다 (시트를 겹치지 않는다)
+    expect( queryByText( "저장" ) ).toBeNull();
+
+    await act( async () => {
+      fireEvent.press( getByText( "삭제" ) );
+    } );
+
+    expect( mockedRemoveRoom ).toHaveBeenCalledWith( "r1" );
+    await waitFor( () => expect( queryByText( "침실을 삭제할까요?" ) ).toBeNull() );
+  } );
+
+  test( "집안일이 없는 방이면 '이 방에는 집안일이 없어요.'", () => {
+    const { getByText } = renderRoomEdit();
+    fireEvent.press( getByText( "침실" ) );
+    fireEvent.press( getByText( "방 삭제" ) );
+    expect( getByText( "이 방에는 집안일이 없어요." ) ).toBeTruthy();
   } );
 } );

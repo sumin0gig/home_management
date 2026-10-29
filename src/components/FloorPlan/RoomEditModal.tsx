@@ -2,6 +2,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +14,7 @@ import {
   ROOM_TYPES,
   ROOM_TYPE_LABELS,
   canResizeRoom,
+  roomDisplayName,
   type FloorPlanRoom,
   type RoomType,
 } from "../../store/useRoomStore";
@@ -22,8 +24,7 @@ import {
   commonColor,
 } from "../../styles/commonStyle";
 import { randomRoomColor } from "../../utils/commonUtils";
-import ModalView from "../common/ModalView";
-import DefaultButton from "../common/DefaultButton";
+import BottomSheetModal from "../common/BottomSheetModal";
 
 export interface RoomEditModalSaveValues {
   roomType: NonNullable<RoomType>;
@@ -38,6 +39,8 @@ interface Props {
   rooms: FloorPlanRoom[];
   onSave: (updates: RoomEditModalSaveValues) => void | Promise<boolean>;
   onClose: () => void;
+  // 넘기면 맨 아래에 "방 삭제"가 생긴다 (방을 새로 만드는 중에는 넘기지 않는다).
+  onDelete?: () => void;
 }
 
 // RoomEditScreen(서버에 저장된 방을 DB에서 수정)과 RoomSetupScreen(온보딩 중
@@ -50,6 +53,7 @@ function RoomEditModal( {
   rooms,
   onSave,
   onClose,
+  onDelete,
 }: Props ): React.JSX.Element {
   const [roomType, setRoomType] = React.useState<NonNullable<RoomType>>(
     room.roomType ?? "GENERAL_ROOM",
@@ -95,152 +99,149 @@ function RoomEditModal( {
   };
 
   return (
-    <ModalView visible onRequestClose={ onClose }>
-      <Text style={ styles.modalTitle }> 방 수정 </Text>
+    <BottomSheetModal visible onRequestClose={ onClose } canClose={ !isSaving }>
+      <ScrollView bounces={ false } keyboardShouldPersistTaps="handled">
+        <Text style={ styles.modalTitle } accessibilityRole="header">
+          { roomDisplayName( { label: label.trim(), roomType } ) }
+        </Text>
 
-      <View style={ styles.chipRow }>
-        { ROOM_TYPES.map( type => (
-          <Pressable
-            key={ type }
-            style={ [styles.chip, roomType === type && styles.chipSelected] }
-            onPress={ () => setRoomType( type ) }
-          >
-            <Text
-              style={
-                roomType === type ? styles.chipTextSelected : styles.chipText
+        <View style={ styles.chipRow }>
+          { ROOM_TYPES.map( type => (
+            <Pressable
+              key={ type }
+              style={ [styles.chip, roomType === type && styles.chipSelected] }
+              onPress={ () => setRoomType( type ) }
+            >
+              <Text
+                style={
+                  roomType === type ? styles.chipTextSelected : styles.chipText
+                }
+              >
+                { ROOM_TYPE_LABELS[type] }
+              </Text>
+            </Pressable>
+          ) ) }
+        </View>
+
+        <TextInput
+          style={ styles.input }
+          placeholder="이름(선택)"
+          value={ label }
+          onChangeText={ setLabel }
+        />
+
+        <View style={ styles.stepperGroup }>
+          <View style={ styles.stepperRow }>
+            <Text style={ styles.stepperLabel }> 가로 </Text>
+            <Pressable
+              style={ [
+                styles.stepperButton,
+                isWidthAtMin && styles.stepperButtonDisabled,
+              ] }
+              disabled={ isWidthAtMin }
+              onPress={ () =>
+                setWidth( Math.max( MIN_ROOM_DIMENSION, width - 1 ) )
               }
             >
-              { ROOM_TYPE_LABELS[type] }
-            </Text>
-          </Pressable>
-        ) ) }
-      </View>
-
-      <TextInput
-        style={ styles.input }
-        placeholder="이름(선택)"
-        value={ label }
-        onChangeText={ setLabel }
-      />
-
-      <View style={ styles.stepperGroup }>
-        <View style={ styles.stepperRow }>
-          <Text style={ styles.stepperLabel }> 가로 </Text>
-          <Pressable
-            style={ [
-              styles.stepperButton,
-              isWidthAtMin && styles.stepperButtonDisabled,
-            ] }
-            disabled={ isWidthAtMin }
-            onPress={ () =>
-              setWidth( Math.max( MIN_ROOM_DIMENSION, width - 1 ) )
-            }
-          >
-            <Text
+              <Text
+                style={ [
+                  styles.stepperButtonText,
+                  isWidthAtMin && styles.stepperButtonTextDisabled,
+                ] }
+              >
+                -
+              </Text>
+            </Pressable>
+            <Text style={ styles.stepperValue }> { width }칸 </Text>
+            <Pressable
               style={ [
-                styles.stepperButtonText,
-                isWidthAtMin && styles.stepperButtonTextDisabled,
+                styles.stepperButton,
+                isWidthAtMax && styles.stepperButtonDisabled,
               ] }
+              disabled={ isWidthAtMax }
+              onPress={ () =>
+                setWidth( Math.min( MAX_ROOM_DIMENSION, width + 1 ) )
+              }
             >
-              -
-            </Text>
-          </Pressable>
-          <Text style={ styles.stepperValue }> { width }칸 </Text>
-          <Pressable
-            style={ [
-              styles.stepperButton,
-              isWidthAtMax && styles.stepperButtonDisabled,
-            ] }
-            disabled={ isWidthAtMax }
-            onPress={ () =>
-              setWidth( Math.min( MAX_ROOM_DIMENSION, width + 1 ) )
-            }
-          >
-            <Text
+              <Text
+                style={ [
+                  styles.stepperButtonText,
+                  isWidthAtMax && styles.stepperButtonTextDisabled,
+                ] }
+              >
+                +
+              </Text>
+            </Pressable>
+          </View>
+          <View style={ styles.stepperRow }>
+            <Text style={ styles.stepperLabel }> 세로 </Text>
+            <Pressable
               style={ [
-                styles.stepperButtonText,
-                isWidthAtMax && styles.stepperButtonTextDisabled,
+                styles.stepperButton,
+                isHeightAtMin && styles.stepperButtonDisabled,
               ] }
+              disabled={ isHeightAtMin }
+              onPress={ () =>
+                setHeight( Math.max( MIN_ROOM_DIMENSION, height - 1 ) )
+              }
             >
-              +
-            </Text>
-          </Pressable>
+              <Text
+                style={ [
+                  styles.stepperButtonText,
+                  isHeightAtMin && styles.stepperButtonTextDisabled,
+                ] }
+              >
+                -
+              </Text>
+            </Pressable>
+            <Text style={ styles.stepperValue }> { height }칸 </Text>
+            <Pressable
+              style={ [
+                styles.stepperButton,
+                isHeightAtMax && styles.stepperButtonDisabled,
+              ] }
+              disabled={ isHeightAtMax }
+              onPress={ () =>
+                setHeight( Math.min( MAX_ROOM_DIMENSION, height + 1 ) )
+              }
+            >
+              <Text
+                style={ [
+                  styles.stepperButtonText,
+                  isHeightAtMax && styles.stepperButtonTextDisabled,
+                ] }
+              >
+                +
+              </Text>
+            </Pressable>
+          </View>
         </View>
-        <View style={ styles.stepperRow }>
-          <Text style={ styles.stepperLabel }> 세로 </Text>
-          <Pressable
-            style={ [
-              styles.stepperButton,
-              isHeightAtMin && styles.stepperButtonDisabled,
-            ] }
-            disabled={ isHeightAtMin }
-            onPress={ () =>
-              setHeight( Math.max( MIN_ROOM_DIMENSION, height - 1 ) )
-            }
-          >
-            <Text
+
+        <View style={ styles.colorRow }>
+          { ROOM_COLOR_PALETTE.map( swatch => (
+            <Pressable
+              key={ swatch }
               style={ [
-                styles.stepperButtonText,
-                isHeightAtMin && styles.stepperButtonTextDisabled,
+                styles.swatch,
+                { backgroundColor: swatch },
+                color === swatch && styles.swatchSelected,
               ] }
-            >
-              -
-            </Text>
-          </Pressable>
-          <Text style={ styles.stepperValue }> { height }칸 </Text>
-          <Pressable
-            style={ [
-              styles.stepperButton,
-              isHeightAtMax && styles.stepperButtonDisabled,
-            ] }
-            disabled={ isHeightAtMax }
-            onPress={ () =>
-              setHeight( Math.min( MAX_ROOM_DIMENSION, height + 1 ) )
-            }
-          >
-            <Text
-              style={ [
-                styles.stepperButtonText,
-                isHeightAtMax && styles.stepperButtonTextDisabled,
-              ] }
-            >
-              +
-            </Text>
-          </Pressable>
+              onPress={ () => setColor( swatch ) }
+            />
+          ) ) }
         </View>
-      </View>
 
-      <View style={ styles.colorRow }>
-        { ROOM_COLOR_PALETTE.map( swatch => (
-          <Pressable
-            key={ swatch }
-            style={ [
-              styles.swatch,
-              { backgroundColor: swatch },
-              color === swatch && styles.swatchSelected,
-            ] }
-            onPress={ () => setColor( swatch ) }
-          />
-        ) ) }
-      </View>
+        {
+          formError
+          ? <Text style={ styles.error }> { formError } </Text>
+          : null
+        }
 
-      {
-        formError
-        ? <Text style={ styles.error }> { formError } </Text>
-        : null
-      }
-
-      <View style={ styles.modalButtonRow }>
-        <DefaultButton
-          text="취소"
-          onPress={ onClose }
-          style={ styles.cancelButton }
-          textStyle={ styles.cancelButtonText }
-        />
         <Pressable
-          style={ styles.saveButton }
+          style={ [styles.saveButton, isSaving && styles.saveButtonDisabled] }
           onPress={ onSubmit }
           disabled={ isSaving }
+          accessibilityRole="button"
         >
           {
             isSaving
@@ -248,8 +249,21 @@ function RoomEditModal( {
             : <Text style={ styles.saveButtonText }> 저장 </Text>
           }
         </Pressable>
-      </View>
-    </ModalView>
+
+        {
+          onDelete
+          ? <Pressable
+              style={ styles.deleteButton }
+              onPress={ onDelete }
+              disabled={ isSaving }
+              accessibilityRole="button"
+            >
+              <Text style={ styles.deleteButtonText }> 방 삭제 </Text>
+            </Pressable>
+          : null
+        }
+      </ScrollView>
+    </BottomSheetModal>
   );
 }
 
@@ -284,6 +298,7 @@ const styles = StyleSheet.create( {
     fontWeight: "600",
   },
   input: {
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: commonColor.border,
     borderRadius: 8,
@@ -353,32 +368,32 @@ const styles = StyleSheet.create( {
     marginBottom: 12,
     textAlign: "center",
   },
-  modalButtonRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: "transparent",
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: commonColor.border,
-  },
-  cancelButtonText: {
-    color: colors.darkGray,
-    fontWeight: "600",
-  },
   saveButton: {
-    flex: 1,
+    minHeight: 50,
     backgroundColor: commonColor.touchable,
-    paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
   },
   saveButtonText: {
     color: colors.white,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  deleteButton: {
+    alignSelf: "center",
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    marginTop: 8,
+  },
+  deleteButtonText: {
+    color: commonColor.error,
+    fontSize: 15,
     fontWeight: "600",
   },
 } );

@@ -1,5 +1,6 @@
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import Toast from "react-native-root-toast";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import Mascot from "../../components/Mascot/Mascot";
@@ -11,9 +12,10 @@ import { colors, commonColor } from "../../styles/commonStyle";
 
 type Props = NativeStackScreenProps<MainStackParamList, "MascotDetail">;
 
+export const AUTO_SAVE_DELAY_MS = 400;
+
 function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
   const mascot = useMascotStore( state => state.mascot );
-  const error = useMascotStore( state => state.error );
   const updateMascot = useMascotStore( state => state.updateMascot );
 
   const [earStyle, setEarStyle] = React.useState<MascotInput["earStyle"]>(
@@ -25,7 +27,78 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
   const [fillColor, setFillColor] = React.useState<string>(
     mascot?.fillColor ?? "",
   );
-  const [isSaving, setIsSaving] = React.useState( false );
+  const [saveError, setSaveError] = React.useState<string | null>( null );
+
+  // 고를 때마다 저장한다. 빠르게 여러 번 바꾸면 마지막 값만 400ms 뒤에 저장하고,
+  // 실패하면 마지막으로 저장된 값으로 되돌린다.
+  const lastSaved = React.useRef<MascotInput>( {
+    earStyle: mascot?.earStyle ?? "ROUND",
+    tailStyle: mascot?.tailStyle ?? "STRAIGHT",
+    fillColor: mascot?.fillColor ?? "",
+  } );
+  const pending = React.useRef<MascotInput | null>( null );
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>( null );
+  const isMounted = React.useRef( true );
+
+  const save = React.useCallback( ( values: MascotInput ) => {
+    pending.current = null;
+    return updateMascot( values ).then( ok => {
+      if (ok) {
+        lastSaved.current = values;
+        if (isMounted.current) {
+          setSaveError( null );
+          Toast.show( "저장했어요", { duration: Toast.durations.SHORT } );
+        }
+        return;
+      }
+      if (isMounted.current) {
+        setEarStyle( lastSaved.current.earStyle );
+        setTailStyle( lastSaved.current.tailStyle );
+        setFillColor( lastSaved.current.fillColor ?? "" );
+        setSaveError( useMascotStore.getState().error ?? "저장하지 못했어요." );
+      }
+    } );
+  }, [updateMascot] );
+
+  const scheduleSave = ( values: MascotInput ) => {
+    pending.current = values;
+    if (timer.current) {
+      clearTimeout( timer.current );
+    }
+    timer.current = setTimeout( () => {
+      timer.current = null;
+      if (pending.current) {
+        save( pending.current );
+      }
+    }, AUTO_SAVE_DELAY_MS );
+  };
+
+  // 화면을 떠날 때 저장 대기 중인 값이 있으면 바로 저장한다.
+  React.useEffect( () => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (timer.current) {
+        clearTimeout( timer.current );
+      }
+      if (pending.current) {
+        save( pending.current );
+      }
+    };
+  }, [save] );
+
+  const onChangeEarStyle = ( value: MascotInput["earStyle"] ) => {
+    setEarStyle( value );
+    scheduleSave( { earStyle: value, tailStyle, fillColor } );
+  };
+  const onChangeTailStyle = ( value: MascotInput["tailStyle"] ) => {
+    setTailStyle( value );
+    scheduleSave( { earStyle, tailStyle: value, fillColor } );
+  };
+  const onChangeFillColor = ( value: string ) => {
+    setFillColor( value );
+    scheduleSave( { earStyle, tailStyle, fillColor: value } );
+  };
 
   React.useEffect( () => {
     navigation.setOptions( { title: "내 마스코트" } );
@@ -45,13 +118,6 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
   const { level, gaugeValue, gaugeMax } = computeHappinessLevel(
     mascot.happiness ?? 0,
   );
-
-  const onSubmit = () => {
-    setIsSaving( true );
-    return updateMascot( { earStyle, tailStyle, fillColor } ).finally( () =>
-      setIsSaving( false ),
-    );
-  };
 
   return (
     <View style={ styles.container }>
@@ -86,8 +152,8 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
       </View>
 
       {
-        error
-        ? <Text style={ styles.error }> { error } </Text>
+        saveError
+        ? <Text style={ styles.error }> { saveError } </Text>
         : null
       }
 
@@ -96,23 +162,11 @@ function MascotDetailScreen( { navigation }: Props ): React.JSX.Element {
           earStyle={ earStyle }
           tailStyle={ tailStyle }
           fillColor={ fillColor }
-          onChangeEarStyle={ setEarStyle }
-          onChangeTailStyle={ setTailStyle }
-          onChangeFillColor={ setFillColor }
+          onChangeEarStyle={ onChangeEarStyle }
+          onChangeTailStyle={ onChangeTailStyle }
+          onChangeFillColor={ onChangeFillColor }
         />
       </View>
-
-      <Pressable
-        style={ styles.saveButton }
-        onPress={ onSubmit }
-        disabled={ isSaving }
-      >
-        {
-          isSaving
-          ? <ActivityIndicator color={ colors.white } />
-          : <Text style={ styles.saveButtonText }> 저장 </Text>
-        }
-      </Pressable>
     </View>
   );
 }
@@ -177,17 +231,6 @@ const styles = StyleSheet.create( {
   },
   editorContainer: {
     marginBottom: 24,
-  },
-  saveButton: {
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "600",
   },
 } );
 
