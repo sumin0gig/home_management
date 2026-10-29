@@ -1,8 +1,13 @@
 import React from "react";
 import { act, fireEvent, render } from "@testing-library/react-native";
-import CompleteCheckScreen, {
-  PRAISE_MESSAGES,
-} from "../../../src/screens/home/CompleteCheckScreen";
+import CompleteCheckScreen from "../../../src/screens/home/CompleteCheckScreen";
+import Fireworks from "../../../src/components/Celebration/Fireworks";
+import {
+  DEFAULT_PRAISES,
+  PRIORITY_PRAISES,
+} from "../../../src/utils/praise";
+import { useRoomStore, type RoomRow } from "../../../src/store/useRoomStore";
+import type { CompleteVariant } from "../../../src/navigation/types";
 import { ACTIONS } from "../../../src/components/Mascot/actions";
 import Mascot from "../../../src/components/Mascot/Mascot";
 import { useTaskStore, type TaskRow } from "../../../src/store/useTaskStore";
@@ -37,50 +42,112 @@ function setHappinessAfter( happiness: number ) {
   } );
 }
 
-function renderCompleteCheckScreen( happinessBefore?: number ) {
+const kitchen: RoomRow = {
+  id: "r1",
+  familyId: "f1",
+  roomType: "KITCHEN",
+  label: null,
+  color: "#A9DDF2",
+} as RoomRow;
+
+function renderCompleteCheckScreen(
+  happinessBefore?: number,
+  variant: CompleteVariant = "full",
+) {
   const navigation = createMockNavigation<"CompleteCheck">();
   return {
     ...render(
       <CompleteCheckScreen
         navigation={ navigation }
-        route={ { params: { taskId: "c1", happinessBefore } } as never }
+        route={ {
+          params: {
+            taskId: "c1",
+            happinessBefore,
+            previousDueDate: "2000-01-01",
+            variant,
+          },
+        } as never }
       />,
     ),
     navigation,
   };
 }
 
+const lastOfDayPraises = PRIORITY_PRAISES.find( s => s.key === "lastOfDay" )!.messages;
+const levelUpPraises = PRIORITY_PRAISES.find( s => s.key === "levelUp" )!.messages;
+
 describe( "CompleteCheckScreen", () => {
   beforeEach( () => {
     resetAllStores();
     useMascotStore.getState().reset();
     useTaskStore.setState( { tasks: [task] } );
+    useRoomStore.setState( { rooms: [kitchen] } );
   } );
 
-  test( "칭찬 문구, 완료한 집안일, 실제로 오른 추억을 보여준다", () => {
+  test( "마지막 할 일(full): 마지막 할 일 칭찬, 완료 줄, 추억 게이지, 폭죽을 보여준다", () => {
     setHappinessAfter( 150 );
-    const { getByText, queryAllByText, queryByTestId } =
-      renderCompleteCheckScreen( 143 );
+    const { getByText, queryAllByText, queryByTestId, getByTestId, UNSAFE_getByType } =
+      renderCompleteCheckScreen( 143, "full" );
 
-    const praises = PRAISE_MESSAGES.flatMap( message => queryAllByText( message ) );
+    const praises = lastOfDayPraises.flatMap( message => queryAllByText( message ) );
     expect( praises ).toHaveLength( 1 );
-    expect( getByText( "냉장고 정리정돈 완료" ) ).toBeTruthy();
-    expect( getByText( "추억 +7" ) ).toBeTruthy();
+    expect( getByText( "냉장고 정리정돈 완료 · 오늘 할 일을 모두 끝냈어요" ) ).toBeTruthy();
+    expect( getByTestId( "happiness-gauge" ) ).toBeTruthy();
+    expect( getByText( "+7" ) ).toBeTruthy();
+    expect( getByText( "추억 Lv.2" ) ).toBeTruthy();
+    expect( UNSAFE_getByType( Fireworks ) ).toBeTruthy();
+    expect( UNSAFE_getByType( Mascot ).props.viewBox ).toBeDefined();
     expect( queryByTestId( "level-up" ) ).toBeNull();
+  } );
+
+  test( "가벼운 축하(light): 시트에 칭찬·게이지·확인만 있고 마스코트와 폭죽은 없다", () => {
+    setHappinessAfter( 150 );
+    const { getByText, queryAllByText, getByTestId, UNSAFE_queryByType } =
+      renderCompleteCheckScreen( 143, "light" );
+
+    const allowed = [
+      ...DEFAULT_PRAISES.map( m => m.replace( "{task}", task.title ) ),
+      "부엌이 반짝반짝해요",
+      "요리할 맛 나는 부엌이 됐어요",
+    ];
+    expect( allowed.flatMap( message => queryAllByText( message ) ) ).toHaveLength( 1 );
+    expect( getByText( "냉장고 정리정돈 완료" ) ).toBeTruthy();
+    expect( getByTestId( "happiness-gauge" ) ).toBeTruthy();
+    expect( getByText( "확인" ) ).toBeTruthy();
+    expect( UNSAFE_queryByType( Mascot ) ).toBeNull();
+    expect( UNSAFE_queryByType( Fireworks ) ).toBeNull();
+  } );
+
+  test( "가벼운 축하에서 막을 누르면 닫힌다", () => {
+    setHappinessAfter( 150 );
+    const { getByTestId, navigation } = renderCompleteCheckScreen( 143, "light" );
+
+    fireEvent.press( getByTestId( "celebration-overlay" ) );
+
+    expect( navigation.goBack ).toHaveBeenCalled();
+  } );
+
+  test.each( ["light", "full"] as const )( "%s: '남은 일' 문구가 없다", variant => {
+    setHappinessAfter( 150 );
+    const { queryAllByText } = renderCompleteCheckScreen( 143, variant );
+
+    expect( queryAllByText( /남은/, { includeHiddenElements: true } ) ).toHaveLength( 0 );
+    expect( queryAllByText( /밀린/, { includeHiddenElements: true } ) ).toHaveLength( 0 );
   } );
 
   test( "추억 저장에 실패해 값이 그대로면 얻은 추억을 보여주지 않는다", () => {
     setHappinessAfter( 143 );
     const { getByText, queryByText } = renderCompleteCheckScreen( 143 );
 
-    expect( getByText( "냉장고 정리정돈 완료" ) ).toBeTruthy();
+    expect( getByText( /냉장고 정리정돈 완료/ ) ).toBeTruthy();
     expect( queryByText( /추억/ ) ).toBeNull();
   } );
 
   test( "레벨이 오르면 레벨 업과 바뀐 레벨을 보여준다", () => {
     setHappinessAfter( 102 );
-    const { getByText, queryByText } = renderCompleteCheckScreen( 95 );
+    const { getByText, queryByText, getByTestId } = renderCompleteCheckScreen( 95 );
 
+    expect( getByTestId( "level-up" ) ).toBeTruthy();
     expect( getByText( "레벨 업!" ) ).toBeTruthy();
     expect( getByText( "추억 Lv. 1 → 2" ) ).toBeTruthy();
     expect( queryByText( "새로 열린 행동" ) ).toBeNull();
@@ -149,7 +216,7 @@ describe( "CompleteCheckScreen", () => {
     expect( UNSAFE_queryByType( Mascot ) ).toBeNull();
     expect( queryByText( /추억/ ) ).toBeNull();
     expect( queryByText( "레벨 업!" ) ).toBeNull();
-    expect( getByText( "냉장고 정리정돈 완료" ) ).toBeTruthy();
+    expect( getByText( /냉장고 정리정돈 완료/ ) ).toBeTruthy();
   } );
 
   test( "확인을 누르면 뒤로 간다", () => {
@@ -158,5 +225,13 @@ describe( "CompleteCheckScreen", () => {
     fireEvent.press( getByText( "확인" ) );
 
     expect( navigation.goBack ).toHaveBeenCalled();
+  } );
+
+  test( "가벼운 축하에서도 레벨이 오르면 레벨업 칭찬과 카드를 보여준다", () => {
+    setHappinessAfter( 102 );
+    const { getByTestId, queryAllByText } = renderCompleteCheckScreen( 95, "light" );
+
+    expect( getByTestId( "level-up" ) ).toBeTruthy();
+    expect( levelUpPraises.flatMap( message => queryAllByText( message ) ) ).toHaveLength( 1 );
   } );
 } );
