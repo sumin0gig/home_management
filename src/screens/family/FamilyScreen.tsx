@@ -1,270 +1,617 @@
 import React from "react";
 import {
   ActivityIndicator,
-  Alert,
-  FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { MainStackParamList } from "../../navigation/types";
 import { useFamilyStore } from "../../store/useFamilyStore";
 import type { FamilyMemberRow } from "../../store/useFamilyStore";
+import { useRoomStore } from "../../store/useRoomStore";
+import { useTaskStore } from "../../store/useTaskStore";
+import { OWNER_TRANSFER_ENABLED } from "../../constants/app";
+import { avatarColor, avatarInitials } from "../../utils/avatar";
 import { colors, commonColor } from "../../styles/commonStyle";
+import ConfirmSheet from "../../components/common/ConfirmSheet";
+import ActionSheet from "../../components/common/ActionSheet";
 
 type Props = NativeStackScreenProps<MainStackParamList, "FamilyMain">;
 
+// 한 번에 시트 하나만 띄운다 (RN Modal을 겹치지 않는다).
+type Sheet =
+  | { kind: "rename" }
+  | { kind: "memberMenu"; member: FamilyMemberRow }
+  | { kind: "transfer"; member: FamilyMemberRow }
+  | { kind: "remove"; member: FamilyMemberRow }
+  | { kind: "leaveMember" }
+  | { kind: "leaveOwnerAlone" }
+  | { kind: "leaveOwnerTransfer" }
+  | { kind: "leaveOwnerBlocked" };
+
+function MemberAvatar( { member }: { member: FamilyMemberRow } ): React.JSX.Element {
+  return (
+    <View style={ [styles.avatar, { backgroundColor: avatarColor( member.id ) }] }>
+      <Text style={ styles.avatarText }> { avatarInitials( member.displayName ) } </Text>
+    </View>
+  );
+}
+
 function FamilyScreen( { navigation }: Props ): React.JSX.Element {
+  const insets = useSafeAreaInsets();
   const family = useFamilyStore( state => state.family );
   const membership = useFamilyStore( state => state.membership );
   const members = useFamilyStore( state => state.members );
-  const error = useFamilyStore( state => state.error );
   const renameFamily = useFamilyStore( state => state.renameFamily );
   const removeMember = useFamilyStore( state => state.removeMember );
   const leaveFamily = useFamilyStore( state => state.leaveFamily );
+  const transferOwnership = useFamilyStore( state => state.transferOwnership );
+  const roomCount = useRoomStore( state => state.rooms.length );
+  const taskCount = useTaskStore( state => state.tasks.length );
 
-  const [isEditingName, setIsEditingName] = React.useState( false );
-  const [nameDraft, setNameDraft] = React.useState( family?.name ?? "" );
-  const [isSaving, setIsSaving] = React.useState( false );
-  const [isLeaving, setIsLeaving] = React.useState( false );
+  const [sheet, setSheet] = React.useState<Sheet | null>( null );
+  const [isWorking, setIsWorking] = React.useState( false );
+  const [sheetError, setSheetError] = React.useState<string | null>( null );
+  const [nameDraft, setNameDraft] = React.useState( "" );
+  // 관리자를 넘기고 떠날 때 고른 구성원 (기본 선택 없음)
+  const [heirId, setHeirId] = React.useState<string | null>( null );
 
   if (!family || !membership) {
     return (
-      <View style={ styles.container }>
+      <View style={ [styles.screen, styles.center] }>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
   const isOwner = membership.role === "OWNER";
+  const others = members.filter( m => m.id !== membership.id );
+  const isAloneOwner = isOwner && others.length === 0;
 
-  const onStartEdit = () => {
-    setNameDraft( family.name );
-    setIsEditingName( true );
+  const openSheet = ( next: Sheet ) => {
+    setSheetError( null );
+    setSheet( next );
+  };
+  const closeSheet = () => {
+    if (!isWorking) {
+      setSheet( null );
+    }
   };
 
-  const onSaveName = () => {
-    if (!nameDraft.trim()) return;
-    setIsSaving( true );
-    return renameFamily( nameDraft.trim() )
-    .then( ok => ok && setIsEditingName( false ) )
-    .finally( () => setIsSaving( false ) );
+  // 진행 중에는 시트가 닫히지 않고, 실패하면 시트 안에 오류를 보여준다.
+  const run = ( action: () => Promise<boolean> ) => {
+    setIsWorking( true );
+    setSheetError( null );
+    return action()
+    .then( ok =>
+      ok
+        ? setSheet( null )
+        : setSheetError(
+          useFamilyStore.getState().error ?? "처리하지 못했어요.",
+        ),
+    )
+    .finally( () => setIsWorking( false ) );
   };
 
-  const onRemoveMember = (member: FamilyMemberRow) => {
-    Alert.alert( "멤버 제거", `${member.displayName}님을 가족에서 제거할까요?`, [
-      { text: "취소", style: "cancel" },
-      {
-        text: "제거",
-        style: "destructive",
-        onPress: () => removeMember( member.id ),
-      },
-    ] );
+  const onLeavePress = () => {
+    if (!isOwner) {
+      openSheet( { kind: "leaveMember" } );
+    } else if (isAloneOwner) {
+      openSheet( { kind: "leaveOwnerAlone" } );
+    } else if (OWNER_TRANSFER_ENABLED) {
+      setHeirId( null );
+      openSheet( { kind: "leaveOwnerTransfer" } );
+    } else {
+      openSheet( { kind: "leaveOwnerBlocked" } );
+    }
   };
 
-  const onLeave = () => {
-    Alert.alert( "가족 떠나기", "정말 이 가족을 떠나시겠어요?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "떠나기",
-        style: "destructive",
-        onPress: () => {
-          setIsLeaving( true );
-          return leaveFamily()
-          .then( ok => {
-            if (!ok) {
-              Alert.alert(
-                "오류",
-                useFamilyStore.getState().error ?? undefined,
-              );
+  const heir = others.find( m => m.id === heirId );
+  const trimmedName = nameDraft.trim();
+
+  const onSaveFamilyName = () => {
+    if (!trimmedName || isWorking) {
+      return;
+    }
+    return run( () => renameFamily( trimmedName ) );
+  };
+
+  const onTransferAndLeave = () => {
+    if (!heir) {
+      return;
+    }
+    // 넘긴 뒤에는 구성원이 되므로 그대로 떠날 수 있다.
+    return run( () =>
+      transferOwnership( heir.id ).then( ok => ( ok ? leaveFamily() : false ) ),
+    );
+  };
+
+  const errorText = sheetError
+    ? <Text style={ styles.sheetError }> { sheetError } </Text>
+    : null;
+
+  const renderSheet = (): React.JSX.Element | null => {
+    if (!sheet) {
+      return null;
+    }
+    switch (sheet.kind) {
+      case "rename":
+        return (
+          <ConfirmSheet
+            visible
+            title="가족 이름"
+            confirmText="저장"
+            confirmDisabled={ !trimmedName }
+            isConfirming={ isWorking }
+            onConfirm={ onSaveFamilyName }
+            onCancel={ closeSheet }
+          >
+            <TextInput
+              style={ styles.input }
+              value={ nameDraft }
+              onChangeText={ setNameDraft }
+              maxLength={ 20 }
+              returnKeyType="done"
+              onSubmitEditing={ onSaveFamilyName }
+              autoFocus
+              accessibilityLabel="가족 이름"
+            />
+            { errorText }
+          </ConfirmSheet>
+        );
+      case "memberMenu":
+        return (
+          <ActionSheet
+            visible
+            title={ sheet.member.displayName }
+            actions={ [
+              ...( OWNER_TRANSFER_ENABLED
+                ? [{
+                    label: "관리자 넘기기",
+                    onPress: () => openSheet( { kind: "transfer", member: sheet.member } ),
+                  }]
+                : [] ),
+              {
+                label: "가족에서 내보내기",
+                tone: "danger" as const,
+                onPress: () => openSheet( { kind: "remove", member: sheet.member } ),
+              },
+            ] }
+            onCancel={ closeSheet }
+          />
+        );
+      case "transfer":
+        return (
+          <ConfirmSheet
+            visible
+            title={ `${sheet.member.displayName}님에게 관리자를 넘길까요?` }
+            description="넘기면 나는 구성원이 돼요."
+            confirmText="넘기기"
+            isConfirming={ isWorking }
+            onConfirm={ () => run( () => transferOwnership( sheet.member.id ) ) }
+            onCancel={ closeSheet }
+          >
+            { errorText }
+          </ConfirmSheet>
+        );
+      case "remove":
+        return (
+          <ConfirmSheet
+            visible
+            title={ `${sheet.member.displayName}님을 내보낼까요?` }
+            description={ `${sheet.member.displayName}님이 완료한 기록은 남아요.` }
+            confirmText="내보내기"
+            confirmTone="danger"
+            isConfirming={ isWorking }
+            onConfirm={ () => run( () => removeMember( sheet.member.id ) ) }
+            onCancel={ closeSheet }
+          >
+            { errorText }
+          </ConfirmSheet>
+        );
+      case "leaveMember":
+        return (
+          <ConfirmSheet
+            visible
+            title="우리집에서 나갈까요?"
+            description="방과 집안일은 가족에게 그대로 남아요. 내가 완료한 기록도 남아요. 다시 들어오려면 초대 코드가 필요해요."
+            confirmText="나가기"
+            confirmTone="danger"
+            isConfirming={ isWorking }
+            onConfirm={ () => run( leaveFamily ) }
+            onCancel={ closeSheet }
+          >
+            { errorText }
+          </ConfirmSheet>
+        );
+      case "leaveOwnerAlone":
+        return (
+          <ConfirmSheet
+            visible
+            title="떠나면 우리집이 삭제돼요"
+            confirmText="우리집 삭제하고 떠나기"
+            confirmTone="danger"
+            isConfirming={ isWorking }
+            onConfirm={ () => run( leaveFamily ) }
+            onCancel={ closeSheet }
+          >
+            <View style={ styles.deleteList } testID="leave-delete-list">
+              <Text style={ styles.deleteItem }>
+                { `· 방 ${roomCount}개와 집안일 ${taskCount}개` }
+              </Text>
+              <Text style={ styles.deleteItem }> · 지금까지의 완료 기록 전부 </Text>
+            </View>
+            <Text style={ styles.keepNote }> 내 계정과 마스코트는 남아요. </Text>
+            { errorText }
+          </ConfirmSheet>
+        );
+      case "leaveOwnerTransfer":
+        return (
+          <ConfirmSheet
+            visible
+            title="관리자를 넘겨야 떠날 수 있어요"
+            description="우리집을 맡을 사람을 골라주세요. 방과 집안일은 그대로 남아요."
+            confirmText={
+              heir
+                ? `${heir.displayName}님에게 넘기고 떠나기`
+                : "넘길 사람을 골라주세요"
             }
-          } )
-          .finally( () => setIsLeaving( false ) );
-        },
-      },
-    ] );
+            confirmTone="danger"
+            confirmDisabled={ !heir }
+            isConfirming={ isWorking }
+            onConfirm={ onTransferAndLeave }
+            onCancel={ closeSheet }
+          >
+            <View style={ styles.radioList } accessibilityRole="radiogroup">
+              { others.map( member => {
+                const isSelected = member.id === heirId;
+                return (
+                  <Pressable
+                    key={ member.id }
+                    style={ [styles.radioRow, isSelected && styles.radioRowSelected] }
+                    onPress={ () => setHeirId( member.id ) }
+                    accessibilityRole="radio"
+                    accessibilityState={ { selected: isSelected } }
+                  >
+                    <View style={ [styles.radio, isSelected && styles.radioSelected] } />
+                    <MemberAvatar member={ member } />
+                    <Text style={ styles.memberName }> { member.displayName } </Text>
+                  </Pressable>
+                );
+              } ) }
+            </View>
+            { errorText }
+          </ConfirmSheet>
+        );
+      case "leaveOwnerBlocked":
+        return (
+          <ConfirmSheet
+            visible
+            title="지금은 떠날 수 없어요"
+            description="다른 구성원이 있는 동안에는 관리자가 떠날 수 없어요. 구성원을 내보낸 뒤 떠날 수 있어요."
+            confirmText="확인"
+            hideCancel
+            onConfirm={ closeSheet }
+            onCancel={ closeSheet }
+          />
+        );
+    }
   };
 
   return (
-    <View style={ styles.container }>
-      {
-        error
-        ? <Text style={ styles.error }> { error } </Text>
-        : null
-      }
-
-      <View style={ styles.header }>
-        {
-          isEditingName
-          ? <View style={ styles.editNameRow }>
-            <TextInput
-              style={ styles.nameInput }
-              value={ nameDraft }
-              onChangeText={ setNameDraft }
-              autoFocus
-            />
-            <Pressable
-              onPress={ onSaveName }
-              disabled={ isSaving }
-              style={ styles.saveButton }
-            >
-              <Text style={ styles.saveButtonText }>
-                { isSaving ? "저장 중" : "저장" }
-              </Text>
-            </Pressable>
-          </View>
-          : <Pressable onPress={ isOwner ? onStartEdit : undefined }>
-            <Text style={ styles.familyName }>
-              { family.name }
-              { isOwner ? " ✎" : "" }
-            </Text>
-          </Pressable>
-        }
+    <ScrollView
+      style={ styles.screen }
+      contentContainerStyle={ [
+        styles.content,
+        { paddingBottom: insets.bottom + 24 },
+      ] }
+    >
+      { /* 1. 가족 카드 */ }
+      <View style={ styles.familyCard }>
+        <View style={ styles.familyNameRow }>
+          <Text style={ styles.familyName } numberOfLines={ 1 }> { family.name } </Text>
+          {
+            isOwner
+            ? <Pressable
+                onPress={ () => {
+                  setNameDraft( family.name );
+                  openSheet( { kind: "rename" } );
+                } }
+                hitSlop={ 10 }
+                accessibilityRole="button"
+              >
+                <Text style={ styles.renameText }> 이름 바꾸기 </Text>
+              </Pressable>
+            : null
+          }
+        </View>
+        <Text style={ styles.familyMeta }>
+          { `구성원 ${members.length}명 · 방 ${roomCount}개 · 집안일 ${taskCount}개` }
+        </Text>
       </View>
 
-      <Text style={ styles.membersTitle }> 가족 구성원 ( { members.length }명 ) </Text>
-      <FlatList
-        data={ members }
-        keyExtractor={ item => item.id }
-        renderItem={ ({ item }) => (
-          <View style={ styles.memberRow }>
-            <View>
-              <Text style={ styles.memberName }> { item.displayName } </Text>
-              <Text style={ styles.memberRole }>
-                { item.role === "OWNER" ? "관리자" : "구성원" }
-              </Text>
+      { /* 2. 구성원 */ }
+      <Text style={ styles.groupTitle } accessibilityRole="header"> 구성원 </Text>
+      <View style={ styles.group }>
+        { members.map( (member, index) => {
+          const isMe = member.id === membership.id;
+          return (
+            <View
+              key={ member.id }
+              style={ [styles.memberRow, index > 0 && styles.divider] }
+              testID={ `member-${member.id}` }
+            >
+              <MemberAvatar member={ member } />
+              <View style={ styles.memberBody }>
+                <View style={ styles.memberNameRow }>
+                  <Text style={ styles.memberName } numberOfLines={ 1 }>
+                    { member.displayName }
+                  </Text>
+                  {
+                    isMe
+                    ? <View style={ styles.mePill }>
+                        <Text style={ styles.mePillText }> 나 </Text>
+                      </View>
+                    : null
+                  }
+                </View>
+                <Text style={ styles.memberRole }>
+                  { member.role === "OWNER" ? "관리자" : "구성원" }
+                </Text>
+              </View>
+              {
+                isOwner && !isMe
+                ? <Pressable
+                    style={ styles.moreButton }
+                    onPress={ () => openSheet( { kind: "memberMenu", member } ) }
+                    accessibilityRole="button"
+                    accessibilityLabel={ `${member.displayName} 메뉴` }
+                  >
+                    <Text style={ styles.moreText }> ⋯ </Text>
+                  </Pressable>
+                : null
+              }
             </View>
-            {
-              isOwner && item.id !== membership.id
-              ? <Pressable onPress={ () => onRemoveMember( item ) }>
-                <Text style={ styles.removeText }> 제거 </Text>
-              </Pressable>
-              : null
-            }
+          );
+        } ) }
+        <Pressable
+          style={ [styles.memberRow, styles.divider] }
+          onPress={ () => navigation.navigate( "AddFamilyMember" ) }
+          accessibilityRole="button"
+        >
+          <View style={ [styles.avatar, styles.inviteAvatar] }>
+            <Text style={ styles.invitePlus }> + </Text>
           </View>
-        ) }
-        ListFooterComponent={
-          <Pressable
-            style={ styles.addMemberButton }
-            onPress={ () => navigation.navigate( "AddFamilyMember" ) }
-          >
-            <Text style={ styles.addMemberButtonText }> 가족 구성원 추가 </Text>
-          </Pressable>
-        }
-      />
+          <Text style={ styles.inviteText }> 가족 초대하기 </Text>
+        </Pressable>
+      </View>
 
+      { /* 3. 떠나기 */ }
       <Pressable
         style={ styles.leaveButton }
-        onPress={ onLeave }
-        disabled={ isLeaving }
+        onPress={ onLeavePress }
+        accessibilityRole="button"
       >
-        <Text style={ styles.leaveButtonText }>
-          { isLeaving ? "처리 중..." : "가족 떠나기" }
+        <Text style={ styles.leaveText }>
+          { isAloneOwner ? "우리집 삭제하고 떠나기" : "가족 떠나기" }
         </Text>
       </Pressable>
-    </View>
+
+      { renderSheet() }
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create( {
-  container: {
+  screen: {
     flex: 1,
-    padding: 24,
-    backgroundColor: commonColor.backgroundColor,
+    backgroundColor: colors.default,
   },
-  header: {
+  center: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  content: {
+    padding: 16,
+  },
+  familyCard: {
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: commonColor.subtleBorder,
+    backgroundColor: colors.white,
+    gap: 4,
     marginBottom: 24,
+  },
+  familyNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   familyName: {
-    fontSize: 22,
+    flexShrink: 1,
+    fontSize: 21,
     fontWeight: "700",
-    marginBottom: 12,
+    color: commonColor.textDefault,
   },
-  editNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
+  renameText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: commonColor.touchable,
   },
-  nameInput: {
-    flex: 1,
+  familyMeta: {
+    fontSize: 12.5,
+    color: commonColor.textMuted,
+  },
+  groupTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: commonColor.textSecondary,
+    marginLeft: 4,
+    marginBottom: 6,
+  },
+  group: {
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: commonColor.border,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    fontSize: 18,
-    marginRight: 8,
+    borderColor: commonColor.subtleBorder,
+    backgroundColor: colors.white,
+    overflow: "hidden",
   },
-  saveButton: {
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  saveButtonText: {
-    color: colors.white,
-    fontWeight: "600",
-  },
-  addMemberButton: {
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  addMemberButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  membersTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
+  divider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0, 0, 0, 0.12)",
   },
   memberRow: {
+    minHeight: 58,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: commonColor.border,
-    borderRadius: 8,
-    marginBottom: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 12,
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+  },
+  memberBody: {
+    flex: 1,
+    gap: 2,
+  },
+  memberNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   memberName: {
-    fontSize: 16,
+    flexShrink: 1,
+    fontSize: 14,
+    fontWeight: "700",
+    color: commonColor.textDefault,
+  },
+  mePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 8,
+    backgroundColor: commonColor.textDefault,
+  },
+  mePillText: {
+    fontSize: 10.5,
+    fontWeight: "700",
+    color: colors.white,
   },
   memberRole: {
-    fontSize: 13,
-    color: commonColor.textSecondary,
-    marginTop: 2,
+    fontSize: 11.5,
+    color: commonColor.textMuted,
   },
-  removeText: {
-    color: commonColor.negative,
-    fontWeight: "600",
+  moreButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  error: {
-    color: commonColor.negative,
-    marginBottom: 16,
-    textAlign: "center",
+  moreText: {
+    fontSize: 20,
+    color: commonColor.textMuted,
+  },
+  inviteAvatar: {
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: commonColor.touchable,
+  },
+  invitePlus: {
+    fontSize: 18,
+    color: commonColor.touchable,
+  },
+  inviteText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: commonColor.touchable,
   },
   leaveButton: {
-    marginTop: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: commonColor.negative,
+    alignSelf: "center",
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    marginTop: 24,
   },
-  leaveButtonText: {
-    color: commonColor.negative,
+  leaveText: {
+    fontSize: 13,
+    color: commonColor.textSecondary,
+    textDecorationLine: "underline",
+  },
+  input: {
+    minHeight: 50,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.14)",
+    backgroundColor: colors.white,
     fontSize: 16,
-    fontWeight: "600",
+    color: commonColor.textDefault,
+    marginBottom: 8,
+  },
+  sheetError: {
+    color: commonColor.error,
+    marginBottom: 8,
+  },
+  deleteList: {
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: colors.white,
+    gap: 4,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  deleteItem: {
+    fontSize: 13.5,
+    color: commonColor.textDefault,
+  },
+  keepNote: {
+    fontSize: 13,
+    color: commonColor.textMuted,
+    marginBottom: 8,
+  },
+  radioList: {
+    gap: 6,
+    marginBottom: 8,
+  },
+  radioRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 52,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+    backgroundColor: colors.white,
+  },
+  radioRowSelected: {
+    borderColor: commonColor.textDefault,
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: commonColor.textSecondary,
+  },
+  radioSelected: {
+    borderWidth: 6,
+    borderColor: commonColor.textDefault,
   },
 } );
 
