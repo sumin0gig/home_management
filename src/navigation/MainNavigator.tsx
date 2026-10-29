@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import type {
   NativeStackNavigationOptions,
   NativeStackNavigationProp,
@@ -19,6 +20,7 @@ import ScanFamilyQrScreen from '../screens/family/ScanFamilyQrScreen';
 import EnterFamilyCodeScreen from '../screens/family/EnterFamilyCodeScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import { ScreenHeader, SettingsShortcutButton } from './ScreenHeader';
+import { FamilyAvatarStack } from './FamilyAvatarStack';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -90,8 +92,21 @@ const homeOptions = ({
 }): NativeStackNavigationOptions => ({
   title: '우리집',
   headerRight: () => (
-    <SettingsShortcutButton
-      onPress={() => navigation.navigate('SettingsMain')}
-    />
+    <View style={styles.homeHeaderRight}>
+      <FamilyAvatarStack
+        onOpenFamily={() => navigation.navigate('FamilyMain')}
+        onInvite={() => navigation.navigate('AddFamilyMember')}
+      />
+      <SettingsShortcutButton
+        onPress={() => navigation.navigate('SettingsMain')}
+      />
+    </View>
   ),
+});
+
+const styles = StyleSheet.create({
+  homeHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 });

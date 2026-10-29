@@ -17,6 +17,7 @@ import { useRoomStore } from "../../store/useRoomStore";
 import { isDueByToday, toDateString } from "../../utils/date";
 import { colors, commonColor } from "../../styles/commonStyle";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
+import HomeTaskList from "../../components/HomeTaskList/HomeTaskList";
 import { type FloorPlanRoom } from "../../store/useRoomStore";
 
 type Props = NativeStackScreenProps<MainStackParamList, "HomeMain">;
@@ -108,10 +109,10 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
 
   const today = toDateString( new Date() );
 
-  const hasDueToday = (room: FloorPlanRoom): boolean =>
-    tasks.some(
+  const getDueCount = (room: FloorPlanRoom): number =>
+    tasks.filter(
       t => t.roomId === room.id && isDueByToday( t.nextDueDate, today ),
-    );
+    ).length;
 
   return (
     <ScrollView
@@ -124,7 +125,21 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
       }
     >
       { roomError && <Text style={ styles.error }> { roomError } </Text> }
-      { taskError && <Text style={ styles.error }> { taskError } </Text> }
+      {
+        taskError
+        ? <View style={ styles.errorRow }>
+            <Text style={ styles.errorText }> { taskError } </Text>
+            <Pressable
+              onPress={ refresh }
+              hitSlop={ 8 }
+              accessibilityRole="button"
+              style={ styles.retryButton }
+            >
+              <Text style={ styles.retryText }> 다시 시도 </Text>
+            </Pressable>
+          </View>
+        : null
+      }
 
       <Pressable
         style={ styles.editLink }
@@ -146,10 +161,22 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
               hasMascot: room.id === mascotRoomId,
             } )
           }
-          hasDueToday={ hasDueToday }
+          getDueCount={ getDueCount }
           mascotRoomId={ mascotRoomId }
         />
       }
+      {
+        rooms.length > 0
+        ? <Text style={ styles.legend }> 숫자는 그 방의 할 일 개수 </Text>
+        : null
+      }
+
+      <HomeTaskList
+        tasks={ tasks }
+        rooms={ rooms }
+        today={ today }
+        onTaskPress={ task => navigation.navigate( "TaskSheet", { taskId: task.id } ) }
+      />
     </ScrollView>
   );
 }
@@ -157,18 +184,25 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
 const styles = StyleSheet.create( {
   root: {
     flex: 1,
-    backgroundColor: commonColor.backgroundColor,
+    backgroundColor: colors.default,
   },
   container: {
     flexGrow: 1,
-    padding: 24,
+    padding: 20,
+    paddingBottom: 32,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    backgroundColor: commonColor.backgroundColor,
+    backgroundColor: colors.default,
+  },
+  legend: {
+    fontSize: 12,
+    color: commonColor.textMuted,
+    marginTop: 6,
+    marginBottom: 20,
   },
   emptySection: {
     fontSize: 14,
@@ -180,9 +214,31 @@ const styles = StyleSheet.create( {
     marginBottom: 12,
     textAlign: "center",
   },
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+  errorText: {
+    flexShrink: 1,
+    color: commonColor.error,
+  },
+  retryButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: commonColor.touchable,
+  },
+  retryText: {
+    color: commonColor.touchable,
+    fontWeight: "600",
+  },
   editLink: {
     alignItems: "flex-end",
-    marginBottom: 20,
+    marginBottom: 12,
   },
   editLinkText: {
     color: commonColor.touchable,

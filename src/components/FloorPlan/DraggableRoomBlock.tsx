@@ -35,7 +35,8 @@ interface Props {
   editable: boolean;
   onPress?: () => void;
   onMove?: (x: number, y: number) => void;
-  hasDueToday?: boolean;
+  // 기한이 오늘이거나 지난 일의 개수. 0이면 배지를 그리지 않는다.
+  dueCount?: number;
   hasMascot?: boolean;
   isRemovable?: boolean;
 }
@@ -47,7 +48,7 @@ function DraggableRoomBlock( {
   editable,
   onPress,
   onMove,
-  hasDueToday,
+  dueCount = 0,
   hasMascot,
   isRemovable,
 }: Props ): React.JSX.Element {
@@ -151,8 +152,14 @@ function DraggableRoomBlock( {
   const content = (
     <>
       {
-        hasDueToday
-        ? <View style={ styles.dueBadge } testID={ `due-badge-${room.id}` } />
+        dueCount > 0
+        ? <View
+            style={ styles.dueBadge }
+            testID={ `due-badge-${room.id}` }
+            pointerEvents="none"
+          >
+            <Text style={ styles.dueBadgeText }> { dueCount } </Text>
+          </View>
         : null
       }
       <Text style={ styles.label } numberOfLines={ 1 }>
@@ -226,14 +233,24 @@ const styles = StyleSheet.create( {
     borderWidth: 1,
     borderColor: commonColor.subtleBorder,
   },
+  // 방 이름(왼쪽 위)·마스코트(가운데)와 겹치지 않게 오른쪽 아래
   dueBadge: {
     position: "absolute",
-    top: 6,
-    right: 6,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: commonColor.negative,
+    right: 4,
+    bottom: 4,
+    height: 16,
+    minWidth: 16,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: commonColor.textDefault,
+  },
+  dueBadgeText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "700",
+    color: colors.white,
   },
   mascotPin: {
     position: "absolute",
