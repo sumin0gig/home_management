@@ -11,7 +11,6 @@ import { createMockNavigation } from "../../../src/test-utils/navigation";
 import type { RoomRow } from "../../../src/store/useRoomStore";
 import type {
   TaskRow,
-  TaskLogRow,
   TaskItemRow,
 } from "../../../src/store/useTaskStore";
 
@@ -49,14 +48,6 @@ const existingItems: TaskItemRow[] = [
   { id: "i1", taskId: "c1", type: "DEFAULT", content: "이불을 걷는다", ord: 0 },
   { id: "i2", taskId: "c1", type: "TIP", content: "오전 11시가 좋다", ord: 1 },
 ] as TaskItemRow[];
-
-const log: TaskLogRow = {
-  id: "log1",
-  taskId: "c1",
-  completedBy: "u1",
-  completedByName: "테스트유저",
-  completedAt: "2026-01-01T00:00:00.000Z",
-} as TaskLogRow;
 
 // 방 상세 화면에서 "+"로 들어오면 roomId가 params로 넘어온다 (폼에는 방 선택 UI가 없다).
 function renderCreate( roomId?: string ) {
@@ -226,10 +217,11 @@ describe( "TaskFormScreen", () => {
       expect( mockedUpdateTask.mock.calls[0][1].items ).toBeUndefined();
     } );
 
-    test( "완료 기록을 불러와서 보여준다", async () => {
-      mockedListTaskLogs.mockResolvedValue( [log] );
-      const { getByText } = renderEdit();
-      await waitFor( () => expect( getByText( /테스트유저/ ) ).toBeTruthy() );
+    test( "완료 기록은 집안일 모달로 옮겨서 수정 화면에서는 불러오지 않는다", async () => {
+      const { queryByText, getByDisplayValue } = renderEdit();
+      await waitFor( () => expect( getByDisplayValue( "침구 햇빛살균" ) ).toBeTruthy() );
+      expect( mockedListTaskLogs ).not.toHaveBeenCalled();
+      expect( queryByText( "최근 완료 기록" ) ).toBeNull();
     } );
 
     test( "저장하면 updateTask를 호출한다", async () => {

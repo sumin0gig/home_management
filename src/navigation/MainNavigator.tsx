@@ -8,7 +8,7 @@ import type { MainStackParamList } from './types';
 import HomeScreen from '../screens/home/HomeScreen';
 import RoomDetailScreen from '../screens/home/RoomDetailScreen';
 import RoomEditScreen from '../screens/home/RoomEditScreen';
-import TaskDetailScreen from '../screens/home/TaskDetailScreen';
+import TaskSheetScreen from '../screens/home/TaskSheetScreen';
 import TaskFormScreen from '../screens/home/TaskFormScreen';
 import CompleteCheckScreen from '../screens/home/CompleteCheckScreen';
 import MascotDetailScreen from '../screens/home/MascotDetailScreen';
@@ -41,9 +41,9 @@ function MainNavigator(): React.JSX.Element {
         options={{ title: '방 편집' }}
       />
       <Stack.Screen
-        name="TaskDetail"
-        component={TaskDetailScreen}
-        options={{ title: '' }}
+        name="TaskSheet"
+        component={TaskSheetScreen}
+        options={taskSheetOptions}
       />
       <Stack.Screen name="TaskForm" component={TaskFormScreen} />
       <Stack.Screen
@@ -75,6 +75,13 @@ function MainNavigator(): React.JSX.Element {
 }
 
 export default MainNavigator;
+
+// 아래에서 올라오는 시트. 올라오는 움직임은 화면 안에서 reanimated로 준다.
+const taskSheetOptions: NativeStackNavigationOptions = {
+  presentation: 'transparentModal',
+  headerShown: false,
+  animation: 'fade',
+};
 
 const homeOptions = ({
   navigation,

@@ -7,18 +7,13 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import { useTaskStore } from "../../store/useTaskStore";
-import { dueDateOnSave, toDateString } from "../../utils/date";
-import { listTaskItems, listTaskLogs } from "../../../actions";
-import {
-  type TaskInput,
-  type TaskItemInput,
-  type TaskLogRow,
-} from "../../store/useTaskStore";
+import { dueDateOnSave } from "../../utils/date";
+import { listTaskItems } from "../../../actions";
+import { type TaskInput, type TaskItemInput } from "../../store/useTaskStore";
 import { colors, commonColor } from "../../styles/commonStyle";
 import DefaultButton from "../../components/common/DefaultButton";
 import TaskItemListEditor from "../../components/TaskItemListEditor/TaskItemListEditor";
@@ -64,7 +59,6 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
   );
   const [isSaving, setIsSaving] = React.useState( false );
   const [error, setError] = React.useState<string | null>( null );
-  const [logs, setLogs] = React.useState<TaskLogRow[]>( [] );
   const [steps, setSteps] = React.useState<string[]>( [] );
   const [tips, setTips] = React.useState<string[]>( [] );
   // 수정 모드에서 기존 안내 항목을 다 불러오기 전에 저장하면 빈 목록으로 덮어쓰게 되므로,
@@ -76,14 +70,6 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
       title: isEditMode ? "집안일 수정" : "집안일 추가",
     } );
   }, [navigation, isEditMode] );
-
-  React.useEffect( () => {
-    if (taskId) {
-      listTaskLogs( taskId )
-      .then( setLogs )
-      .catch( err => setError( (err as Error).message ) );
-    }
-  }, [taskId] );
 
   React.useEffect( () => {
     if (taskId) {
@@ -238,24 +224,6 @@ function TaskFormScreen( { navigation, route }: Props ): React.JSX.Element {
           />
         : null
       }
-
-      {
-        isEditMode
-        ? <View style={ styles.logsSection }>
-            <Text style={ styles.label }> 최근 완료 기록 </Text>
-            {logs.length === 0 ? (
-              <Text style={ styles.emptyLogs }> 완료 기록이 없습니다. </Text>
-            ) : (
-              logs.map( log => (
-                <Text key={ log.id } style={ styles.logItem }>
-                  { toDateString( new Date( log.completedAt ) ) } ·{ " " }
-                  { log.completedByName }
-                </Text>
-              ) )
-            )}
-          </View>
-        : null
-      }
     </ScrollView>
   );
 }
@@ -312,18 +280,6 @@ const styles = StyleSheet.create( {
     color: commonColor.negative,
     fontSize: 16,
     fontWeight: "600",
-  },
-  logsSection: {
-    marginTop: 28,
-  },
-  emptyLogs: {
-    fontSize: 14,
-    color: colors.gray,
-  },
-  logItem: {
-    fontSize: 14,
-    color: colors.darkGray,
-    paddingVertical: 4,
   },
 } );
 

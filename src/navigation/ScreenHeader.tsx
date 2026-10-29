@@ -63,6 +63,7 @@ export function SettingsShortcutButton({
       size={22}
       color={colors.black}
       onPress={onPress}
+      accessibilityLabel="설정"
       style={styles.button}
     />
   );

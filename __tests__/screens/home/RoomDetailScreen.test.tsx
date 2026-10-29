@@ -77,11 +77,11 @@ describe( "RoomDetailScreen", () => {
     } );
   } );
 
-  test( "집안일 항목을 탭하면 TaskDetail로 이동한다", () => {
+  test( "집안일 항목을 탭하면 집안일 모달(TaskSheet)이 열린다", () => {
     const { getByText, navigation } = renderRoomDetailScreen();
     fireEvent.press( getByText( "침구 햇빛살균" ) );
 
-    expect( navigation.navigate ).toHaveBeenCalledWith( "TaskDetail", {
+    expect( navigation.navigate ).toHaveBeenCalledWith( "TaskSheet", {
       taskId: "c1",
     } );
   } );

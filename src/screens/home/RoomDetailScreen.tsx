@@ -66,6 +66,7 @@ function RoomDetailScreen( { navigation, route }: Props ): React.JSX.Element {
         name="Plus"
         style={ styles.addButton }
         onPress={ () => navigation.navigate( "TaskForm", { roomId } ) }
+        accessibilityLabel="집안일 추가"
       />
 
       <ScrollView>
