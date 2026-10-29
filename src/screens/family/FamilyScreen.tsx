@@ -32,6 +32,8 @@ type Sheet =
   | { kind: "leaveMember" }
   | { kind: "leaveOwnerAlone" }
   | { kind: "leaveOwnerTransfer" }
+  // 회원 탈퇴 화면에서 "관리자 넘기기"로 왔을 때: 넘길 사람만 고르고 떠나지는 않는다
+  | { kind: "chooseTransfer" }
   | { kind: "leaveOwnerBlocked" };
 
 function MemberAvatar( { member }: { member: FamilyMemberRow } ): React.JSX.Element {
@@ -42,7 +44,7 @@ function MemberAvatar( { member }: { member: FamilyMemberRow } ): React.JSX.Elem
   );
 }
 
-function FamilyScreen( { navigation }: Props ): React.JSX.Element {
+function FamilyScreen( { navigation, route }: Props ): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const family = useFamilyStore( state => state.family );
   const membership = useFamilyStore( state => state.membership );
@@ -60,6 +62,20 @@ function FamilyScreen( { navigation }: Props ): React.JSX.Element {
   const [nameDraft, setNameDraft] = React.useState( "" );
   // 관리자를 넘기고 떠날 때 고른 구성원 (기본 선택 없음)
   const [heirId, setHeirId] = React.useState<string | null>( null );
+
+  // 회원 탈퇴 화면의 "관리자 넘기기"에서 왔으면 넘길 사람 고르기 시트를 바로 연다.
+  const wantsTransfer = route.params?.transfer === true;
+  const canTransfer =
+    OWNER_TRANSFER_ENABLED &&
+    membership?.role === "OWNER" &&
+    members.length > 1;
+  React.useEffect( () => {
+    if (wantsTransfer && canTransfer) {
+      setHeirId( null );
+      setSheet( { kind: "chooseTransfer" } );
+      navigation.setParams( { transfer: undefined } );
+    }
+  }, [wantsTransfer, canTransfer, navigation] );
 
   if (!family || !membership) {
     return (
@@ -121,6 +137,13 @@ function FamilyScreen( { navigation }: Props ): React.JSX.Element {
     return run( () => renameFamily( trimmedName ) );
   };
 
+  const onTransferOnly = () => {
+    if (!heir) {
+      return;
+    }
+    return run( () => transferOwnership( heir.id ) );
+  };
+
   const onTransferAndLeave = () => {
     if (!heir) {
       return;
@@ -134,6 +157,27 @@ function FamilyScreen( { navigation }: Props ): React.JSX.Element {
   const errorText = sheetError
     ? <Text style={ styles.sheetError }> { sheetError } </Text>
     : null;
+
+  const heirChoices = (
+    <View style={ styles.radioList } accessibilityRole="radiogroup">
+      { others.map( member => {
+        const isSelected = member.id === heirId;
+        return (
+          <Pressable
+            key={ member.id }
+            style={ [styles.radioRow, isSelected && styles.radioRowSelected] }
+            onPress={ () => setHeirId( member.id ) }
+            accessibilityRole="radio"
+            accessibilityState={ { selected: isSelected } }
+          >
+            <View style={ [styles.radio, isSelected && styles.radioSelected] } />
+            <MemberAvatar member={ member } />
+            <Text style={ styles.memberName }> { member.displayName } </Text>
+          </Pressable>
+        );
+      } ) }
+    </View>
+  );
 
   const renderSheet = (): React.JSX.Element | null => {
     if (!sheet) {
@@ -250,6 +294,24 @@ function FamilyScreen( { navigation }: Props ): React.JSX.Element {
             { errorText }
           </ConfirmSheet>
         );
+      case "chooseTransfer":
+        return (
+          <ConfirmSheet
+            visible
+            title="누구에게 관리자를 넘길까요?"
+            description="넘기면 나는 구성원이 돼요. 그 뒤에 탈퇴할 수 있어요."
+            confirmText={
+              heir ? `${heir.displayName}님에게 넘기기` : "넘길 사람을 골라주세요"
+            }
+            confirmDisabled={ !heir }
+            isConfirming={ isWorking }
+            onConfirm={ onTransferOnly }
+            onCancel={ closeSheet }
+          >
+            { heirChoices }
+            { errorText }
+          </ConfirmSheet>
+        );
       case "leaveOwnerTransfer":
         return (
           <ConfirmSheet
@@ -267,24 +329,7 @@ function FamilyScreen( { navigation }: Props ): React.JSX.Element {
             onConfirm={ onTransferAndLeave }
             onCancel={ closeSheet }
           >
-            <View style={ styles.radioList } accessibilityRole="radiogroup">
-              { others.map( member => {
-                const isSelected = member.id === heirId;
-                return (
-                  <Pressable
-                    key={ member.id }
-                    style={ [styles.radioRow, isSelected && styles.radioRowSelected] }
-                    onPress={ () => setHeirId( member.id ) }
-                    accessibilityRole="radio"
-                    accessibilityState={ { selected: isSelected } }
-                  >
-                    <View style={ [styles.radio, isSelected && styles.radioSelected] } />
-                    <MemberAvatar member={ member } />
-                    <Text style={ styles.memberName }> { member.displayName } </Text>
-                  </Pressable>
-                );
-              } ) }
-            </View>
+            { heirChoices }
             { errorText }
           </ConfirmSheet>
         );

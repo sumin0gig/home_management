@@ -7,12 +7,15 @@ import {
   signInWithGoogle,
 } from "../../actions";
 import { HOUSE_PRESETS } from "../store/housePresets";
+import { useAuthStore } from "../store/useAuthStore";
 import FloorPlanIllustration from "../components/Onboarding/FloorPlanIllustration";
 import { colors, commonColor } from "../styles/commonStyle";
 
 function LoginScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const [error, setError] = React.useState<string | null>( null );
+  const accountDeleted = useAuthStore( state => state.accountDeleted );
+  const setAccountDeleted = useAuthStore( state => state.setAccountDeleted );
 
   const onGoogleSignIn = () => {
     setError( null );
@@ -23,6 +26,34 @@ function LoginScreen(): React.JSX.Element {
     openPrivacyPolicy().catch( () =>
       setError( "개인정보처리방침을 열 수 없습니다." ),
     );
+
+  // 회원 탈퇴 직후에는 완료 안내를 한 번 먼저 보여준다.
+  if (accountDeleted) {
+    return (
+      <View
+        style={ [
+          styles.screen,
+          styles.doneScreen,
+          { paddingTop: insets.top, paddingBottom: insets.bottom + 16 },
+        ] }
+        testID="account-deleted"
+      >
+        <View style={ styles.doneBody }>
+          <Text style={ styles.title } accessibilityRole="header">
+            탈퇴가 끝났어요
+          </Text>
+          <Text style={ styles.description }> 그동안 함께해줘서 고마워요. </Text>
+        </View>
+        <Pressable
+          style={ styles.doneButton }
+          onPress={ () => setAccountDeleted( false ) }
+          accessibilityRole="button"
+        >
+          <Text style={ styles.doneButtonText }> 처음 화면으로 </Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={ [styles.screen, { paddingTop: insets.top + 40 }] }>
@@ -123,6 +154,26 @@ const styles = StyleSheet.create( {
   },
   policyLink: {
     textDecorationLine: "underline",
+  },
+  doneScreen: {
+    justifyContent: "space-between",
+  },
+  doneBody: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  doneButton: {
+    minHeight: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: commonColor.touchable,
+  },
+  doneButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.white,
   },
 } );
 
