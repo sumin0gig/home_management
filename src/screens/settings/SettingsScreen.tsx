@@ -1,5 +1,13 @@
 import React from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -11,6 +19,11 @@ import {
 import { commonColor } from "../../styles/commonStyle";
 import Icon from "../../components/common/Icon";
 import type { MainStackParamList } from "../../navigation/types";
+import { useWidgetInstalled } from "../../widget/useWidgetInstalled";
+import {
+  loadWidgetShowMascot,
+  saveWidgetShowMascot,
+} from "../../widget/taskWidgetSync";
 
 type Props = NativeStackScreenProps<MainStackParamList, "SettingsMain">;
 
@@ -41,7 +54,63 @@ function MenuItem( {
   );
 }
 
+// "홈 화면 위젯" 묶음 (Android만). 설정 화면 전체 디자인은 09에서 다시 짠다.
+function WidgetSettingsSection( {
+  onOpenPrompt,
+  installed,
+}: {
+  onOpenPrompt: () => void;
+  installed: boolean | null;
+} ): React.JSX.Element {
+  const [showMascot, setShowMascot] = React.useState<boolean | null>( null );
+
+  React.useEffect( () => {
+    loadWidgetShowMascot().then( setShowMascot );
+  }, [] );
+
+  const onToggleMascot = (value: boolean) => {
+    setShowMascot( value );
+    return saveWidgetShowMascot( value );
+  };
+
+  return (
+    <View>
+      <Text style={ styles.sectionTitle } accessibilityRole="header">
+        홈 화면 위젯
+      </Text>
+      <Pressable
+        style={ ({ pressed }) => [
+          styles.menuItem,
+          pressed && !installed && styles.menuItemPressed,
+        ] }
+        onPress={ installed ? undefined : onOpenPrompt }
+        disabled={ !!installed }
+        accessibilityRole="button"
+        accessibilityState={ { disabled: !!installed } }
+      >
+        <Text style={ styles.menuLabel }> 위젯 </Text>
+        {
+          installed
+          ? <Text style={ styles.menuValue }> 추가됨 </Text>
+          : <Icon name="ChevronRight" size={ 16 } color={ commonColor.textDefault } />
+        }
+      </Pressable>
+      <View style={ styles.menuItem }>
+        <Text style={ styles.menuLabel }> 위젯에 마스코트 보이기 </Text>
+        <Switch
+          value={ showMascot ?? true }
+          disabled={ showMascot === null }
+          onValueChange={ onToggleMascot }
+          trackColor={ { true: commonColor.touchable } }
+          accessibilityLabel="위젯에 마스코트 보이기"
+        />
+      </View>
+    </View>
+  );
+}
+
 function SettingsScreen( { navigation }: Props ): React.JSX.Element {
+  const widgetInstalled = useWidgetInstalled( navigation );
   const insets = useSafeAreaInsets();
   const [error, setError] = React.useState<string | null>( null );
   const [isDeleting, setIsDeleting] = React.useState( false );
@@ -86,6 +155,14 @@ function SettingsScreen( { navigation }: Props ): React.JSX.Element {
         : null
       }
       <MenuItem label="가족 관리" onPress={ goToFamily } />
+      {
+        Platform.OS === "android"
+        ? <WidgetSettingsSection
+            installed={ widgetInstalled }
+            onOpenPrompt={ () => navigation.navigate( "WidgetPrompt" ) }
+          />
+        : null
+      }
       <MenuItem label="개인정보처리방침" onPress={ onOpenPrivacyPolicy } />
       <MenuItem label="로그아웃" onPress={ onSignOut } color={ "error" } />
       <Pressable
@@ -125,6 +202,18 @@ const styles = StyleSheet.create( {
   },
   menuLabel: {
     fontSize: 16,
+  },
+  menuValue: {
+    fontSize: 14,
+    color: commonColor.textSecondary,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: commonColor.textSecondary,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 6,
   },
   menuLabelDestructive: {
     color: commonColor.negative,

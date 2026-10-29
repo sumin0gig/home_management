@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">HomeManagement</string>
     <string name="task_widget_label">집안일 위젯</string>
-    <string name="task_widget_description">가장 빨리 해야 하는 집안일 3개를 보여줍니다.</string>
+    <string name="task_widget_description">오늘 할 일을 한눈에 보여줘요</string>
 </resources>

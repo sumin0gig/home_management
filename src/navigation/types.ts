@@ -17,6 +17,7 @@ export type MainStackParamList = {
     // light: 가벼운 시트, full: 오늘의 마지막 할 일 (전체 화면 + 폭죽)
     variant: CompleteVariant;
   };
+  WidgetPrompt: undefined;
   TaskForm: { taskId?: string; roomId?: string } | undefined;
   MascotDetail: undefined;
   MascotCollection: undefined;
