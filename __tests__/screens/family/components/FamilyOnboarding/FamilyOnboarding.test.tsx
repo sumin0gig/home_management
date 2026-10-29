@@ -129,7 +129,7 @@ describe( "FamilyOnboarding", () => {
       await act( async () => {
         fireEvent.press( getByText( "참여하기" ) );
       } );
-      expect( mockedJoinFamily ).toHaveBeenCalledWith( "f2" );
+      expect( mockedJoinFamily ).toHaveBeenCalledWith( "f2", "K7Q2MX" );
     } );
 
     test( "6자 미만이면 '확인'이 동작하지 않는다", async () => {

@@ -9,6 +9,7 @@ import {
   listRoomsForFamily,
 } from '../../actions';
 import { useRoomStore } from './useRoomStore';
+import { SERVER_JOIN_ENABLED } from '../constants/app';
 
 const client = generateClient<Schema>();
 
@@ -65,7 +66,10 @@ interface FamilyState {
   createFamily: (name: string) => Promise<boolean>;
   // 코드에 맞는 가족이 없으면 null (오류일 때도 null이고 error에 남긴다)
   lookupFamilyByCode: (code: string) => Promise<FamilyLookup | null>;
-  joinFamily: (familyId: string) => Promise<boolean>;
+  // inviteCode는 서버에서 참여하기(SERVER_JOIN_ENABLED)일 때 쓴다.
+  joinFamily: (familyId: string, inviteCode?: string) => Promise<boolean>;
+  // 관리자 넘기기 (서버 함수). 성공하면 가족을 다시 읽는다.
+  transferOwnership: (newOwnerMemberId: string) => Promise<boolean>;
   refreshMembers: () => Promise<void>;
   renameFamily: (name: string) => Promise<boolean>;
   // 가족에게 보이는 내 이름 (내 FamilyMember.displayName). 남은 완료 기록은 그대로.
@@ -185,9 +189,19 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
     }
   },
 
-  joinFamily: async (familyId: string) => {
+  joinFamily: async (familyId: string, inviteCode?: string) => {
     set({ error: null });
     try {
+      if (SERVER_JOIN_ENABLED && inviteCode) {
+        // 서버가 코드 확인·중복 참여 막기·role·familyOwnerId를 모두 맡는다.
+        const { errors } = await client.mutations.joinFamilyByCode({
+          inviteCode,
+        });
+        throwIfErrors(errors, '가족 참여에 실패했습니다.');
+        await get().fetchMyFamily();
+        return true;
+      }
+
       const [displayName, user] = await Promise.all([
         fetchDisplayName(),
         getCurrentAuthUser(),
@@ -217,6 +231,26 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       });
       throwIfErrors(memberErrors, '가족 참여에 실패했습니다.');
 
+      await get().fetchMyFamily();
+      return true;
+    } catch (err) {
+      set({ error: (err as Error).message });
+      return false;
+    }
+  },
+
+  transferOwnership: async (newOwnerMemberId: string) => {
+    const { family } = get();
+    if (!family) {
+      return false;
+    }
+    set({ error: null });
+    try {
+      const { errors } = await client.mutations.transferFamilyOwnership({
+        familyId: family.id,
+        newOwnerMemberId,
+      });
+      throwIfErrors(errors, '관리자를 넘기지 못했습니다.');
       await get().fetchMyFamily();
       return true;
     } catch (err) {

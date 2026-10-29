@@ -26,7 +26,7 @@ function JoinConfirmScreen( {
   const onJoin = () => {
     setIsJoining( true );
     setError( null );
-    return joinFamily( family.id )
+    return joinFamily( family.id, family.inviteCode )
     .then( ok => {
       if (!ok) {
         setError( useFamilyStore.getState().error );
