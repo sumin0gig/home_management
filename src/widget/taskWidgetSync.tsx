@@ -2,7 +2,7 @@ import React from 'react';
 import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { requestWidgetUpdate } from 'react-native-android-widget';
-import { toDateString } from '../utils/date';
+import { formatDueStatus, getDueStatus, toDateString } from '../utils/date';
 import type { TaskRow } from '../store/useTaskStore';
 import { TaskWidget } from './TaskWidget';
 
@@ -13,16 +13,6 @@ export interface WidgetTaskItem {
   id: string;
   title: string;
   dueLabel: string;
-}
-
-function formatDueLabel(nextDueDate: string, today: string): string {
-  if (nextDueDate < today) {
-    return '기한 지남';
-  }
-  if (nextDueDate === today) {
-    return '오늘';
-  }
-  return `예정 (${nextDueDate})`;
 }
 
 export function getTopTasks(
@@ -36,7 +26,7 @@ export function getTopTasks(
     .map(task => ({
       id: task.id,
       title: task.title,
-      dueLabel: formatDueLabel(task.nextDueDate, today),
+      dueLabel: formatDueStatus(getDueStatus(task.nextDueDate, today)),
     }));
 }
 

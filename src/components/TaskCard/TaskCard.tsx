@@ -4,8 +4,17 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { MainStackParamList } from "../../navigation/types";
 import type { TaskRow } from "../../store/useTaskStore";
-import { formatDueLabel, toDateString } from "../../utils/date";
-import { colors, commonColor } from "../../styles/commonStyle";
+import {
+  formatDueStatus,
+  getDueStatus,
+  isDueByToday,
+  toDateString,
+} from "../../utils/date";
+import {
+  colors,
+  commonColor,
+  dueStatusColor,
+} from "../../styles/commonStyle";
 
 interface Props {
   task: TaskRow;
@@ -15,8 +24,8 @@ const TaskCard = ( { task }: Props ): React.JSX.Element => {
   const navigation =
     useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const today = toDateString( new Date() );
-  const isDue = task.nextDueDate <= today;
-  const dueLabel = formatDueLabel( task.nextDueDate, today );
+  const isDue = isDueByToday( task.nextDueDate, today );
+  const dueStatus = getDueStatus( task.nextDueDate, today );
 
   return (
     <Pressable
@@ -24,11 +33,9 @@ const TaskCard = ( { task }: Props ): React.JSX.Element => {
       onPress={ () => navigation.navigate( "TaskDetail", { taskId: task.id } ) }
     >
       <Text style={ styles.title }> { task.title } </Text>
-      {
-        dueLabel
-        ? <Text style={ styles.due }> { dueLabel } </Text>
-        : null
-      }
+      <Text style={ [styles.due, { color: dueStatusColor( dueStatus.kind ) }] }>
+        { formatDueStatus( dueStatus ) }
+      </Text>
     </Pressable>
   );
 }
@@ -58,7 +65,6 @@ const styles = StyleSheet.create( {
   },
   due: {
     fontSize: 12,
-    color: commonColor.textMuted,
     marginTop: 4,
     fontWeight: "600",
   },

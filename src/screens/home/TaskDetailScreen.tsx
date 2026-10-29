@@ -15,12 +15,17 @@ import { useTaskStore, type TaskItemRow } from "../../store/useTaskStore";
 import { roomDisplayName, useRoomStore } from "../../store/useRoomStore";
 import { useMascotStore } from "../../store/useMascotStore";
 import {
-  formatDueLabel,
+  formatDueStatus,
+  getDueStatus,
   formatRecurrence,
   toDateString,
 } from "../../utils/date";
 import { splitTaskItemContent } from "../../utils/taskItem";
-import { colors, commonColor } from "../../styles/commonStyle";
+import {
+  colors,
+  commonColor,
+  dueStatusColor,
+} from "../../styles/commonStyle";
 import Icon from "../../components/common/Icon";
 
 type Props = NativeStackScreenProps<MainStackParamList, "TaskDetail">;
@@ -81,7 +86,7 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
   }
 
   const today = toDateString( new Date() );
-  const dueLabel = formatDueLabel( task.nextDueDate, today );
+  const dueStatus = getDueStatus( task.nextDueDate, today );
   const steps = items.filter( item => item.type === "DEFAULT" );
   const tips = items.filter( item => item.type === "TIP" );
 
@@ -122,11 +127,11 @@ function TaskDetailScreen( { navigation, route }: Props ): React.JSX.Element {
               </View>
             : null
           }
-          {
-            dueLabel
-            ? <Text style={ styles.dueLabel }> { dueLabel } </Text>
-            : null
-          }
+          <Text
+            style={ [styles.dueLabel, { color: dueStatusColor( dueStatus.kind ) }] }
+          >
+            { formatDueStatus( dueStatus ) }
+          </Text>
         </View>
 
         <Text style={ styles.title }> { task.title } </Text>
@@ -236,7 +241,6 @@ const styles = StyleSheet.create( {
   dueLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: commonColor.info,
   },
   title: {
     fontSize: 26,
