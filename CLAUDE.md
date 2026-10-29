@@ -358,10 +358,11 @@ buttons, errors) rather than reaching into `colors` directly.
 
 ## Known pre-existing issue
 
-`src/components/RoomSetupScreen/RoomBlockTile.tsx` /
-`src/components/RoomSetupScreen/RoomSetupScreen.tsx` have an incomplete room-size
-stepper feature (dead `sizeIndex`/`ROOM_SIZES`/`ROOM_SIZE_LABELS` references,
-missing stepper UI). This causes 4 failing tests in
-`RoomSetupScreen.test.tsx` and a few `no-unused-vars` lint errors that are
-unrelated to unrelated changes — don't try to silently "fix" them as a side
-effect of other work; call it out instead.
+None in the onboarding room setup anymore: `RoomSetupScreen` was rewritten in
+07 (집 모양 → 도면 다듬기 → 기본 집안일) and the old room-size stepper leftovers
+(`sizeIndex`/`ROOM_SIZES`/`ROOM_SIZE_LABELS`, `RoomBlockTile`) are gone.
+
+`__tests__/App.test.tsx` fails to run without the generated
+`amplify_outputs.json` (it's gitignored, created by `npx ampx sandbox` /
+deploy). That's an environment issue, not a code one — don't "fix" it by
+committing outputs.

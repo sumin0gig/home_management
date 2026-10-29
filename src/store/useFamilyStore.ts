@@ -6,6 +6,7 @@ import {
   getCurrentAuthUser,
   fetchDisplayName,
   listMyFamilyMemberships,
+  listRoomsForFamily,
 } from '../../actions';
 import { useRoomStore } from './useRoomStore';
 
@@ -39,6 +40,19 @@ export function pickPrimaryMembership(
   )[0];
 }
 
+// 초대 코드로 찾은 가족 (참여 확인 화면에 보여줄 정보)
+export interface FamilyLookup {
+  family: FamilyRow;
+  ownerName: string | null;
+  memberCount: number;
+  roomCount: number;
+}
+
+// 대문자로 바꾸고 영문·숫자만 남긴다 (초대 코드 입력·QR 공용)
+export function normalizeInviteCode(code: string): string {
+  return code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 type FamilyStatus = 'loading' | 'none' | 'joined';
 
 interface FamilyState {
@@ -49,7 +63,9 @@ interface FamilyState {
   error: string | null;
   fetchMyFamily: () => Promise<void>;
   createFamily: (name: string) => Promise<boolean>;
-  joinFamily: (inviteCode: string) => Promise<boolean>;
+  // 코드에 맞는 가족이 없으면 null (오류일 때도 null이고 error에 남긴다)
+  lookupFamilyByCode: (code: string) => Promise<FamilyLookup | null>;
+  joinFamily: (familyId: string) => Promise<boolean>;
   refreshMembers: () => Promise<void>;
   renameFamily: (name: string) => Promise<boolean>;
   removeMember: (memberRecordId: string) => Promise<boolean>;
@@ -134,7 +150,40 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
     }
   },
 
-  joinFamily: async (inviteCode: string) => {
+  lookupFamilyByCode: async (code: string) => {
+    set({ error: null });
+    try {
+      const { data: families, errors } =
+        await client.models.Family.listFamilyByInviteCode({
+          inviteCode: normalizeInviteCode(code),
+        });
+      throwIfErrors(errors, '초대 코드를 확인하는 중 오류가 발생했습니다.');
+      const family = families[0];
+      if (!family) {
+        return null;
+      }
+      const [{ data: members, errors: memberErrors }, rooms] =
+        await Promise.all([
+          client.models.FamilyMember.list({
+            filter: { familyId: { eq: family.id } },
+          }),
+          listRoomsForFamily(family.id),
+        ]);
+      throwIfErrors(memberErrors, '가족 정보를 불러오지 못했습니다.');
+      const owner = members.find(m => m.role === 'OWNER');
+      return {
+        family,
+        ownerName: owner?.displayName ?? null,
+        memberCount: members.length,
+        roomCount: rooms.length,
+      };
+    } catch (err) {
+      set({ error: (err as Error).message });
+      return null;
+    }
+  },
+
+  joinFamily: async (familyId: string) => {
     set({ error: null });
     try {
       const [displayName, user] = await Promise.all([
@@ -149,17 +198,12 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
         throw new Error(ALREADY_IN_FAMILY_MESSAGE);
       }
 
-      const normalizedCode = inviteCode.trim().toUpperCase();
-
-      const { data: families, errors } =
-        await client.models.Family.listFamilyByInviteCode({
-          inviteCode: normalizedCode,
-        });
-      throwIfErrors(errors, '초대 코드를 확인하는 중 오류가 발생했습니다.');
-
-      const family = families[0];
+      const { data: family, errors } = await client.models.Family.get({
+        id: familyId,
+      });
+      throwIfErrors(errors, '가족을 찾지 못했습니다.');
       if (!family) {
-        throw new Error('유효하지 않은 초대 코드입니다.');
+        throw new Error('가족을 찾지 못했습니다. 코드를 다시 확인해주세요.');
       }
 
       const { errors: memberErrors } = await client.models.FamilyMember.create({

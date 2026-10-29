@@ -1,18 +1,14 @@
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import RoomWaitingScreen from "../../../../../src/components/RoomWaitingScreen/RoomWaitingScreen";
-import { signOutUser } from "../../../../../actions";
+import { render, fireEvent, act } from "@testing-library/react-native";
+import RoomWaitingScreen, {
+  WAITING_POLL_INTERVAL_MS,
+} from "../../../../../src/components/RoomWaitingScreen/RoomWaitingScreen";
 import { useFamilyStore } from "../../../../../src/store/useFamilyStore";
 import { useRoomStore } from "../../../../../src/store/useRoomStore";
+import { useMascotStore, type MascotRow } from "../../../../../src/store/useMascotStore";
 import { resetAllStores } from "../../../../../src/test-utils/resetStores";
-import type { FamilyRow } from "../../../../../src/store/useFamilyStore";
+import type { FamilyMemberRow, FamilyRow } from "../../../../../src/store/useFamilyStore";
 
-jest.mock( "../../../../../actions", () => ( {
-  ...jest.requireActual( "../../../../../actions" ),
-  signOutUser: jest.fn(),
-} ) );
-
-const mockedSignOutUser = signOutUser as jest.Mock;
 const mockedFetchRooms = jest.fn();
 
 const family: FamilyRow = {
@@ -22,32 +18,61 @@ const family: FamilyRow = {
   ownerId: "u1",
 } as FamilyRow;
 
+const owner = { id: "m1", userId: "u1", displayName: "민수", role: "OWNER" } as FamilyMemberRow;
+
 describe( "RoomWaitingScreen", () => {
   beforeEach( () => {
     jest.clearAllMocks();
     resetAllStores();
-    useFamilyStore.setState( { status: "joined", family } );
+    useMascotStore.getState().reset();
+    useFamilyStore.setState( { status: "joined", family, members: [owner] } );
     useRoomStore.setState( { fetchRooms: mockedFetchRooms } );
   } );
 
-  test( "대기 안내 문구를 표시한다", () => {
-    const { getByText } = render( <RoomWaitingScreen /> );
-    expect( getByText( "집 구조를 만드는 중이에요" ) ).toBeTruthy();
+  afterEach( () => {
+    jest.useRealTimers();
   } );
 
-  test( "새로고침 버튼을 탭하면 fetchRooms를 호출한다", async () => {
-    mockedFetchRooms.mockResolvedValue( undefined );
-    const { getByText } = render( <RoomWaitingScreen /> );
-    fireEvent.press( getByText( "새로고침" ) );
-    await waitFor( () =>
-      expect( mockedFetchRooms ).toHaveBeenCalledWith( "f1" ),
-    );
+  test( "관리자 이름으로 안내하고, 새로고침 버튼은 없다", () => {
+    const { getByText, queryByText } = render( <RoomWaitingScreen /> );
+    expect( getByText( "민수님이\n집 구조를 만들고 있어요" ) ).toBeTruthy();
+    expect( getByText( "다 되면 자동으로 넘어가요" ) ).toBeTruthy();
+    expect( queryByText( "새로고침" ) ).toBeNull();
+    expect( queryByText( "로그아웃" ) ).toBeNull();
   } );
 
-  test( "로그아웃 링크를 탭하면 signOutUser를 호출한다", () => {
-    mockedSignOutUser.mockResolvedValue( undefined );
-    const { getByText } = render( <RoomWaitingScreen /> );
-    fireEvent.press( getByText( "로그아웃" ) );
-    expect( mockedSignOutUser ).toHaveBeenCalledTimes( 1 );
+  test( "15초마다 방을 다시 불러오고, 화면이 사라지면 멈춘다", () => {
+    jest.useFakeTimers();
+    const { unmount } = render( <RoomWaitingScreen /> );
+
+    act( () => {
+      jest.advanceTimersByTime( WAITING_POLL_INTERVAL_MS );
+    } );
+    expect( mockedFetchRooms ).toHaveBeenCalledTimes( 1 );
+    expect( mockedFetchRooms ).toHaveBeenCalledWith( "f1" );
+
+    act( () => {
+      jest.advanceTimersByTime( WAITING_POLL_INTERVAL_MS );
+    } );
+    expect( mockedFetchRooms ).toHaveBeenCalledTimes( 2 );
+
+    unmount();
+    act( () => {
+      jest.advanceTimersByTime( WAITING_POLL_INTERVAL_MS * 3 );
+    } );
+    expect( mockedFetchRooms ).toHaveBeenCalledTimes( 2 );
+  } );
+
+  test( "마스코트가 없으면 카드가 있고, 누르면 onMakeMascot", () => {
+    const onMakeMascot = jest.fn();
+    const { getByText } = render( <RoomWaitingScreen onMakeMascot={ onMakeMascot } /> );
+    fireEvent.press( getByText( "마스코트 만들기" ) );
+    expect( onMakeMascot ).toHaveBeenCalled();
+  } );
+
+  test( "마스코트가 이미 있으면 카드가 없다", () => {
+    useMascotStore.setState( { status: "created", mascot: { id: "m" } as MascotRow } );
+    const { queryByTestId } = render( <RoomWaitingScreen onMakeMascot={ jest.fn() } /> );
+    expect( queryByTestId( "waiting-mascot-card" ) ).toBeNull();
   } );
 } );

@@ -16,8 +16,6 @@ import MascotDetailScreen from '../screens/home/MascotDetailScreen';
 import MascotCollectionScreen from '../screens/home/MascotCollectionScreen';
 import FamilyScreen from '../screens/family/FamilyScreen';
 import AddFamilyMemberScreen from '../screens/family/AddFamilyMemberScreen';
-import ScanFamilyQrScreen from '../screens/family/ScanFamilyQrScreen';
-import EnterFamilyCodeScreen from '../screens/family/EnterFamilyCodeScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import WidgetPromptScreen from '../screens/home/WidgetPromptScreen';
 import { ScreenHeader, SettingsShortcutButton } from './ScreenHeader';
@@ -71,8 +69,6 @@ function MainNavigator(): React.JSX.Element {
         options={{ title: '가족' }}
       />
       <Stack.Screen name="AddFamilyMember" component={AddFamilyMemberScreen} />
-      <Stack.Screen name="ScanFamilyQr" component={ScanFamilyQrScreen} />
-      <Stack.Screen name="EnterFamilyCode" component={EnterFamilyCodeScreen} />
       <Stack.Screen
         name="SettingsMain"
         component={SettingsScreen}

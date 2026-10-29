@@ -8,16 +8,18 @@ import {
   Text,
   View,
 } from "react-native";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Camera } from "react-native-camera-kit";
-import type { MainStackParamList } from "../../navigation/types";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFamilyStore } from "../../store/useFamilyStore";
+import Icon from "../common/Icon";
 import { colors, commonColor } from "../../styles/commonStyle";
+import { CODE_NOT_FOUND_MESSAGE } from "./InviteCodeScreen";
+import type { FamilyOnboardingScreenProps } from "./types";
 
-type Props = NativeStackScreenProps<MainStackParamList, "ScanFamilyQr">;
+type Props = FamilyOnboardingScreenProps<"ScanFamilyQr">;
 
 type PermissionStatus = "checking" | "granted" | "denied";
-type ScanStatus = "scanning" | "joining" | "error";
+type ScanStatus = "scanning" | "checking" | "error";
 
 type OnReadCodeEvent = {
   nativeEvent: {
@@ -25,17 +27,15 @@ type OnReadCodeEvent = {
   };
 };
 
+// 온보딩의 "QR 코드로 참여하기". 스캔하면 바로 참여하지 않고 참여 확인으로 간다.
 function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
-  const error = useFamilyStore( state => state.error );
-  const joinFamily = useFamilyStore( state => state.joinFamily );
+  const insets = useSafeAreaInsets();
+  const lookupFamilyByCode = useFamilyStore( state => state.lookupFamilyByCode );
+  const [error, setError] = React.useState<string | null>( null );
 
   const [permissionStatus, setPermissionStatus] =
     React.useState<PermissionStatus>( "checking" );
   const [scanStatus, setScanStatus] = React.useState<ScanStatus>( "scanning" );
-
-  React.useEffect( () => {
-    navigation.setOptions( { title: "QR 코드 스캔" } );
-  }, [navigation] );
 
   React.useEffect( () => {
     PermissionsAndroid.request( PermissionsAndroid.PERMISSIONS.CAMERA ).then(
@@ -49,11 +49,29 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
 
   const onReadCode = (event: OnReadCodeEvent) => {
     if (scanStatus !== "scanning") return;
-    setScanStatus( "joining" );
-    return joinFamily( event.nativeEvent.codeStringValue.trim() ).then( ok =>
-      ok ? navigation.popToTop() : setScanStatus( "error" ),
-    );
+    setScanStatus( "checking" );
+    return lookupFamilyByCode( event.nativeEvent.codeStringValue ).then( lookup => {
+      if (lookup) {
+        setScanStatus( "scanning" );
+        navigation.replace( "JoinConfirm", { lookup } );
+        return;
+      }
+      setError( useFamilyStore.getState().error ?? CODE_NOT_FOUND_MESSAGE );
+      setScanStatus( "error" );
+    } );
   };
+
+  const closeButton = (
+    <View style={ [styles.closeButton, { top: insets.top + 12 }] }>
+      <Icon
+        name="Close"
+        size={ 22 }
+        color={ colors.white }
+        onPress={ () => navigation.goBack() }
+        accessibilityLabel="닫기"
+      />
+    </View>
+  );
 
   if (permissionStatus === "checking") {
     return (
@@ -76,6 +94,7 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
         >
           <Text style={ styles.retryButtonText }> 설정 열기 </Text>
         </Pressable>
+        { closeButton }
       </View>
     );
   }
@@ -91,7 +110,7 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
         frameColor={ colors.white }
       />
       {
-        scanStatus === "joining"
+        scanStatus === "checking"
         ? <View style={ [styles.overlay, styles.centered] }>
           <ActivityIndicator size="large" color={ colors.white } />
         </View>
@@ -101,7 +120,7 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
         scanStatus === "error"
         ? <View style={ [styles.overlay, styles.centered] }>
           <Text style={ styles.overlayText }>
-            { error ?? "참여에 실패했어요." }
+            { error ?? CODE_NOT_FOUND_MESSAGE }
           </Text>
           <Pressable
             style={ styles.retryButton }
@@ -112,6 +131,7 @@ function ScanFamilyQrScreen( { navigation }: Props ): React.JSX.Element {
         </View>
         : null
       }
+      { closeButton }
     </View>
   );
 }
@@ -128,6 +148,10 @@ const styles = StyleSheet.create( {
   },
   camera: {
     flex: 1,
+  },
+  closeButton: {
+    position: "absolute",
+    left: 16,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

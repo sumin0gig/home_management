@@ -11,6 +11,7 @@ import PlusIcon from "bootstrap-icons/icons/plus-lg.svg";
 import LightbulbIcon from "bootstrap-icons/icons/lightbulb.svg";
 import CheckCircleIcon from "bootstrap-icons/icons/check-circle-fill.svg";
 import CloseIcon from "bootstrap-icons/icons/x-lg.svg";
+import CheckIcon from "bootstrap-icons/icons/check-lg.svg";
 import { colors } from "../../styles/commonStyle";
 
 const IconSet = {
@@ -25,6 +26,7 @@ const IconSet = {
   Lightbulb: LightbulbIcon,
   CheckCircle: CheckCircleIcon,
   Close: CloseIcon,
+  Check: CheckIcon,
 } as const;
 
 export type IconName = keyof typeof IconSet;

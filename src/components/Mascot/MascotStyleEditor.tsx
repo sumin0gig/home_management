@@ -6,6 +6,12 @@ import { COLOR_OPTIONS, EAR_OPTIONS, TAIL_OPTIONS } from "./optionMaps";
 
 type Tab = "ear" | "tail" | "color";
 
+const TABS: Array<{ key: Tab; label: string }> = [
+  { key: "ear", label: "귀 모양" },
+  { key: "tail", label: "꼬리 모양" },
+  { key: "color", label: "색상" },
+];
+
 interface Props {
   earStyle: MascotInput["earStyle"];
   tailStyle: MascotInput["tailStyle"];
@@ -27,46 +33,24 @@ const MascotStyleEditor = ( {
 
   return (
     <View>
-      <View style={ styles.tabRow }>
-        <Pressable
-          style={ [styles.tab, activeTab === "ear" && styles.tabActive] }
-          onPress={ () => setActiveTab( "ear" ) }
-        >
-          <Text
-            style={ [
-              styles.tabText,
-              activeTab === "ear" && styles.tabTextActive,
-            ] }
-          >
-            귀 모양
-          </Text>
-        </Pressable>
-        <Pressable
-          style={ [styles.tab, activeTab === "tail" && styles.tabActive] }
-          onPress={ () => setActiveTab( "tail" ) }
-        >
-          <Text
-            style={ [
-              styles.tabText,
-              activeTab === "tail" && styles.tabTextActive,
-            ] }
-          >
-            꼬리 모양
-          </Text>
-        </Pressable>
-        <Pressable
-          style={ [styles.tab, activeTab === "color" && styles.tabActive] }
-          onPress={ () => setActiveTab( "color" ) }
-        >
-          <Text
-            style={ [
-              styles.tabText,
-              activeTab === "color" && styles.tabTextActive,
-            ] }
-          >
-            색상
-          </Text>
-        </Pressable>
+      { /* 회색 바탕 안에 흰 알약이 선택된 탭을 표시하는 분할 버튼 */ }
+      <View style={ styles.tabRow } accessibilityRole="tablist">
+        { TABS.map( tab => {
+          const isActive = activeTab === tab.key;
+          return (
+            <Pressable
+              key={ tab.key }
+              style={ [styles.tab, isActive && styles.tabActive] }
+              onPress={ () => setActiveTab( tab.key ) }
+              accessibilityRole="tab"
+              accessibilityState={ { selected: isActive } }
+            >
+              <Text style={ [styles.tabText, isActive && styles.tabTextActive] }>
+                { tab.label }
+              </Text>
+            </Pressable>
+          );
+        } ) }
       </View>
 
       <ScrollView
@@ -85,6 +69,8 @@ const MascotStyleEditor = ( {
                 earStyle === option.value && styles.optionChipSelected,
               ] }
               onPress={ () => onChangeEarStyle( option.value ) }
+              accessibilityRole="radio"
+              accessibilityState={ { selected: earStyle === option.value } }
             >
               <Text
                 style={ [
@@ -108,6 +94,8 @@ const MascotStyleEditor = ( {
                 tailStyle === option.value && styles.optionChipSelected,
               ] }
               onPress={ () => onChangeTailStyle( option.value ) }
+              accessibilityRole="radio"
+              accessibilityState={ { selected: tailStyle === option.value } }
             >
               <Text
                 style={ [
@@ -132,6 +120,9 @@ const MascotStyleEditor = ( {
                 fillColor === color && styles.colorSwatchSelected,
               ] }
               onPress={ () => onChangeFillColor( color ) }
+              accessibilityRole="radio"
+              accessibilityLabel={ `색 ${color}` }
+              accessibilityState={ { selected: fillColor === color } }
             />
           ) )
           : null
@@ -144,51 +135,64 @@ const MascotStyleEditor = ( {
 const styles = StyleSheet.create( {
   tabRow: {
     flexDirection: "row",
-    marginBottom: 16,
+    padding: 3,
+    borderRadius: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.06)",
+    marginBottom: 14,
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
+    minHeight: 36,
     alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: commonColor.divider,
+    justifyContent: "center",
+    borderRadius: 9,
   },
   tabActive: {
-    borderBottomColor: commonColor.touchable,
+    backgroundColor: colors.white,
+    shadowColor: colors.pureBlack,
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
   },
   tabText: {
-    fontSize: 14,
-    color: colors.gray,
+    fontSize: 13.5,
+    color: commonColor.textMuted,
     fontWeight: "600",
   },
   tabTextActive: {
-    color: commonColor.touchable,
+    color: commonColor.textDefault,
+    fontWeight: "700",
   },
   optionScroll: {
     flexGrow: 0,
   },
   optionRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: 8,
     paddingVertical: 4,
   },
   optionChip: {
+    minHeight: 44,
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: commonColor.border,
-    borderRadius: 20,
-    paddingVertical: 8,
+    borderColor: "rgba(0, 0, 0, 0.12)",
+    borderRadius: 12,
     paddingHorizontal: 16,
+    backgroundColor: colors.white,
   },
   optionChipSelected: {
-    borderColor: commonColor.touchable,
-    backgroundColor: commonColor.touchable,
+    borderWidth: 2,
+    borderColor: commonColor.textDefault,
+    paddingHorizontal: 15,
   },
   optionChipText: {
-    color: colors.darkGray,
+    color: commonColor.textMuted,
     fontWeight: "600",
   },
   optionChipTextSelected: {
-    color: colors.white,
+    color: commonColor.textDefault,
+    fontWeight: "700",
   },
   colorSwatch: {
     width: 40,
@@ -198,7 +202,7 @@ const styles = StyleSheet.create( {
     borderColor: "transparent",
   },
   colorSwatchSelected: {
-    borderColor: commonColor.touchable,
+    borderColor: commonColor.textDefault,
   },
 } );
 

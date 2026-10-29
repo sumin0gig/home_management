@@ -20,6 +20,7 @@ import { colors, commonColor } from "../../styles/commonStyle";
 import FloorPlanCanvas from "../../components/FloorPlan/FloorPlanCanvas";
 import HomeTaskList from "../../components/HomeTaskList/HomeTaskList";
 import { useWidgetInstalled } from "../../widget/useWidgetInstalled";
+import { takePendingRoute } from "../../navigation/pendingNavigation";
 import {
   canShowWidgetPrompt,
   markWidgetPromptShown,
@@ -105,6 +106,13 @@ function HomeScreen( { navigation }: Props ): React.JSX.Element {
     } );
     return () => subscription.remove();
   }, [navigation, refresh] );
+
+  // 준비 완료 화면에서 "가족 초대하기"를 눌렀으면 홈 위에 초대 화면을 연다.
+  React.useEffect( () => {
+    if (takePendingRoute() === "AddFamilyMember") {
+      navigation.navigate( "AddFamilyMember" );
+    }
+  }, [navigation] );
 
   // 위젯 설치 안내: Android, 위젯 미설치, 첫 불러오기가 끝남, 홈이 맨 위일 때.
   // 이번 실행·7일·위젯으로 열림·온보딩 조건은 canShowWidgetPrompt가 본다.

@@ -1,34 +1,32 @@
 import React from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFamilyStore } from "../../store/useFamilyStore";
+import { StyleSheet, Text, View } from "react-native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ensureUserExists, signOutUser } from "../../../actions";
+import StartupScreen from "../Onboarding/StartupScreen";
+import OnboardingButton from "../Onboarding/OnboardingButton";
 import { colors, commonColor } from "../../styles/commonStyle";
+import ChooseScreen from "./ChooseScreen";
+import FamilyNameScreen from "./FamilyNameScreen";
+import InviteCodeScreen from "./InviteCodeScreen";
+import JoinConfirmScreen from "./JoinConfirmScreen";
+import ScanFamilyQrScreen from "./ScanFamilyQrScreen";
+import type { FamilyOnboardingParamList } from "./types";
 
+const Stack = createNativeStackNavigator<FamilyOnboardingParamList>();
+
+// 가족이 없을 때의 시작 흐름 (고르기 → 만들기 / 참여하기). 처음 들어올 때
+// 사용자 정보를 등록(ensureUserExists)하는 동안은 시작 화면을 보여준다.
 function FamilyOnboarding(): React.JSX.Element {
-  const insets = useSafeAreaInsets();
-  const error = useFamilyStore( state => state.error );
-  const createFamily = useFamilyStore( state => state.createFamily );
-  const joinFamily = useFamilyStore( state => state.joinFamily );
-
-  const [familyName, setFamilyName] = React.useState( "" );
-  const [inviteCode, setInviteCode] = React.useState( "" );
-  const [isCreating, setIsCreating] = React.useState( false );
-  const [isJoining, setIsJoining] = React.useState( false );
   const [isBootstrapping, setIsBootstrapping] = React.useState( true );
   const [bootstrapError, setBootstrapError] = React.useState<string | null>(
     null,
   );
+  const [attempt, setAttempt] = React.useState( 0 );
 
   React.useEffect( () => {
     let cancelled = false;
+    setIsBootstrapping( true );
+    setBootstrapError( null );
     ensureUserExists()
     .catch( () => {
       if (!cancelled) {
@@ -45,168 +43,55 @@ function FamilyOnboarding(): React.JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [] );
-
-  const onCreate = () => {
-    if (!familyName.trim()) {
-      return;
-    }
-    setIsCreating( true );
-    return createFamily( familyName.trim() ).finally( () => setIsCreating( false ) );
-  };
-
-  const onJoin = () => {
-    if (!inviteCode.trim()) {
-      return;
-    }
-    setIsJoining( true );
-    return joinFamily( inviteCode.trim() ).finally( () => setIsJoining( false ) );
-  };
+  }, [attempt] );
 
   if (isBootstrapping) {
+    return <StartupScreen />;
+  }
+
+  if (bootstrapError) {
     return (
-      <View style={ [styles.container, styles.centered] }>
-        <ActivityIndicator color={ commonColor.touchable } />
+      <View style={ styles.errorScreen }>
+        <Text style={ styles.errorText }> { bootstrapError } </Text>
+        <OnboardingButton text="다시 시도" onPress={ () => setAttempt( a => a + 1 ) } />
+        <OnboardingButton
+          text="다른 계정으로 로그인"
+          variant="link"
+          onPress={ () => signOutUser() }
+        />
       </View>
     );
   }
 
   return (
-    <View style={ styles.container }>
-      <Pressable
-        style={ [styles.logoutLink, { top: insets.top + 16 }] }
-        onPress={ () => signOutUser() }
-      >
-        <Text style={ styles.logoutLinkText }> 로그아웃 </Text>
-      </Pressable>
-
-      <Text style={ styles.stepIndicator }> 1 / 3 단계 · 가족 만들기 </Text>
-      <Text style={ styles.title }> 함께할 가족을 만들어보세요 </Text>
-      <Text style={ styles.description }>
-        가족을 새로 만들거나, 받은 초대 코드로 참여해보세요.
-      </Text>
-
-      {
-        bootstrapError
-        ? <Text style={ styles.error }> { bootstrapError } </Text>
-        : null
-      }
-
-      {
-        error
-        ? <Text style={ styles.error }> { error } </Text>
-        : null
-      }
-
-      <View style={ styles.section }>
-        <Text style={ styles.sectionTitle }> 가족 만들기 </Text>
-        <TextInput
-          style={ styles.input }
-          placeholder="가족 이름"
-          value={ familyName }
-          onChangeText={ setFamilyName }
-        />
-        <Pressable
-          style={ styles.button }
-          onPress={ onCreate }
-          disabled={ isCreating }
-        >
-          {
-            isCreating
-            ? <ActivityIndicator color={ colors.white } />
-            : <Text style={ styles.buttonText }> 만들기 </Text>
-          }
-        </Pressable>
-      </View>
-
-      <View style={ styles.section }>
-        <Text style={ styles.sectionTitle }> 초대 코드로 참여하기 </Text>
-        <TextInput
-          style={ styles.input }
-          placeholder="초대 코드"
-          value={ inviteCode }
-          onChangeText={ setInviteCode }
-          autoCapitalize="characters"
-        />
-        <Pressable style={ styles.button } onPress={ onJoin } disabled={ isJoining }>
-          {
-            isJoining
-            ? <ActivityIndicator color={ colors.white } />
-            : <Text style={ styles.buttonText }> 참여하기 </Text>
-          }
-        </Pressable>
-      </View>
-    </View>
+    <Stack.Navigator
+      initialRouteName="Choose"
+      screenOptions={ {
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.default },
+      } }
+    >
+      <Stack.Screen name="Choose" component={ ChooseScreen } />
+      <Stack.Screen name="FamilyName" component={ FamilyNameScreen } />
+      <Stack.Screen name="InviteCode" component={ InviteCodeScreen } />
+      <Stack.Screen name="ScanFamilyQr" component={ ScanFamilyQrScreen } />
+      <Stack.Screen name="JoinConfirm" component={ JoinConfirmScreen } />
+    </Stack.Navigator>
   );
 }
 
 const styles = StyleSheet.create( {
-  container: {
+  errorScreen: {
     flex: 1,
-    padding: 24,
-    backgroundColor: commonColor.backgroundColor,
-  },
-  centered: {
     justifyContent: "center",
-    alignItems: "center",
+    padding: 24,
+    gap: 12,
+    backgroundColor: colors.default,
   },
-  logoutLink: {
-    position: "absolute",
-    right: 16,
-  },
-  logoutLinkText: {
-    color: colors.darkGray,
-    fontSize: 13,
-  },
-  stepIndicator: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: commonColor.touchable,
-    marginTop: 40,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 13,
-    color: commonColor.textMuted,
-    marginBottom: 20,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 12,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: commonColor.border,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  error: {
+  errorText: {
     color: commonColor.error,
-    marginBottom: 16,
     textAlign: "center",
-  },
-  button: {
-    backgroundColor: commonColor.touchable,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "600",
+    marginBottom: 8,
   },
 } );
 
