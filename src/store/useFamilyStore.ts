@@ -68,6 +68,8 @@ interface FamilyState {
   joinFamily: (familyId: string) => Promise<boolean>;
   refreshMembers: () => Promise<void>;
   renameFamily: (name: string) => Promise<boolean>;
+  // 가족에게 보이는 내 이름 (내 FamilyMember.displayName). 남은 완료 기록은 그대로.
+  updateMyDisplayName: (name: string) => Promise<boolean>;
   removeMember: (memberRecordId: string) => Promise<boolean>;
   leaveFamily: () => Promise<boolean>;
   reset: () => void;
@@ -252,6 +254,29 @@ export const useFamilyStore = create<FamilyState>((set, get) => ({
       });
       throwIfErrors(errors, '가족 이름 변경에 실패했습니다.');
       set({ family: { ...family, name } });
+      return true;
+    } catch (err) {
+      set({ error: (err as Error).message });
+      return false;
+    }
+  },
+
+  updateMyDisplayName: async (name: string) => {
+    const { membership } = get();
+    if (!membership) {
+      return false;
+    }
+    set({ error: null });
+    try {
+      const { data: updated, errors } = await client.models.FamilyMember.update(
+        { id: membership.id, displayName: name },
+      );
+      throwIfErrors(errors, '이름을 바꾸지 못했습니다.');
+      const next = updated ?? { ...membership, displayName: name };
+      set({
+        membership: next,
+        members: get().members.map(m => (m.id === next.id ? next : m)),
+      });
       return true;
     } catch (err) {
       set({ error: (err as Error).message });
